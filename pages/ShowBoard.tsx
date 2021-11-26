@@ -9,7 +9,7 @@ import React from 'react'
 import Link from 'next/link'
 import _ from 'lodash'
 
-type Card_ = Card & { _count: { card_updates: number } }
+type Card_ = Card & { _count: { cardUpdates: number } }
 type Board_ = Board & { owner: User, cards: Card_[] }
 
 // TODO: handle both logged-in and logged-out cases
@@ -26,7 +26,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       owner: true,
       cards: {
         include: {
-          _count: { select: { card_updates: true } }
+          _count: { select: { cardUpdates: true } }
         }
       }
     }
@@ -46,7 +46,7 @@ function renderCard(card: Card_) {
       <BSCard.Body>
         {isPrivate ? "🔒 " : ""}
         <Link href={`/ShowCard?cardId=${card.id}`}><a className="stretched-link">{card.title}</a></Link>
-        <Badge pill style={{ marginLeft: ".5em" }} bg="secondary">{card._count.card_updates}</Badge>
+        <Badge pill style={{ marginLeft: ".5em" }} bg="secondary">{card._count.cardUpdates}</Badge>
       </BSCard.Body>
     </BSCard >
   )

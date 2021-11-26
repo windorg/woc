@@ -1,4 +1,4 @@
-import { Board, User } from "@prisma/client";
+import { Board, Card, User } from "@prisma/client";
 import React from "react";
 import { Breadcrumb } from "react-bootstrap";
 import { boardSettings, checkPrivate } from "../lib/model-settings";
@@ -32,6 +32,16 @@ export function BoardCrumb(props: { active?: boolean, board: Board }) {
     <LinkItem active={props.active} href={`/ShowBoard?boardId=${props.board.id}`}>
       {isPrivate ? "🔒 " : ""}
       {props.board.title}
+    </LinkItem>
+  )
+}
+
+export function CardCrumb(props: { active?: boolean, card: Card }) {
+  const isPrivate = checkPrivate(boardSettings(props.card).visibility)
+  return (
+    <LinkItem active={props.active} href={`/ShowCard?cardId=${props.card.id}`}>
+      {isPrivate ? "🔒 " : ""}
+      {props.card.title}
     </LinkItem>
   )
 }
