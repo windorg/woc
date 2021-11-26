@@ -3,10 +3,11 @@ import Head from 'next/head'
 import type { Board, User, Card } from '@prisma/client'
 import { prisma } from '../lib/db'
 import { boardSettings, cardSettings, checkPrivate } from '../lib/model-settings'
-import { Badge, Breadcrumb, Card as BSCard } from 'react-bootstrap'
+import { Accordion, Badge, Breadcrumb, Card as BSCard } from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb } from '../components/breadcrumbs'
 import React from 'react'
 import Link from 'next/link'
+import _ from 'lodash'
 
 type Card_ = Card & { _count: { card_updates: number } }
 type Board_ = Board & { owner: User, cards: Card_[] }
@@ -53,7 +54,7 @@ function renderCard(card: Card_) {
 
 const ShowBoard: NextPage<Props> = ({ board }) => {
   const isPrivate = checkPrivate(boardSettings(board).visibility)
-  const normalCards = board.cards // TODO partition into normal and archived
+  const [normalCards, archivedCards] = _.partition(board.cards, card => (!cardSettings(card).archived))
   return (
     <>
       <Head>
@@ -75,7 +76,13 @@ const ShowBoard: NextPage<Props> = ({ board }) => {
       <div style={{ marginTop: "30px" }}>
         {normalCards.map(renderCard)}
       </div>
-      {/* TODO when (not (null archivedCards)) archive */}
+      {(archivedCards.length > 0) &&
+        <Accordion className="mt-5">
+          <Accordion.Item eventKey="0">
+            <Accordion.Header><Badge bg="secondary">Archived cards</Badge></Accordion.Header>
+            <Accordion.Body>{archivedCards.map(renderCard)}</Accordion.Body>
+          </Accordion.Item>
+        </Accordion>}
     </>
   )
 }

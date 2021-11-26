@@ -11,4 +11,4 @@ services:
       - "pg:/var/lib/postgresql/data"
     restart: "always"
 volumes:
-  pg:
+  pg: null

@@ -4,7 +4,7 @@ import { Breadcrumb } from "react-bootstrap";
 import { boardSettings, checkPrivate } from "../lib/model-settings";
 import Link from 'next/link'
 
-function LinkItem(props) {
+function LinkItem(props: React.ComponentProps<typeof Link> & { active?: boolean }) {
   return props.active
     ? (<Breadcrumb.Item active>{props.children}</Breadcrumb.Item>)
     : (<Link href={props.href} passHref><Breadcrumb.Item>{props.children}</Breadcrumb.Item></Link>)
