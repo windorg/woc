@@ -1,16 +1,219 @@
-html,
-body {
-  padding: 0;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+* {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+pre {
+  border: 1px solid #bbb;
+  padding: 0.75rem 1rem;
+  border-radius: 0.3rem;
+}
+
+pre code {
+  word-wrap: normal;
 }
 
 a {
-  color: inherit;
-  text-decoration: none;
+  text-decoration: none !important;
+}
+a:hover {
+  text-decoration: underline !important;
 }
 
-* {
-  box-sizing: border-box;
+ol.breadcrumb {
+  background-color: #e9ecef;
+  border-radius: 0.25rem;
+  padding: 0.75rem 1rem;
+}
+
+/* https://stackoverflow.com/questions/36247140/why-dont-flex-items-shrink-past-content-size 
+   This is needed to prevent code blocks from breaking the viewport in the feed. */
+.media-body {
+  min-width: 0;
+}
+
+/* Highlight things linked to via #anchor in the URL */
+.hash-target {
+  box-shadow: #ffe988 0px 0px 0px 3px;
+}
+
+.ProseMirror h1,
+.rendered-content h1 {
+  margin-top: 1.5em;
+  font-size: 130%;
+  font-weight: bold;
+}
+.ProseMirror h1:first-child,
+.rendered-content h1:first-child {
+  margin-top: 0.5rem;
+}
+.ProseMirror h2,
+.rendered-content h2 {
+  margin-top: 1em;
+  font-size: 110%;
+  font-weight: bold;
+}
+.ProseMirror h2:first-child,
+.rendered-content h2:first-child {
+  margin-top: 0.5rem;
+}
+.ProseMirror h3,
+.rendered-content h3 {
+  margin-top: 1em;
+  font-size: 100%;
+  font-weight: bold;
+}
+.ProseMirror h3:first-child,
+.rendered-content h3:first-child {
+  margin-top: 0.5rem;
+}
+
+.ProseMirror .small p,
+.ProseMirror.small p,
+.rendered-content .small p,
+.rendered-content.small p {
+  margin-bottom: 0.5rem;
+}
+
+.ProseMirror li p,
+.rendered-content li p {
+  margin-bottom: 0.5rem;
+}
+
+.ProseMirror p,
+.rendered-content p {
+  margin-bottom: 0.7rem;
+}
+
+.ProseMirror blockquote,
+.rendered-content blockquote {
+  margin-left: 1.5em;
+  padding-left: 1em;
+  font-size: 90%;
+  border-left: 4px solid rgb(200, 200, 200);
+}
+
+/* https://dev.to/nehalahmadkhan/how-to-make-footer-stick-to-bottom-of-web-page-3i14 */
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+footer {
+  margin-top: auto;
+}
+
+.woc-logo-text {
+  font-family: "Open Sans";
+}
+@media (max-width: 550px) {
+  .woc-logo-icon {
+    width: 32px;
+  }
+  .woc-logo-text {
+    display: none;
+  }
+}
+@media (max-width: 360px) {
+  .woc-logo-icon {
+    display: none;
+  }
+}
+
+.btn-tiny {
+  padding: 0.125rem 0.25rem;
+  font-size: 0.5rem;
+  opacity: 50%;
+}
+
+.ProseMirror {
+  height: auto;
+  max-width: 40rem;
+}
+
+.ProseMirror:after {
+  font-size: 0.7rem;
+  color: #999;
+  width: 100%;
+  display: block;
+  text-align: right;
+  content: "Markdown, ⌘B ⌘I are OK; ⌘E for code; ⇧⏎ quits code blocks";
+}
+
+#inbox-badge {
+  bottom: 2px;
+  position: relative;
+}
+
+.woc-board-private,
+.woc-card-private,
+.woc-card-update-private {
+  background-color: #efefef;
+}
+
+.woc-card-update {
+  padding: 0.5rem 1rem;
+  margin: 1.25rem 0;
+  max-width: 40rem;
+  border-radius: 5px;
+}
+
+.woc-card-update-pinned,
+.woc-card-update-private.woc-card-update-pinned {
+  background-color: #ffecd0;
+}
+
+.woc-card-update-private {
+  margin-bottom: 1.75rem; /* Only for private ones! We don't want them to stick together. */
+}
+
+.woc-card-update-replies .reply {
+  margin-top: 0.9rem;
+}
+.woc-card-update-replies .reply .woc-reply-info {
+  margin-bottom: 0.15rem;
+}
+.woc-card-update-replies:not(:empty) {
+  margin-bottom: 1.75rem;
+  margin-top: 1.25rem;
+}
+
+.woc-inbox .reply {
+  max-width: 40rem;
+  margin-bottom: 2rem;
+}
+
+.woc-feed-item-card-update {
+  max-width: 40rem;
+}
+
+.userpic {
+  border-radius: 50%;
+}
+
+#sessions-new {
+  padding: 0;
+}
+#login_panel,
+#signup_panel {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+#signup_panel {
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 0, 0.5) 0%,
+    rgba(0, 188, 212, 0.5) 50%,
+    rgba(238, 130, 238, 0.5) 100%
+  );
+}
+@media (min-width: 576px) {
+  #login_panel,
+  #signup_panel {
+    border-radius: 10px;
+    max-width: calc(50% - 1rem);
+  }
+  #signup_panel {
+    margin-left: 1rem;
+  }
 }
