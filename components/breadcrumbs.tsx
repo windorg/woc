@@ -20,7 +20,7 @@ export function BoardsCrumb(props: { active?: boolean }) {
 
 export function UserCrumb(props: { active?: boolean, user: User }) {
   return (
-    <LinkItem active={props.active} href={`/ShowUser?id=${props.user.id}`}>
+    <LinkItem active={props.active} href={`/ShowUser?userId=${props.user.id}`}>
       <em>@{props.user.handle}</em>
     </LinkItem>
   )
@@ -29,7 +29,7 @@ export function UserCrumb(props: { active?: boolean, user: User }) {
 export function BoardCrumb(props: { active?: boolean, board: Board }) {
   const isPrivate = checkPrivate(boardSettings(props.board).visibility)
   return (
-    <LinkItem active={props.active} href={`/ShowBoard?id=${props.board.id}`}>
+    <LinkItem active={props.active} href={`/ShowBoard?boardId=${props.board.id}`}>
       {isPrivate ? "🔒 " : ""}
       {props.board.title}
     </LinkItem>

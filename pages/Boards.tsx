@@ -68,7 +68,7 @@ const Boards: NextPage<Props> = ({ allBoards }) => {
         <BoardsCrumb active />
       </Breadcrumb>
 
-      <p>To create your own boards, please <a href="/LoginOrSignup">sign up</a>.</p>
+      <p>To create your own boards, please <Link href="/LoginOrSignup"><a>sign up</a></Link>.</p>
       <h1 className="mt-5">Public boards</h1>
       <div className="row-cols-1 row-cols-md2">
         {allBoards.map((board, _) => renderOthersBoard(board))}
