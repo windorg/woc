@@ -9,10 +9,13 @@
   },
   "dependencies": {
     "@prisma/client": "^3.5.0",
+    "@storyofams/next-api-decorators": "^1.6.0",
     "bootstrap": "^5.1.3",
+    "class-validator": "^0.13.2",
     "commonmark": "^0.30.0",
     "lodash": "^4.17.21",
     "next": "12.0.4",
+    "next-auth": "^4.0.0-beta.7",
     "next-superjson": "^0.0.2",
     "react": "17.0.2",
     "react-bootstrap": "^2.0.2",

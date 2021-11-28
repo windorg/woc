@@ -65,6 +65,7 @@ model FollowedUser {
   @@unique([subscriberId, followedUserId], map: "followed_users_unique")
   @@index([followedUserId], map: "followed_users_followed_user_id_index")
   @@index([subscriberId], map: "followed_users_subscriber_id_index")
+  @@map("followed_users")
 }
 
 model Reply {
@@ -105,11 +106,12 @@ model SubscriptionUpdate {
   @@index([cardUpdateId], map: "subscription_updates_card_update_id_index")
   @@index([replyId], map: "subscription_updates_reply_id_index")
   @@index([subscriberId], map: "subscription_updates_subscriber_id_index")
+  @@map("subscription_updates")
 }
 
 model User {
   id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  email               String
+  email               String               @unique
   handle              String               @unique
   createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   displayName         String               @map("display_name")
