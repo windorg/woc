@@ -5,14 +5,15 @@ import { prisma } from '../lib/db'
 import { boardSettings, cardSettings } from '../lib/model-settings'
 import { Accordion, Badge, Breadcrumb, Button, Card as BSCard, Form } from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb } from '../components/breadcrumbs'
+import { CardCard } from '../components/cardCard'
 import React, { useState } from 'react'
-import Link from 'next/link'
 import _ from 'lodash'
 import { canEditBoard } from '../lib/access'
 import { getSession } from 'next-auth/react'
 import { serialize, deserialize } from 'superjson'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { callCreateCard } from './api/cards/create'
+import { TransitionGroup, CSSTransition } from 'react-transition-group'
 
 type Card_ = Card & { _count: { cardUpdates: number } }
 type Board_ = Board & { owner: User, cards: Card_[] }
@@ -44,19 +45,6 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
       board
     })
   }
-}
-
-function renderCard(card: Card_) {
-  const isPrivate = cardSettings(card).visibility === 'private'
-  return (
-    <BSCard key={card.id} className={`mb-2 woc-card ${isPrivate ? "woc-card-private" : ""}`}>
-      <BSCard.Body>
-        {isPrivate ? "🔒 " : ""}
-        <Link href={`/ShowCard?cardId=${card.id}`}><a className="stretched-link">{card.title}</a></Link>
-        <Badge pill style={{ marginLeft: ".5em" }} bg="secondary">{card._count.cardUpdates}</Badge>
-      </BSCard.Body>
-    </BSCard >
-  )
 }
 
 function CardAddForm(props: { addCard: (title: string) => Promise<void> }) {
@@ -119,15 +107,22 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
       </h1>
       {canEditBoard(userId, board) && <CardAddForm addCard={addCard} />}
       <div style={{ marginTop: "30px" }}>
-        {normalCards.map(renderCard)}
+        <TransitionGroup>
+          {normalCards.map(card => (
+            <CSSTransition key={card.id} timeout={350} classNames="woc-card">
+              <CardCard card={card} />
+            </CSSTransition>
+          ))}
+        </TransitionGroup>
       </div>
       {(archivedCards.length > 0) &&
         <Accordion className="mt-5">
           <Accordion.Item eventKey="0">
             <Accordion.Header><Badge bg="secondary">Archived cards</Badge></Accordion.Header>
-            <Accordion.Body>{archivedCards.map(renderCard)}</Accordion.Body>
+            <Accordion.Body>{archivedCards.map(card => (<CardCard key={card.id} card={card} />))}</Accordion.Body>
           </Accordion.Item>
-        </Accordion>}
+        </Accordion>
+      }
     </>
   )
 }

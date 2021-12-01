@@ -93,6 +93,14 @@ ol.breadcrumb {
   border-left: 4px solid rgb(200, 200, 200);
 }
 
+.woc-card.woc-card-enter {
+  background-color: #fff59d;
+}
+.woc-card.woc-card-enter-active {
+  background-color: white;
+  transition: background-color 350ms ease-in;
+}
+
 /* https://dev.to/nehalahmadkhan/how-to-make-footer-stick-to-bottom-of-web-page-3i14 */
 #layout {
   min-height: 100vh;
