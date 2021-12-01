@@ -94,13 +94,20 @@ ol.breadcrumb {
 }
 
 /* https://dev.to/nehalahmadkhan/how-to-make-footer-stick-to-bottom-of-web-page-3i14 */
-body {
+#layout {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 footer {
   margin-top: auto;
+}
+
+/* Retain the max-width of 1140px even on huge screens, similar to Bootstrap 4 */
+@media (min-width: 1400px) {
+  .container {
+    max-width: 1140px !important;
+  }
 }
 
 .woc-logo-text {

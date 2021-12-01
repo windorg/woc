@@ -9,6 +9,8 @@ import Link from 'next/link'
 import { getSession } from 'next-auth/react'
 import { canSeeBoard } from '../lib/access'
 import { BoardCard } from '../components/boardCard'
+import { SuperJSONResult } from 'superjson/dist/types'
+import { deserialize, serialize } from 'superjson'
 
 type Board_ = Board & { owner: { handle: string, displayName: string } }
 
@@ -18,7 +20,7 @@ type Props = {
   otherBoards: Board_[]
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
+export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
   const include = { owner: { select: { handle: true, displayName: true } } }
   const session = await getSession(context)
   if (session) {
@@ -33,7 +35,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       include,
       orderBy: { createdAt: "desc" }
     }).then(x => x.filter(board => canSeeBoard(session.userId, board)))
-    return { props: { userId: session.userId, userBoards, otherBoards } }
+    return { props: serialize({ userId: session.userId, userBoards, otherBoards }) }
   } else {
     // Not logged in
     const userBoards: Board_[] = []
@@ -41,11 +43,13 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
       include,
       orderBy: { createdAt: "desc" }
     }).then(x => x.filter(board => canSeeBoard(null, board)))
-    return { props: { userId: null, userBoards, otherBoards } }
+    return { props: serialize({ userId: null, userBoards, otherBoards }) }
   }
 }
 
-const Boards: NextPage<Props> = ({ userId, userBoards, otherBoards }) => {
+const Boards: NextPage<SuperJSONResult> = (props) => {
+  const { userId, userBoards, otherBoards } = deserialize<Props>(props)
+
   return (
     <>
       <Head>

@@ -31,7 +31,7 @@ function NavHeader() {
 
 export default function Layout({ children }: PropsWithChildren<{}>): JSX.Element {
   return (
-    <>
+    <div id="layout">
       <div className="container mt-4">
         <NavHeader />
         {children}
@@ -42,6 +42,6 @@ export default function Layout({ children }: PropsWithChildren<{}>): JSX.Element
           • favicon by <a href="https://loading.io/">loading.io</a>
         </div>
       </footer>
-    </>
+    </div>
   )
 }

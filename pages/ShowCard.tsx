@@ -9,6 +9,8 @@ import React from 'react'
 import Link from 'next/link'
 import _ from 'lodash'
 import { renderMarkdown } from '../lib/markdown'
+import { SuperJSONResult } from 'superjson/dist/types'
+import { deserialize, serialize } from 'superjson'
 
 type Card_ = Card & { owner: User, board: Board, cardUpdates: CardUpdate[] }
 
@@ -17,7 +19,7 @@ type Props = {
   card: Card_
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
+export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
   let card = await prisma.card.findUnique({
     where: {
       id: context.query.cardId as string
@@ -30,9 +32,9 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
   })
   if (!card) { return { notFound: true } }
   return {
-    props: {
+    props: serialize({
       card
-    }
+    })
   }
 }
 
@@ -64,7 +66,9 @@ function renderCardUpdate(card: Card, cardUpdate: CardUpdate) {
   )
 }
 
-const ShowCard: NextPage<Props> = ({ card }) => {
+const ShowCard: NextPage<SuperJSONResult> = (props) => {
+  const { card } = deserialize<Props>(props)
+
   const settings = cardSettings(card)
   const isPrivate = settings.visibility === 'private'
   const [pinnedUpdates, otherUpdates] = _.partition(card.cardUpdates, update => cardUpdateSettings(update).pinned)
