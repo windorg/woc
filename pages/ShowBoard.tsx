@@ -59,19 +59,21 @@ function renderCard(card: Card_) {
   )
 }
 
-function CardAddForm({ addCard }) {
+function CardAddForm(props: { addCard: (title: string) => Promise<void> }) {
   const [titleInput, setTitleInput] = useState('')
   const onSubmit = (e: any) => {
     e.preventDefault()
     // TODO: what exactly will happen in prod if this fails with err500?
-    addCard(titleInput)
+    props.addCard(titleInput)
     setTitleInput('')
   }
   return <>
     <Form onSubmit={onSubmit}>
       <Form.Group className="mb-3" controlId="cardAddTitle">
-        <Form.Control type="text" placeholder="Card title" style={{ maxWidth: "40rem", width: "100%" }}
-          value={titleInput} onInput={e => setTitleInput(e.target.value)} />
+        <Form.Control
+          type="text" placeholder="Card title" style={{ maxWidth: "40rem", width: "100%" }}
+          value={titleInput}
+          onInput={e => setTitleInput((e.target as HTMLInputElement).value)} />
       </Form.Group>
       <Button variant="primary" type="submit">Add a card</Button>
       <Form.Check className="ms-4" inline id="cardPrivate" type="checkbox" label="🔒 Private card" />
