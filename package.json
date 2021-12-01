@@ -15,7 +15,7 @@
     "commonmark": "^0.30.0",
     "lodash": "^4.17.21",
     "next": "12.0.4",
-    "next-auth": "^4.0.0-beta.7",
+    "next-auth": "^0.0.0-pr.3217.87a21677",
     "next-superjson": "^0.0.2",
     "react": "17.0.2",
     "react-bootstrap": "^2.0.2",

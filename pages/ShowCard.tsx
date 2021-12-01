@@ -2,8 +2,8 @@ import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
 import type { Board, User, Card, CardUpdate } from '@prisma/client'
 import { prisma } from '../lib/db'
-import { boardSettings, cardSettings, cardUpdateSettings, checkPrivate } from '../lib/model-settings'
-import { Accordion, Badge, Breadcrumb, Card as BSCard } from 'react-bootstrap'
+import { cardSettings, cardUpdateSettings } from '../lib/model-settings'
+import { Badge, Breadcrumb } from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb, CardCrumb } from '../components/breadcrumbs'
 import React from 'react'
 import Link from 'next/link'
@@ -38,7 +38,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
 
 function renderCardUpdate(card: Card, cardUpdate: CardUpdate) {
   const settings = cardUpdateSettings(cardUpdate)
-  const isPrivate = checkPrivate(settings.visibility)
+  const isPrivate = settings.visibility === 'private'
   const cardClasses =
     "woc-card-update" +
     (isPrivate ? " woc-card-update-private" : "") +
@@ -66,7 +66,7 @@ function renderCardUpdate(card: Card, cardUpdate: CardUpdate) {
 
 const ShowCard: NextPage<Props> = ({ card }) => {
   const settings = cardSettings(card)
-  const isPrivate = checkPrivate(settings.visibility)
+  const isPrivate = settings.visibility === 'private'
   const [pinnedUpdates, otherUpdates] = _.partition(card.cardUpdates, update => cardUpdateSettings(update).pinned)
   const reverseOrderUpdates =
     <>

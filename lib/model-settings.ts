@@ -1,15 +1,9 @@
 // Settings types used in most models (Board, Card, etc)
 
-import { Board, Card, CardUpdate, User } from "@prisma/client";
+import { Board, Card, CardUpdate, User } from "@prisma/client"
 
+// If you ever change this, grep for 'private' and 'public'
 export type Visibility = 'private' | 'public'
-
-export function checkPrivate(x: Visibility): boolean {
-  switch (x) {
-    case 'private': return true;
-    case 'public': return false;
-  }
-}
 
 export type BoardSettings = {
   visibility: Visibility

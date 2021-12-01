@@ -1,63 +1,51 @@
 import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
-import type { Board } from '@prisma/client'
+import type { Board, User } from '@prisma/client'
 import { prisma } from '../lib/db'
-import { boardSettings, checkPrivate } from '../lib/model-settings'
 import React from 'react'
-import Card from 'react-bootstrap/Card'
 import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import { BoardsCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
+import { getSession } from 'next-auth/react'
+import { canSeeBoard } from '../lib/access'
+import { BoardCard } from '../components/boardCard'
 
 type Board_ = Board & { owner: { handle: string, displayName: string } }
 
-// TODO: handle both logged-in and logged-out cases
 type Props = {
-  allBoards: Board_[]
+  userId: User['id'] | null
+  userBoards: Board_[]
+  otherBoards: Board_[]
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async () => {
-  let allBoards = await prisma.board.findMany({
-    include: {
-      owner: { select: { handle: true, displayName: true } }
-    },
-    orderBy: { createdAt: "desc" }
-  })
-  allBoards = allBoards.filter((board) => !checkPrivate(boardSettings(board).visibility))
-  return {
-    props: {
-      allBoards
-    }
+export const getServerSideProps: GetServerSideProps<Props> = async (context) => {
+  const include = { owner: { select: { handle: true, displayName: true } } }
+  const session = await getSession(context)
+  if (session) {
+    // Logged in
+    const userBoards = await prisma.board.findMany({
+      where: { ownerId: session.userId },
+      include,
+      orderBy: { createdAt: "desc" }
+    })
+    const otherBoards = await prisma.board.findMany({
+      where: { NOT: { ownerId: session.userId } },
+      include,
+      orderBy: { createdAt: "desc" }
+    }).then(x => x.filter(board => canSeeBoard(session.userId, board)))
+    return { props: { userId: session.userId, userBoards, otherBoards } }
+  } else {
+    // Not logged in
+    const userBoards: Board_[] = []
+    const otherBoards = await prisma.board.findMany({
+      include,
+      orderBy: { createdAt: "desc" }
+    }).then(x => x.filter(board => canSeeBoard(null, board)))
+    return { props: { userId: null, userBoards, otherBoards } }
   }
 }
 
-function renderOthersBoard(board: Board_) {
-  const isPrivate = checkPrivate(boardSettings(board).visibility)
-  return (
-    <Card key={board.id} className={`woc-board mt-3 mb-3 ${isPrivate ? "woc-board-private" : ""}`}>
-      <Card.Body>
-        <h3>
-          {isPrivate && "🔒 "}
-          <Link href={`/ShowBoard?boardId=${board.id}`}>
-            <a className="text-muted">
-              {board.title}
-            </a>
-          </Link>
-        </h3>
-        <Link href={`/ShowUser?userId=${board.ownerId}`}>
-          <a>
-            <span>
-              <span className="me-2">{board.owner.displayName}</span>
-              <em>@{board.owner.handle}</em>
-            </span>
-          </a>
-        </Link>
-      </Card.Body>
-    </Card>
-  )
-}
-
-const Boards: NextPage<Props> = ({ allBoards }) => {
+const Boards: NextPage<Props> = ({ userId, userBoards, otherBoards }) => {
   return (
     <>
       <Head>
@@ -68,11 +56,25 @@ const Boards: NextPage<Props> = ({ allBoards }) => {
         <BoardsCrumb active />
       </Breadcrumb>
 
-      <p>To create your own boards, please <Link href="/LoginOrSignup"><a>sign up</a></Link>.</p>
-      <h1 className="mt-5">Public boards</h1>
-      <div className="row-cols-1 row-cols-md2">
-        {allBoards.map((board, _) => renderOthersBoard(board))}
-      </div>
+      {userId
+        ? <>
+          <h1 className="mt-5">Your boards</h1>
+          <div className="row-cols-1 row-cols-md2">
+            {userBoards.map(board => <BoardCard key={board.id} board={board} kind='own-board' />)}
+          </div>
+          <h1 className="mt-5">Others&apos; public boards</h1>
+          <div className="row-cols-1 row-cols-md2">
+            {otherBoards.map(board => <BoardCard key={board.id} board={board} kind='other-board' />)}
+          </div>
+        </>
+        : <>
+          <p>To create your own boards, please <Link href="/LoginOrSignup"><a>sign up</a></Link>.</p>
+          <h1 className="mt-5">Public boards</h1>
+          <div className="row-cols-1 row-cols-md2">
+            {otherBoards.map(board => <BoardCard key={board.id} board={board} kind='other-board' />)}
+          </div>
+        </>
+      }
     </>
   )
 }

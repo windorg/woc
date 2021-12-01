@@ -2,7 +2,7 @@ import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
 import type { Board, User, Card } from '@prisma/client'
 import { prisma } from '../lib/db'
-import { boardSettings, cardSettings, checkPrivate } from '../lib/model-settings'
+import { boardSettings, cardSettings } from '../lib/model-settings'
 import { Accordion, Badge, Breadcrumb, Card as BSCard } from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb } from '../components/breadcrumbs'
 import React from 'react'
@@ -40,7 +40,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async (context) => 
 }
 
 function renderCard(card: Card_) {
-  const isPrivate = checkPrivate(cardSettings(card).visibility)
+  const isPrivate = cardSettings(card).visibility === 'private'
   return (
     <BSCard key={card.id} className={`mb-2 woc-card ${isPrivate ? "woc-card-private" : ""}`}>
       <BSCard.Body>
@@ -53,7 +53,7 @@ function renderCard(card: Card_) {
 }
 
 const ShowBoard: NextPage<Props> = ({ board }) => {
-  const isPrivate = checkPrivate(boardSettings(board).visibility)
+  const isPrivate = boardSettings(board).visibility === 'private'
   const [normalCards, archivedCards] = _.partition(board.cards, card => (!cardSettings(card).archived))
   return (
     <>
