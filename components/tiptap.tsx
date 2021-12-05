@@ -40,6 +40,7 @@ let Tiptap = forwardRef((props: {
   content: string
   onSubmit: () => void
 }, ref: React.ForwardedRef<TiptapMethods>) => {
+  // TODO: why does it rerender on every keypress?
   const editor = useEditor({
     extensions: [
       StarterKit.configure({

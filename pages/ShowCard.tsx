@@ -5,7 +5,7 @@ import { prisma } from '../lib/db'
 import { cardSettings, commentSettings } from '../lib/model-settings'
 import { Badge, Breadcrumb, Button, Form } from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb, CardCrumb } from '../components/breadcrumbs'
-import React, { createRef, Ref, RefObject } from 'react'
+import React, { createRef, RefObject, useState } from 'react'
 import Link from 'next/link'
 import { Tiptap, TiptapMethods } from '../components/tiptap'
 import _ from 'lodash'
@@ -16,7 +16,7 @@ import { deserialize, serialize } from 'superjson'
 import { canEditCard } from 'lib/access'
 import { getSession } from 'next-auth/react'
 import { callCreateComment } from './api/comments/create'
-import { useRouter } from 'next/router'
+import update from 'immutability-helper'
 
 type Card_ = Card & {
   owner: User
@@ -26,7 +26,7 @@ type Card_ = Card & {
 }
 
 type Props = {
-  card: Card_
+  initialCard: Card_
 }
 
 export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
@@ -42,13 +42,17 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     }
   })
   if (!card) { return { notFound: true } }
-  const props: Props = { card: { ...card, canEdit: await canEditCard(session?.userId, card) } }
+  const props: Props = {
+    initialCard: {
+      ...card, canEdit: await canEditCard(session?.userId, card)
+    }
+  }
   return {
     props: serialize(props)
   }
 }
 
-function Comment(props: { card: Card, comment: Comment }) {
+function CommentComponent(props: { card: Card, comment: Comment }) {
   const { card, comment } = props
   const settings = commentSettings(comment)
   const isPrivate = settings.visibility === 'private'
@@ -78,54 +82,66 @@ function Comment(props: { card: Card, comment: Comment }) {
 }
 
 // TODO handle the "private" checkbox
-function AddCommentForm(props: { cardId: Card['id'] }) {
-  const editorRef: RefObject<TiptapMethods> = createRef()
-  const router = useRouter()
-  const onSubmit = () => {
-    if (!editorRef.current) throw Error("Editor is not initialized")
-    callCreateComment({
-      cardId: props.cardId,
-      content: editorRef.current.getMarkdown()
-    })
-    // TODO add comments without reloading the page
-    // editorRef.current.clearContent()
-    router.reload()
+class AddCommentForm extends React.Component<{
+  cardId: Card['id']
+  addComment: (comment: Comment) => void
+}> {
+  // We use a class because refs are set to null on rerenders when using functional components
+  private editorRef: RefObject<TiptapMethods>
+  constructor(props) {
+    super(props)
+    this.editorRef = createRef()
   }
-  return (
-    <Form onSubmit={e => { e.preventDefault(); onSubmit() }}>
-      <div className="mb-3" style={{ maxWidth: "40rem", width: "100%" }}>
-        <Tiptap content="" onSubmit={onSubmit} ref={editorRef} />
-      </div>
-      <Button variant="primary" type="submit">Post</Button>
-      <Form.Check className="ms-4" inline id="commentPrivate" type="checkbox" label="🔒 Private comment" />
-    </Form>
-  )
+  render() {
+    const submit = async () => {
+      if (!this.editorRef.current) throw Error("Editor is not initialized")
+      const comment = await callCreateComment({
+        cardId: this.props.cardId,
+        content: this.editorRef.current.getMarkdown()
+      })
+      this.props.addComment(comment)
+      this.editorRef.current.clearContent()
+    }
+    return (
+      <Form onSubmit={e => { e.preventDefault(); submit() }}>
+        <div className="mb-3" style={{ maxWidth: "40rem", width: "100%" }}>
+          <Tiptap content="" onSubmit={submit} ref={this.editorRef} />
+        </div>
+        <Button variant="primary" type="submit">Post</Button>
+        <Form.Check className="ms-4" inline id="commentPrivate" type="checkbox" label="🔒 Private comment" />
+      </Form >
+    )
+  }
 }
 
 const ShowCard: NextPage<SuperJSONResult> = (props) => {
-  const { card } = deserialize<Props>(props)
+  const { initialCard } = deserialize<Props>(props)
+
+  const [card, setCard] = useState(initialCard)
+  const addComment = (comment: Comment) =>
+    setCard(prevCard => update(prevCard, { comments: { $push: [comment] } }))
 
   const settings = cardSettings(card)
   const isPrivate = settings.visibility === 'private'
-  const [pinnedUpdates, otherUpdates] =
+  const [pinnedComments, otherComments] =
     _.partition(
       _.orderBy(card.comments, ['createdAt'], ['desc']),
       comment => commentSettings(comment).pinned)
-  const reverseOrderUpdates =
+  const reverseOrderComments =
     <>
       <p className="text-muted small">Comment order: oldest to newest.</p>
       <div className="mb-3">
-        {_.concat(R.reverse(pinnedUpdates), R.reverse(otherUpdates))
-          .map(comment => (<Comment key={comment.id} card={card} comment={comment} />))}
+        {_.concat(R.reverse(pinnedComments), R.reverse(otherComments))
+          .map(comment => (<CommentComponent key={comment.id} card={card} comment={comment} />))}
       </div>
-      {card.canEdit && <AddCommentForm cardId={card.id} />}
+      {card.canEdit && <AddCommentForm addComment={addComment} cardId={card.id} />}
     </>
-  const normalOrderUpdates =
+  const normalOrderComments =
     <>
-      {card.canEdit && <AddCommentForm cardId={card.id} />}
+      {card.canEdit && <AddCommentForm addComment={addComment} cardId={card.id} />}
       <div className="mt-4">
-        {_.concat(pinnedUpdates, otherUpdates)
-          .map(comment => (<Comment key={comment.id} card={card} comment={comment} />))}
+        {_.concat(pinnedComments, otherComments)
+          .map(comment => (<CommentComponent key={comment.id} card={card} comment={comment} />))}
       </div>
     </>
   return (
@@ -148,7 +164,7 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
         {card.title}
         {/* TODO card edit & delete buttons */}
       </h1>
-      {settings.reverseOrder ? reverseOrderUpdates : normalOrderUpdates}
+      {settings.reverseOrder ? reverseOrderComments : normalOrderComments}
     </>
   )
 }
