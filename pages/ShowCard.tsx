@@ -3,23 +3,34 @@ import Head from 'next/head'
 import type { Board, User, Card, CardUpdate } from '@prisma/client'
 import { prisma } from '../lib/db'
 import { cardSettings, cardUpdateSettings } from '../lib/model-settings'
-import { Badge, Breadcrumb } from 'react-bootstrap'
+import { Badge, Breadcrumb, Button, Form } from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb, CardCrumb } from '../components/breadcrumbs'
-import React from 'react'
+import React, { createRef, Ref, RefObject } from 'react'
 import Link from 'next/link'
+import { Tiptap, TiptapMethods } from '../components/tiptap'
 import _ from 'lodash'
+import * as R from 'ramda'
 import { renderMarkdown } from '../lib/markdown'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
+import { canEditCard } from 'lib/access'
+import { getSession } from 'next-auth/react'
+import { callCreateComment } from './api/comments/create'
+import { useRouter } from 'next/router'
 
-type Card_ = Card & { owner: User, board: Board, cardUpdates: CardUpdate[] }
+type Card_ = Card & {
+  owner: User
+  board: Board
+  cardUpdates: CardUpdate[]
+  canEdit: boolean
+}
 
-// TODO: handle both logged-in and logged-out cases
 type Props = {
   card: Card_
 }
 
 export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
+  const session = await getSession(context)
   let card = await prisma.card.findUnique({
     where: {
       id: context.query.cardId as string
@@ -31,26 +42,26 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     }
   })
   if (!card) { return { notFound: true } }
+  const props: Props = { card: { ...card, canEdit: await canEditCard(session?.userId, card) } }
   return {
-    props: serialize({
-      card
-    })
+    props: serialize(props)
   }
 }
 
-function renderCardUpdate(card: Card, cardUpdate: CardUpdate) {
-  const settings = cardUpdateSettings(cardUpdate)
+function Comment(props: { card: Card, comment: CardUpdate }) {
+  const { card, comment } = props
+  const settings = cardUpdateSettings(comment)
   const isPrivate = settings.visibility === 'private'
   const cardClasses =
     "woc-card-update" +
     (isPrivate ? " woc-card-update-private" : "") +
     (settings.pinned ? " woc-card-update-pinned" : "")
   return (
-    <div key={cardUpdate.id} id={`comment-${cardUpdate.id}`} className={cardClasses}>
+    <div key={comment.id} id={`comment-${comment.id}`} className={cardClasses}>
       <div style={{ marginBottom: ".3em" }}>
         <span className="text-muted small">
-          <Link href={`/ShowCard?cardId=${card.id}#comment-${cardUpdate.id}`}>
-            <a>timestamp {/* TODO <a>{renderTimestamp(cardUpdate.createdAt)}</a> */}</a>
+          <Link href={`/ShowCard?cardId=${card.id}#comment-${comment.id}`}>
+            <a>{comment.createdAt.toString()} {/* TODO <a>{renderTimestamp(cardUpdate.createdAt)}</a> */}</a>
           </Link>
         </span>
         {isPrivate && "🔒 "}
@@ -59,10 +70,35 @@ function renderCardUpdate(card: Card, cardUpdate: CardUpdate) {
         </div>
       </div>
       <div className="rendered-content">
-        {renderMarkdown(cardUpdate.content)}
+        {renderMarkdown(comment.content)}
       </div>
       {/* TODO render replies */}
     </div>
+  )
+}
+
+// TODO handle the "private" checkbox
+function AddCommentForm(props: { cardId: Card['id'] }) {
+  const editorRef: RefObject<TiptapMethods> = createRef()
+  const router = useRouter()
+  const onSubmit = () => {
+    if (!editorRef.current) throw Error("Editor is not initialized")
+    callCreateComment({
+      cardId: props.cardId,
+      content: editorRef.current.getMarkdown()
+    })
+    // TODO add comments without reloading the page
+    // editorRef.current.clearContent()
+    router.reload()
+  }
+  return (
+    <Form onSubmit={e => { e.preventDefault(); onSubmit() }}>
+      <div className="mb-3" style={{ maxWidth: "40rem", width: "100%" }}>
+        <Tiptap content="" onSubmit={onSubmit} ref={editorRef} />
+      </div>
+      <Button variant="primary" type="submit">Post</Button>
+      <Form.Check className="ms-4" inline id="commentPrivate" type="checkbox" label="🔒 Private comment" />
+    </Form>
   )
 }
 
@@ -71,22 +107,25 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
 
   const settings = cardSettings(card)
   const isPrivate = settings.visibility === 'private'
-  const [pinnedUpdates, otherUpdates] = _.partition(card.cardUpdates, update => cardUpdateSettings(update).pinned)
+  const [pinnedUpdates, otherUpdates] =
+    _.partition(
+      _.orderBy(card.cardUpdates, ['createdAt'], ['desc']),
+      comment => cardUpdateSettings(comment).pinned)
   const reverseOrderUpdates =
     <>
       <p className="text-muted small">Comment order: oldest to newest.</p>
       <div className="mb-3">
-        {_.concat(_.reverse(pinnedUpdates), _.reverse(otherUpdates))
-          .map(update => renderCardUpdate(card, update))}
+        {_.concat(R.reverse(pinnedUpdates), R.reverse(otherUpdates))
+          .map(comment => (<Comment key={comment.id} card={card} comment={comment} />))}
       </div>
-      {/* TODO when(get #editable cardV)(renderCardUpdateAddForm card) */}
+      {card.canEdit && <AddCommentForm cardId={card.id} />}
     </>
   const normalOrderUpdates =
     <>
-      {/* TODO when(get #editable cardV)(renderCardUpdateAddForm card) */}
+      {card.canEdit && <AddCommentForm cardId={card.id} />}
       <div className="mt-4">
         {_.concat(pinnedUpdates, otherUpdates)
-          .map(update => renderCardUpdate(card, update))}
+          .map(comment => (<Comment key={comment.id} card={card} comment={comment} />))}
       </div>
     </>
   return (
@@ -107,7 +146,7 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
         {cardSettings(card).archived && <Badge bg="secondary" className="me-2">Archived</Badge>}
         {isPrivate && "🔒 "}
         {card.title}
-        {/* card edit & delete buttons */}
+        {/* TODO card edit & delete buttons */}
       </h1>
       {settings.reverseOrder ? reverseOrderUpdates : normalOrderUpdates}
     </>

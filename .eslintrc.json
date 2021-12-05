@@ -1,3 +1,18 @@
 {
-  "extends": "next/core-web-vitals"
+  "extends": "next/core-web-vitals",
+  "plugins": [
+    "ban"
+  ],
+  "rules": {
+    "ban/ban": [
+      1, // warning
+      {
+        "name": [
+          "_",
+          "reverse"
+        ],
+        "message": "'reverse' mutates the array in-place; use R.reverse"
+      }
+    ]
+  }
 }

@@ -15,7 +15,6 @@ function pwstore_pbkdf1(password: Buffer, salt: string, iter: number): Buffer {
 
 // Checks password stored in pwstore-fast format
 function checkPassword(password: string, pwstring: string): boolean {
-  console.log(password, pwstring)
   const [algo, strength, salt, hash] = pwstring.split('|')
   if (algo != 'sha256') return false
   // NB: pwstore-fast doesn't decode the salt from base64 before doing the hashing

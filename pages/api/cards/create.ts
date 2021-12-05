@@ -5,6 +5,8 @@ import * as yup from 'yup'
 import { SchemaOf } from 'yup'
 import axios from 'axios'
 import deepMap from 'deep-map'
+import { canEditBoard } from 'lib/access'
+import { getSession } from 'next-auth/react'
 
 interface CreateCardRequest extends NextApiRequest {
   body: {
@@ -21,17 +23,19 @@ const schema: SchemaOf<CreateCardRequest['body']> = yup.object({
 export default async function createCard(req: CreateCardRequest, res: NextApiResponse<Card>) {
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
-    const { ownerId } = await prisma.board.findUnique({
+    const session = await getSession({ req })
+    const board = await prisma.board.findUnique({
       where: { id: body.boardId },
-      select: { ownerId: true },
+      select: { ownerId: true, settings: true },
       rejectOnNotFound: true,
     })
+    if (!await canEditBoard(session?.userId, board)) return res.status(403)
     const card = await prisma.card.create({
       data: {
         title: body.title.trim(),
         boardId: body.boardId,
         settings: {},
-        ownerId: ownerId,
+        ownerId: board.ownerId,
       }
     })
     return res.status(201).json(card)

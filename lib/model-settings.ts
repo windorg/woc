@@ -8,7 +8,7 @@ export type Visibility = 'private' | 'public'
 export type BoardSettings = {
   visibility: Visibility
 }
-export function boardSettings(board: Board): BoardSettings {
+export function boardSettings(board: Pick<Board, 'settings'>): BoardSettings {
   const def: BoardSettings = {
     visibility: 'public'
   }
@@ -21,7 +21,7 @@ export type CardSettings = {
   reverseOrder: boolean
   archived: boolean
 }
-export function cardSettings(card: Card): CardSettings {
+export function cardSettings(card: Pick<Card, 'settings'>): CardSettings {
   const def: CardSettings = {
     visibility: 'public',
     reverseOrder: false,
@@ -37,7 +37,7 @@ export type CardUpdateSettings = {
   // Who is following the thread (e.g. all users that replied to it). Does not include the card owner.
   subscribers: User['id'][]
 }
-export function cardUpdateSettings(cardUpdate: CardUpdate): CardUpdateSettings {
+export function cardUpdateSettings(cardUpdate: Pick<CardUpdate, 'settings'>): CardUpdateSettings {
   const def: CardUpdateSettings = {
     visibility: 'public',
     pinned: false,

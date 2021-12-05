@@ -37,55 +37,55 @@ ol.breadcrumb {
   box-shadow: #ffe988 0px 0px 0px 3px;
 }
 
-.ProseMirror h1,
+.tiptap h1,
 .rendered-content h1 {
   margin-top: 1.5em;
   font-size: 130%;
   font-weight: bold;
 }
-.ProseMirror h1:first-child,
+.tiptap h1:first-child,
 .rendered-content h1:first-child {
   margin-top: 0.5rem;
 }
-.ProseMirror h2,
+.tiptap h2,
 .rendered-content h2 {
   margin-top: 1em;
   font-size: 110%;
   font-weight: bold;
 }
-.ProseMirror h2:first-child,
+.tiptap h2:first-child,
 .rendered-content h2:first-child {
   margin-top: 0.5rem;
 }
-.ProseMirror h3,
+.tiptap h3,
 .rendered-content h3 {
   margin-top: 1em;
   font-size: 100%;
   font-weight: bold;
 }
-.ProseMirror h3:first-child,
+.tiptap h3:first-child,
 .rendered-content h3:first-child {
   margin-top: 0.5rem;
 }
 
-.ProseMirror .small p,
-.ProseMirror.small p,
+.tiptap .small p,
+.tiptap.small p,
 .rendered-content .small p,
 .rendered-content.small p {
   margin-bottom: 0.5rem;
 }
 
-.ProseMirror li p,
+.tiptap li p,
 .rendered-content li p {
   margin-bottom: 0.5rem;
 }
 
-.ProseMirror p,
+.tiptap p,
 .rendered-content p {
   margin-bottom: 0.7rem;
 }
 
-.ProseMirror blockquote,
+.tiptap blockquote,
 .rendered-content blockquote {
   margin-left: 1.5em;
   padding-left: 1em;
@@ -141,12 +141,12 @@ footer {
   opacity: 50%;
 }
 
-.ProseMirror {
+.tiptap {
   height: auto;
   max-width: 40rem;
 }
 
-.ProseMirror:after {
+.tiptap:after {
   font-size: 0.7rem;
   color: #999;
   width: 100%;

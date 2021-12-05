@@ -16,7 +16,7 @@ import { callCreateCard } from './api/cards/create'
 import { TransitionGroup, CSSTransition } from 'react-transition-group'
 
 type Card_ = Card & { _count: { cardUpdates: number } }
-type Board_ = Board & { owner: User, cards: Card_[] }
+type Board_ = Board & { owner: User, cards: Card_[], canEdit: boolean }
 
 type Props = {
   userId: User['id'] | null
@@ -39,17 +39,17 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     }
   })
   if (!board) { return { notFound: true } }
-  return {
-    props: serialize({
-      userId: session?.userId,
-      board
-    })
+  const props: Props = {
+    userId: session?.userId,
+    board: { ...board, canEdit: await canEditBoard(session?.userId, board) },
   }
+  return { props: serialize(props) }
 }
 
+// TODO: handle the "private" checkbox
 function CardAddForm(props: { addCard: (title: string) => Promise<void> }) {
   const [titleInput, setTitleInput] = useState('')
-  const onSubmit = (e: any) => {
+  const onSubmit = e => {
     e.preventDefault()
     // TODO: what exactly will happen in prod if this fails with err500?
     props.addCard(titleInput)
@@ -79,14 +79,13 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
       ...await callCreateCard({ boardId: board.id, title }),
       _count: { cardUpdates: 0 }
     }
-    console.log(card)
     setCards(_.concat(cards, [card]))
   }
 
   const isPrivate = boardSettings(board).visibility === 'private'
   const [normalCards, archivedCards] =
     _.partition(
-      _.reverse(_.sortBy(cards, ['createdAt'])),
+      _.orderBy(cards, ['createdAt'], ['desc']),
       card => (!cardSettings(card).archived))
   return (
     <>
@@ -105,7 +104,7 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
         {isPrivate ? "🔒 " : ""}
         {board.title}
       </h1>
-      {canEditBoard(userId, board) && <CardAddForm addCard={addCard} />}
+      {board.canEdit && <CardAddForm addCard={addCard} />}
       <div style={{ marginTop: "30px" }}>
         <TransitionGroup>
           {normalCards.map(card => (
