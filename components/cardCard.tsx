@@ -3,7 +3,7 @@ import { Badge, Card as BSCard } from 'react-bootstrap'
 import Link from 'next/link'
 import { Card } from "@prisma/client"
 
-type Card_ = Card & { _count: { cardUpdates: number } }
+type Card_ = Card & { _count: { comments: number } }
 
 // A card, e.g. in a board view.
 export function CardCard({ card }: { card: Card_ }) {
@@ -13,7 +13,7 @@ export function CardCard({ card }: { card: Card_ }) {
       <BSCard.Body>
         {isPrivate ? "🔒 " : ""}
         <Link href={`/ShowCard?cardId=${card.id}`}><a className="stretched-link">{card.title}</a></Link>
-        <Badge pill style={{ marginLeft: ".5em" }} bg="secondary">{card._count.cardUpdates}</Badge>
+        <Badge pill style={{ marginLeft: ".5em" }} bg="secondary">{card._count.comments}</Badge>
       </BSCard.Body>
     </BSCard>
   )

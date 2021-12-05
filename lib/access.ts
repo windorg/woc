@@ -5,7 +5,7 @@ import { boardSettings, cardSettings } from "./model-settings"
 // Types that are just enough to decide if something can be seen
 type PBoard = Pick<Board, 'ownerId' | 'settings'>
 type PCard = Pick<Card, 'ownerId' | 'settings'> & { board: PBoard }
-type PCardUpdate = Pick<Card, 'ownerId' | 'settings'> & { card: PCard }
+type PComment = Pick<Card, 'ownerId' | 'settings'> & { card: PCard }
 
 const pBoardSelect = { ownerId: true, settings: true }
 const pCardSelect = { ownerId: true, settings: true, board: { select: pBoardSelect } }

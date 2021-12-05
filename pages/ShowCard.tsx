@@ -1,8 +1,8 @@
 import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
-import type { Board, User, Card, CardUpdate } from '@prisma/client'
+import type { Board, User, Card, Comment } from '@prisma/client'
 import { prisma } from '../lib/db'
-import { cardSettings, cardUpdateSettings } from '../lib/model-settings'
+import { cardSettings, commentSettings } from '../lib/model-settings'
 import { Badge, Breadcrumb, Button, Form } from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb, CardCrumb } from '../components/breadcrumbs'
 import React, { createRef, Ref, RefObject } from 'react'
@@ -21,7 +21,7 @@ import { useRouter } from 'next/router'
 type Card_ = Card & {
   owner: User
   board: Board
-  cardUpdates: CardUpdate[]
+  comments: Comment[]
   canEdit: boolean
 }
 
@@ -38,7 +38,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     include: {
       owner: true,
       board: true,
-      cardUpdates: true
+      comments: true
     }
   })
   if (!card) { return { notFound: true } }
@@ -48,9 +48,9 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   }
 }
 
-function Comment(props: { card: Card, comment: CardUpdate }) {
+function Comment(props: { card: Card, comment: Comment }) {
   const { card, comment } = props
-  const settings = cardUpdateSettings(comment)
+  const settings = commentSettings(comment)
   const isPrivate = settings.visibility === 'private'
   const cardClasses =
     "woc-card-update" +
@@ -61,7 +61,7 @@ function Comment(props: { card: Card, comment: CardUpdate }) {
       <div style={{ marginBottom: ".3em" }}>
         <span className="text-muted small">
           <Link href={`/ShowCard?cardId=${card.id}#comment-${comment.id}`}>
-            <a>{comment.createdAt.toString()} {/* TODO <a>{renderTimestamp(cardUpdate.createdAt)}</a> */}</a>
+            <a>{comment.createdAt.toString()} {/* TODO <a>{renderTimestamp(comment.createdAt)}</a> */}</a>
           </Link>
         </span>
         {isPrivate && "🔒 "}
@@ -109,8 +109,8 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
   const isPrivate = settings.visibility === 'private'
   const [pinnedUpdates, otherUpdates] =
     _.partition(
-      _.orderBy(card.cardUpdates, ['createdAt'], ['desc']),
-      comment => cardUpdateSettings(comment).pinned)
+      _.orderBy(card.comments, ['createdAt'], ['desc']),
+      comment => commentSettings(comment).pinned)
   const reverseOrderUpdates =
     <>
       <p className="text-muted small">Comment order: oldest to newest.</p>

@@ -30,14 +30,14 @@ model Card {
   ownerId             String               @map("owner_id") @db.Uuid
   board               Board                @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cards_ref_board_id")
   owner               User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cards_ref_owner_id")
-  cardUpdates         CardUpdate[]
+  comments            Comment[]
   subscriptionUpdates SubscriptionUpdate[]
 
   @@index([ownerId], map: "cards_owner_id_index")
   @@map("cards")
 }
 
-model CardUpdate {
+model Comment {
   id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   content             String
@@ -72,15 +72,15 @@ model Reply {
   id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   content             String
-  cardUpdateId        String               @map("card_update_id") @db.Uuid
+  commentId           String               @map("card_update_id") @db.Uuid
   authorId            String?              @map("author_id") @db.Uuid
   settings            Json
   author              User?                @relation(fields: [authorId], references: [id], onUpdate: NoAction, map: "replies_ref_author_id")
-  cardUpdate          CardUpdate           @relation(fields: [cardUpdateId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "replies_ref_card_update_id")
+  comment             Comment              @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "replies_ref_card_update_id")
   subscriptionUpdates SubscriptionUpdate[]
 
   @@index([authorId], map: "replies_author_id_index")
-  @@index([cardUpdateId], map: "replies_card_update_id_index")
+  @@index([commentId], map: "replies_card_update_id_index")
   @@map("replies")
 }
 
@@ -89,7 +89,7 @@ model SubscriptionUpdate {
   subscriberId String                   @map("subscriber_id") @db.Uuid
   boardId      String?                  @map("board_id") @db.Uuid
   cardId       String?                  @map("card_id") @db.Uuid
-  cardUpdateId String?                  @map("card_update_id") @db.Uuid
+  commentId    String?                  @map("card_update_id") @db.Uuid
   replyId      String?                  @map("reply_id") @db.Uuid
   createdAt    DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
   updateKind   subscription_update_kind @map("update_kind")
@@ -97,13 +97,13 @@ model SubscriptionUpdate {
   isRead       Boolean                  @default(false) @map("is_read")
   board        Board?                   @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_board_id")
   card         Card?                    @relation(fields: [cardId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_card_id")
-  cardUpdate   CardUpdate?              @relation(fields: [cardUpdateId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_card_update_id")
+  comment      Comment?                 @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_card_update_id")
   reply        Reply?                   @relation(fields: [replyId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "subscription_updates_ref_reply_id")
   user         User                     @relation(fields: [subscriberId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_subscriber_id")
 
   @@index([boardId], map: "subscription_updates_board_id_index")
   @@index([cardId], map: "subscription_updates_card_id_index")
-  @@index([cardUpdateId], map: "subscription_updates_card_update_id_index")
+  @@index([commentId], map: "subscription_updates_card_update_id_index")
   @@index([replyId], map: "subscription_updates_reply_id_index")
   @@index([subscriberId], map: "subscription_updates_subscriber_id_index")
   @@map("subscription_updates")
@@ -120,7 +120,7 @@ model User {
   failedLoginAttempts Int                  @default(0) @map("failed_login_attempts")
   boards              Board[]
   cards               Card[]
-  card_updates        CardUpdate[]
+  comments            Comment[]
   followedUserRefs    FollowedUser[]       @relation("followed_users_followed_user_idTousers")
   subscriberRefs      FollowedUser[]       @relation("followed_users_subscriber_idTousers")
   replies             Reply[]
@@ -141,6 +141,6 @@ enum job_status {
 enum subscription_update_kind {
   suk_board
   suk_card
-  suk_card_update
+  suk_card_update // Comment
   suk_reply
 }

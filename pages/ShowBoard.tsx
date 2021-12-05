@@ -15,7 +15,7 @@ import { SuperJSONResult } from 'superjson/dist/types'
 import { callCreateCard } from './api/cards/create'
 import { TransitionGroup, CSSTransition } from 'react-transition-group'
 
-type Card_ = Card & { _count: { cardUpdates: number } }
+type Card_ = Card & { _count: { comments: number } }
 type Board_ = Board & { owner: User, cards: Card_[], canEdit: boolean }
 
 type Props = {
@@ -33,7 +33,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
       owner: true,
       cards: {
         include: {
-          _count: { select: { cardUpdates: true } }
+          _count: { select: { comments: true } }
         }
       }
     }
@@ -77,7 +77,7 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
   const addCard = async (title: Card['title']) => {
     const card = {
       ...await callCreateCard({ boardId: board.id, title }),
-      _count: { cardUpdates: 0 }
+      _count: { comments: 0 }
     }
     setCards(_.concat(cards, [card]))
   }
