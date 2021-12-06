@@ -14,6 +14,7 @@
     "commonmark": "^0.30.0",
     "deep-map": "^2.0.0",
     "es6-weak-map": "^2.0.3",
+    "formik": "^2.2.9",
     "immutability-helper": "^3.1.1",
     "linkifyjs": "^3.0.4",
     "lodash": "^4.17.21",

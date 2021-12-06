@@ -1,7 +1,3 @@
-import Code from '@tiptap/extension-code'
-import CodeBlock from '@tiptap/extension-code-block'
-import Heading from '@tiptap/extension-heading'
-import HardBreak from '@tiptap/extension-hard-break'
 import Typography from '@tiptap/extension-typography'
 import { useEditor, EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -40,7 +36,8 @@ let Tiptap = forwardRef((props: {
   content: string
   onSubmit: () => void
 }, ref: React.ForwardedRef<TiptapMethods>) => {
-  // TODO: why does it rerender on every keypress?
+  // NB: This rerenders on every keypress, which is apparently a feature:
+  // https://github.com/ueberdosis/tiptap/issues/2158#issuecomment-979325997
   const editor = useEditor({
     extensions: [
       StarterKit.configure({

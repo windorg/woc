@@ -12,8 +12,9 @@ import { canEditBoard } from '../lib/access'
 import { getSession } from 'next-auth/react'
 import { serialize, deserialize } from 'superjson'
 import { SuperJSONResult } from 'superjson/dist/types'
-import { callCreateCard } from './api/cards/create'
+import { callCreateCard, CreateCardBody } from './api/cards/create'
 import { TransitionGroup, CSSTransition } from 'react-transition-group'
+import { useFormik } from 'formik'
 
 type Card_ = Card & { _count: { comments: number } }
 type Board_ = Board & { owner: User, cards: Card_[], canEdit: boolean }
@@ -46,27 +47,34 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   return { props: serialize(props) }
 }
 
-// TODO: handle the "private" checkbox
-function CardAddForm(props: { addCard: (title: string) => Promise<void> }) {
-  const [titleInput, setTitleInput] = useState('')
-  const onSubmit = e => {
-    e.preventDefault()
-    // TODO: what exactly will happen in prod if this fails with err500?
-    props.addCard(titleInput)
-    setTitleInput('')
-  }
-  return <>
-    <Form onSubmit={onSubmit}>
-      <Form.Group className="mb-3" controlId="cardAddTitle">
+function CardAddForm(props: {
+  addCard: (body: Omit<CreateCardBody, 'boardId'>) => Promise<void>
+}) {
+  const formik = useFormik({
+    initialValues: {
+      title: '',
+      private: false,
+    },
+    onSubmit: values => {
+      // TODO: what exactly will happen in prod if the backend fails with err500 for whatever reason?
+      props.addCard(values)
+      formik.resetForm()
+    }
+  })
+  return (
+    <Form onSubmit={formik.handleSubmit}>
+      <Form.Group className="mb-3">
         <Form.Control
-          type="text" placeholder="Card title" style={{ maxWidth: "40rem", width: "100%" }}
-          value={titleInput}
-          onInput={e => setTitleInput((e.target as HTMLInputElement).value)} />
+          name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
+          type="text" placeholder="Card title"
+          style={{ maxWidth: "40rem", width: "100%" }} />
       </Form.Group>
       <Button variant="primary" type="submit">Add a card</Button>
-      <Form.Check className="ms-4" inline id="cardPrivate" type="checkbox" label="🔒 Private card" />
+      <Form.Check
+        name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
+        type="checkbox" className="ms-4" inline label="🔒 Private card" />
     </Form>
-  </>
+  )
 }
 
 const ShowBoard: NextPage<SuperJSONResult> = (props) => {
@@ -74,9 +82,9 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
 
   const [cards, setCards] = useState(board.cards)
 
-  const addCard = async (title: Card['title']) => {
+  const addCard = async (body: Omit<CreateCardBody, 'boardId'>) => {
     const card = {
-      ...await callCreateCard({ boardId: board.id, title }),
+      ...await callCreateCard({ boardId: board.id, ...body }),
       _count: { comments: 0 }
     }
     setCards(_.concat(cards, [card]))

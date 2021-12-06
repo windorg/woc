@@ -82,11 +82,12 @@ function CommentComponent(props: { card: Card, comment: Comment }) {
 }
 
 // TODO handle the "private" checkbox
+// TODO don't allow posting with empty content
 class AddCommentForm extends React.Component<{
   cardId: Card['id']
   addComment: (comment: Comment) => void
 }> {
-  // We use a class because refs are set to null on rerenders when using functional components
+  // NB: We use a class because refs are set to null on rerenders when using functional components
   private editorRef: RefObject<TiptapMethods>
   constructor(props) {
     super(props)

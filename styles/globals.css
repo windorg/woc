@@ -161,7 +161,7 @@ footer {
 }
 
 .woc-board-private,
-.woc-card-private,
+.woc-card.woc-card-private,
 .woc-card-update-private {
   background-color: #efefef;
 }
