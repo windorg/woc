@@ -57,9 +57,9 @@ function CommentComponent(props: { card: Card, comment: Comment }) {
   const settings = commentSettings(comment)
   const isPrivate = settings.visibility === 'private'
   const cardClasses =
-    "woc-card-update" +
-    (isPrivate ? " woc-card-update-private" : "") +
-    (settings.pinned ? " woc-card-update-pinned" : "")
+    "woc-comment" +
+    (isPrivate ? " woc-comment-private" : "") +
+    (settings.pinned ? " woc-comment-pinned" : "")
   return (
     <div key={comment.id} id={`comment-${comment.id}`} className={cardClasses}>
       <div style={{ marginBottom: ".3em" }}>

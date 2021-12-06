@@ -162,33 +162,33 @@ footer {
 
 .woc-board-private,
 .woc-card.woc-card-private,
-.woc-card-update-private {
+.woc-comment-private {
   background-color: #efefef;
 }
 
-.woc-card-update {
+.woc-comment {
   padding: 0.5rem 1rem;
   margin: 1.25rem 0;
   max-width: 40rem;
   border-radius: 5px;
 }
 
-.woc-card-update-pinned,
-.woc-card-update-private.woc-card-update-pinned {
+.woc-comment-pinned,
+.woc-comment-private.woc-comment-pinned {
   background-color: #ffecd0;
 }
 
-.woc-card-update-private {
+.woc-comment-private {
   margin-bottom: 1.75rem; /* Only for private ones! We don't want them to stick together. */
 }
 
-.woc-card-update-replies .reply {
+.woc-comment-replies .reply {
   margin-top: 0.9rem;
 }
-.woc-card-update-replies .reply .woc-reply-info {
+.woc-comment-replies .reply .woc-reply-info {
   margin-bottom: 0.15rem;
 }
-.woc-card-update-replies:not(:empty) {
+.woc-comment-replies:not(:empty) {
   margin-bottom: 1.75rem;
   margin-top: 1.25rem;
 }
@@ -198,7 +198,7 @@ footer {
   margin-bottom: 2rem;
 }
 
-.woc-feed-item-card-update {
+.woc-feed-item-comment {
   max-width: 40rem;
 }
 
