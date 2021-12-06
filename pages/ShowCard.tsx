@@ -17,6 +17,8 @@ import { canEditCard } from 'lib/access'
 import { getSession } from 'next-auth/react'
 import { callCreateComment } from './api/comments/create'
 import update from 'immutability-helper'
+import ReactTimeAgo from 'react-time-ago'
+import { BiLink } from 'react-icons/bi'
 
 type Card_ = Card & {
   owner: User
@@ -65,7 +67,10 @@ function CommentComponent(props: { card: Card, comment: Comment }) {
       <div style={{ marginBottom: ".3em" }}>
         <span className="text-muted small">
           <Link href={`/ShowCard?cardId=${card.id}#comment-${comment.id}`}>
-            <a>{comment.createdAt.toString()} {/* TODO <a>{renderTimestamp(comment.createdAt)}</a> */}</a>
+            <a>
+              <BiLink className="mb-1 me-1" />
+              <ReactTimeAgo timeStyle="twitter-minute-now" date={comment.createdAt} />
+            </a>
           </Link>
         </span>
         {isPrivate && "🔒 "}
