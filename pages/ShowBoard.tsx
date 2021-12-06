@@ -12,9 +12,10 @@ import { canEditBoard } from '../lib/access'
 import { getSession } from 'next-auth/react'
 import { serialize, deserialize } from 'superjson'
 import { SuperJSONResult } from 'superjson/dist/types'
-import { callCreateCard, CreateCardBody } from './api/cards/create'
+import { callCreateCard } from './api/cards/create'
 import { TransitionGroup, CSSTransition } from 'react-transition-group'
 import { useFormik } from 'formik'
+import update from 'immutability-helper'
 
 type Card_ = Card & { _count: { comments: number } }
 type Board_ = Board & { owner: User, cards: Card_[], canEdit: boolean }
@@ -47,17 +48,22 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   return { props: serialize(props) }
 }
 
-function CardAddForm(props: {
-  addCard: (body: Omit<CreateCardBody, 'boardId'>) => Promise<void>
+function AddCardForm(props: {
+  boardId: Board['id']
+  afterCardCreated: (card: Card) => void
 }) {
   const formik = useFormik({
     initialValues: {
       title: '',
       private: false,
     },
-    onSubmit: values => {
+    onSubmit: async (values) => {
       // TODO: what exactly will happen in prod if the backend fails with err500 for whatever reason?
-      props.addCard(values)
+      const card = await callCreateCard({
+        boardId: props.boardId,
+        ...values
+      })
+      props.afterCardCreated(card)
       formik.resetForm()
     }
   })
@@ -81,13 +87,9 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
   const { userId, board } = deserialize<Props>(props)
 
   const [cards, setCards] = useState(board.cards)
-
-  const addCard = async (body: Omit<CreateCardBody, 'boardId'>) => {
-    const card = {
-      ...await callCreateCard({ boardId: board.id, ...body }),
-      _count: { comments: 0 }
-    }
-    setCards(_.concat(cards, [card]))
+  const addCard = (card: Card) => {
+    const card_ = { ...card, _count: { comments: 0 } }
+    setCards(prevCards => update(prevCards, { $push: [card_] }))
   }
 
   const isPrivate = boardSettings(board).visibility === 'private'
@@ -95,6 +97,7 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
     _.partition(
       _.orderBy(cards, ['createdAt'], ['desc']),
       card => (!cardSettings(card).archived))
+
   return (
     <>
       <Head>
@@ -112,7 +115,7 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
         {isPrivate ? "🔒 " : ""}
         {board.title}
       </h1>
-      {board.canEdit && <CardAddForm addCard={addCard} />}
+      {board.canEdit && <AddCardForm boardId={board.id} afterCardCreated={addCard} />}
       <div style={{ marginTop: "30px" }}>
         <TransitionGroup>
           {normalCards.map(card => (
