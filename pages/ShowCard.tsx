@@ -19,6 +19,7 @@ import { callCreateComment } from './api/comments/create'
 import update from 'immutability-helper'
 import ReactTimeAgo from 'react-time-ago'
 import { BiLink } from 'react-icons/bi'
+import { Formik } from 'formik'
 
 type Card_ = Card & {
   owner: User
@@ -44,6 +45,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     }
   })
   if (!card) { return { notFound: true } }
+  // TODO filter out private comments
   const props: Props = {
     initialCard: {
       ...card, canEdit: await canEditCard(session?.userId, card)
@@ -73,7 +75,7 @@ function CommentComponent(props: { card: Card, comment: Comment }) {
             </a>
           </Link>
         </span>
-        {isPrivate && "🔒 "}
+        {isPrivate && " 🔒 "}
         <div className="ms-3 d-inline-flex">
           {/* TODO render comment buttons */}
         </div>
@@ -86,11 +88,10 @@ function CommentComponent(props: { card: Card, comment: Comment }) {
   )
 }
 
-// TODO handle the "private" checkbox
 // TODO don't allow posting with empty content
 class AddCommentForm extends React.Component<{
   cardId: Card['id']
-  addComment: (comment: Comment) => void
+  afterCommentCreated: (comment: Comment) => void
 }> {
   // NB: We use a class because refs are set to null on rerenders when using functional components
   private editorRef: RefObject<TiptapMethods>
@@ -99,23 +100,32 @@ class AddCommentForm extends React.Component<{
     this.editorRef = createRef()
   }
   render() {
-    const submit = async () => {
-      if (!this.editorRef.current) throw Error("Editor is not initialized")
-      const comment = await callCreateComment({
-        cardId: this.props.cardId,
-        content: this.editorRef.current.getMarkdown()
-      })
-      this.props.addComment(comment)
-      this.editorRef.current.clearContent()
-    }
     return (
-      <Form onSubmit={e => { e.preventDefault(); submit() }}>
-        <div className="mb-3" style={{ maxWidth: "40rem", width: "100%" }}>
-          <Tiptap content="" onSubmit={submit} ref={this.editorRef} />
-        </div>
-        <Button variant="primary" type="submit">Post</Button>
-        <Form.Check className="ms-4" inline id="commentPrivate" type="checkbox" label="🔒 Private comment" />
-      </Form >
+      <Formik
+        initialValues={{ private: false }}
+        onSubmit={async (values) => {
+          if (!this.editorRef.current) throw Error("Editor is not initialized")
+          const comment = await callCreateComment({
+            cardId: this.props.cardId,
+            content: this.editorRef.current.getMarkdown(),
+            ...values
+          })
+          this.props.afterCommentCreated(comment)
+          this.editorRef.current.clearContent()
+        }}
+      >
+        {props => (
+          <Form onSubmit={props.handleSubmit}>
+            <div className="mb-3" style={{ maxWidth: "40rem", width: "100%" }}>
+              <Tiptap content="" onSubmit={props.handleSubmit} ref={this.editorRef} />
+            </div>
+            <Button variant="primary" type="submit">Post</Button>
+            <Form.Check
+              name="private" id="private" checked={props.values.private} onChange={props.handleChange}
+              type="checkbox" className="ms-4" inline label="🔒 Private comment" />
+          </Form>
+        )}
+      </Formik>
     )
   }
 }
@@ -140,11 +150,11 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
         {_.concat(R.reverse(pinnedComments), R.reverse(otherComments))
           .map(comment => (<CommentComponent key={comment.id} card={card} comment={comment} />))}
       </div>
-      {card.canEdit && <AddCommentForm addComment={addComment} cardId={card.id} />}
+      {card.canEdit && <AddCommentForm afterCommentCreated={addComment} cardId={card.id} />}
     </>
   const normalOrderComments =
     <>
-      {card.canEdit && <AddCommentForm addComment={addComment} cardId={card.id} />}
+      {card.canEdit && <AddCommentForm afterCommentCreated={addComment} cardId={card.id} />}
       <div className="mt-4">
         {_.concat(pinnedComments, otherComments)
           .map(comment => (<CommentComponent key={comment.id} card={card} comment={comment} />))}
