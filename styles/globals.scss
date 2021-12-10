@@ -7,17 +7,16 @@ pre {
   border: 1px solid #bbb;
   padding: 0.75rem 1rem;
   border-radius: 0.3rem;
-}
-
-pre code {
-  word-wrap: normal;
+  code {
+    word-wrap: normal;
+  }
 }
 
 a {
   text-decoration: none !important;
-}
-a:hover {
-  text-decoration: underline !important;
+  &:hover {
+    text-decoration: underline !important;
+  }
 }
 
 ol.breadcrumb {
@@ -37,68 +36,60 @@ ol.breadcrumb {
   box-shadow: #ffe988 0px 0px 0px 3px;
 }
 
-.tiptap h1,
-.rendered-content h1 {
-  margin-top: 1.5em;
-  font-size: 130%;
-  font-weight: bold;
-}
-.tiptap h1:first-child,
-.rendered-content h1:first-child {
-  margin-top: 0.5rem;
-}
-.tiptap h2,
-.rendered-content h2 {
-  margin-top: 1em;
-  font-size: 110%;
-  font-weight: bold;
-}
-.tiptap h2:first-child,
-.rendered-content h2:first-child {
-  margin-top: 0.5rem;
-}
-.tiptap h3,
-.rendered-content h3 {
-  margin-top: 1em;
-  font-size: 100%;
-  font-weight: bold;
-}
-.tiptap h3:first-child,
-.rendered-content h3:first-child {
-  margin-top: 0.5rem;
-}
-
-.tiptap .small p,
-.tiptap.small p,
-.rendered-content .small p,
-.rendered-content.small p {
-  margin-bottom: 0.5rem;
-}
-
-.tiptap li p,
-.rendered-content li p {
-  margin-bottom: 0.5rem;
-}
-
-.tiptap p,
-.rendered-content p {
-  margin-bottom: 0.7rem;
+.tiptap,
+.rendered-content {
+  h1,
+  h2,
+  h3 {
+    font-weight: bold;
+  }
+  h1 {
+    margin-top: 1.5em;
+    font-size: 130%;
+    &:first-child {
+      margin-top: 0.5rem;
+    }
+  }
+  h2 {
+    margin-top: 1em;
+    font-size: 110%;
+    &:first-child {
+      margin-top: 0.5rem;
+    }
+  }
+  h3 {
+    margin-top: 1em;
+    font-size: 100%;
+    &:first-child {
+      margin-top: 0.5rem;
+    }
+  }
+  &.small p,
+  .small p {
+    margin-bottom: 0.5rem;
+  }
+  li p {
+    margin-bottom: 0.5rem;
+  }
+  p {
+    margin-bottom: 0.7rem;
+  }
+  blockquote {
+    margin-left: 1.5em;
+    padding-left: 1em;
+    font-size: 90%;
+    border-left: 4px solid rgb(200, 200, 200);
+  }
 }
 
-.tiptap blockquote,
-.rendered-content blockquote {
-  margin-left: 1.5em;
-  padding-left: 1em;
-  font-size: 90%;
-  border-left: 4px solid rgb(200, 200, 200);
-}
-
-.woc-card.woc-card-enter {
-  background-color: #fff59d;
-}
-.woc-card.woc-card-enter-active {
-  background-color: white;
-  transition: background-color 350ms ease-in;
+.woc-card {
+  &.woc-card-enter {
+    background-color: #fff59d;
+  }
+  &.woc-card-enter-active {
+    background-color: white;
+    transition: background-color 350ms ease-in;
+  }
 }
 
 /* https://dev.to/nehalahmadkhan/how-to-make-footer-stick-to-bottom-of-web-page-3i14 */
@@ -155,6 +146,54 @@ footer {
   content: "Markdown, ⌘B ⌘I are OK; ⌘E for code; ⇧⏎ quits code blocks";
 }
 
+.link-button {
+  line-height: 100%;
+  user-select: none;
+  &:hover {
+    margin-bottom: -1px;
+    border-bottom: 1px solid;
+    &.link-button-dashed {
+      border-bottom: 1px dashed;
+    }
+    cursor: pointer;
+  }
+}
+
+.link-button.dropdown {
+  &.show:hover {
+    border-bottom: 0;
+    margin-bottom: 0;
+  }
+  .dropdown-toggle::after {
+    display: none;
+  }
+  .dropdown-menu {
+    *:hover {
+      text-decoration: none !important;
+    }
+  }
+}
+
+// Make the menu smaller
+.woc-comment-more {
+  .dropdown-menu {
+    padding: 0.4rem 0;
+  }
+  .dropdown-divider {
+    margin: 0.4rem 0;
+  }
+  .dropdown-item {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.8rem;
+    line-height: 160%;
+    .icon {
+      height: 1rem;
+      width: 1rem;
+      margin-right: 0.4rem;
+    }
+  }
+}
+
 #inbox-badge {
   bottom: 2px;
   position: relative;
@@ -168,6 +207,7 @@ footer {
 
 .woc-comment {
   padding: 0.5rem 1rem;
+  padding-top: 0.75rem;
   margin: 1.25rem 0;
   max-width: 40rem;
   border-radius: 5px;

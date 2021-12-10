@@ -1,6 +1,6 @@
-import { Board, Card, User } from "@prisma/client"
+import { Board, Card, User, Comment } from "@prisma/client"
 import { prisma } from "./db"
-import { boardSettings, cardSettings } from "./model-settings"
+import { boardSettings, cardSettings, commentSettings } from "./model-settings"
 
 // Types that are just enough to decide if something can be seen
 type PBoard = Pick<Board, 'ownerId' | 'settings'>
@@ -20,6 +20,12 @@ const findBoard = (id) => prisma.board.findUnique({
 const findCard = (id) => prisma.card.findUnique({
   where: { id },
   select: pCardSelect,
+  rejectOnNotFound: true
+})
+
+const findComment = (id) => prisma.comment.findUnique({
+  where: { id },
+  select: pCommentSelect,
   rejectOnNotFound: true
 })
 
@@ -45,4 +51,14 @@ export async function canSeeCard(userId: User['id'] | null, card: Card['id'] | P
 export async function canEditCard(userId: User['id'] | null, card: Card['id'] | PCard) {
   const card_ = typeof card === 'object' ? card : await findCard(card)
   return card_.ownerId === userId
+}
+
+export async function canSeeComment(userId: User['id'] | null, comment: Comment['id'] | PComment) {
+  const comment_ = typeof comment === 'object' ? comment : await findComment(comment)
+  return comment_.ownerId === userId
+    || (commentSettings(comment_).visibility === 'public' && canSeeCard(userId, comment_.card))
+}
+export async function canEditComment(userId: User['id'] | null, comment: Comment['id'] | PComment) {
+  const comment_ = typeof comment === 'object' ? comment : await findComment(comment)
+  return comment_.ownerId === userId
 }
