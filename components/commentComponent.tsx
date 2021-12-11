@@ -10,6 +10,7 @@ import { AiOutlinePushpin } from 'react-icons/ai'
 import copy from 'copy-to-clipboard'
 import { callUpdateComment } from '../pages/api/comments/update'
 import styles from './commentComponent.module.scss'
+import { callDeleteComment } from 'pages/api/comments/delete'
 
 function MenuCopyLink(props: { card: Card, comment: Comment }) {
   return <Dropdown.Item
@@ -42,11 +43,18 @@ function MenuMakePrivate(props: { private, updateComment }) {
     </Dropdown.Item>
 }
 
+function MenuDelete(props: { deleteComment }) {
+  return <Dropdown.Item className="text-danger"
+    onClick={() => props.deleteComment()}>
+    <BiTrashAlt className="icon" /><span>Delete</span>
+  </Dropdown.Item>
+}
 
 export function CommentComponent(props: {
   card: Card
   comment: Comment
-  afterCommentUpdated: (comment: Comment) => void
+  afterCommentUpdated: (newComment: Comment) => void
+  afterCommentDeleted: () => void
 }) {
   const { card, comment } = props
   const settings = commentSettings(comment)
@@ -60,6 +68,11 @@ export function CommentComponent(props: {
   const updateComment = async (data) => {
     const diff = await callUpdateComment({ commentId: comment.id, ...data })
     props.afterCommentUpdated({ ...comment, ...diff })
+  }
+
+  const deleteComment = async () => {
+    await callDeleteComment({ commentId: comment.id })
+    props.afterCommentDeleted()
   }
 
   return (
@@ -87,9 +100,7 @@ export function CommentComponent(props: {
               <MenuMakePrivate private={isPrivate} updateComment={updateComment} />
               <MenuPin pinned={settings.pinned} updateComment={updateComment} />
               <Dropdown.Divider />
-              <Dropdown.Item className="text-danger">
-                <BiTrashAlt className="icon" /><span>Delete</span>
-              </Dropdown.Item>
+              <MenuDelete deleteComment={deleteComment} />
             </Dropdown.Menu>
           </Dropdown>
 

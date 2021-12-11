@@ -105,6 +105,10 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
     setCard(prevCard => update(prevCard, {
       comments: { $apply: xs => _.map(xs, x => (x.id === comment.id ? comment : x)) }
     }))
+  const deleteComment = (id: Comment['id']) =>
+    setCard(prevCard => update(prevCard, {
+      comments: { $apply: xs => _.filter(xs, x => (x.id !== id)) }
+    }))
 
   const settings = cardSettings(card)
   const isPrivate = settings.visibility === 'private'
@@ -119,7 +123,9 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
         {_.concat(R.reverse(pinnedComments), R.reverse(otherComments))
           .map(comment => (
             <CommentComponent key={comment.id} card={card} comment={comment}
-              afterCommentUpdated={updateComment} />
+              afterCommentUpdated={updateComment}
+              afterCommentDeleted={() => deleteComment(comment.id)}
+            />
           ))}
       </div>
       {card.canEdit && <AddCommentForm afterCommentCreated={addComment} cardId={card.id} />}
@@ -131,7 +137,9 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
         {_.concat(pinnedComments, otherComments)
           .map(comment => (
             <CommentComponent key={comment.id} card={card} comment={comment}
-              afterCommentUpdated={updateComment} />
+              afterCommentUpdated={updateComment}
+              afterCommentDeleted={() => deleteComment(comment.id)}
+            />
           ))}
       </div>
     </>
