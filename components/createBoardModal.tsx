@@ -1,0 +1,49 @@
+import React from 'react'
+import Modal from 'react-bootstrap/Modal'
+import Form from 'react-bootstrap/Form'
+import Button from 'react-bootstrap/Button'
+import { Formik } from 'formik'
+import { callCreateBoard } from 'pages/api/boards/create'
+import { Board } from '@prisma/client'
+
+export function CreateBoardModal(props: {
+  show: boolean
+  onHide: () => void
+  afterBoardCreated: (newBoard: Board) => void
+}) {
+  return (
+    <Modal
+      size="lg"
+      show={props.show}
+      onHide={props.onHide}
+    >
+      <Modal.Header closeButton>
+        <Modal.Title>Create a board</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Formik
+          initialValues={{ private: false, title: "" }}
+          onSubmit={async (values) => {
+            const board = await callCreateBoard(values)
+            props.afterBoardCreated(board)
+          }}
+        >
+          {props => (
+            <Form onSubmit={props.handleSubmit}>
+              <Form.Group className="mb-3">
+                <Form.Control
+                  name="title" id="title" value={props.values.title} onChange={props.handleChange}
+                  type="text" placeholder="Board title"
+                  style={{ width: "100%" }} />
+              </Form.Group>
+              <Button variant="primary" type="submit">Create a board</Button>
+              <Form.Check
+                name="private" id="private" checked={props.values.private} onChange={props.handleChange}
+                type="checkbox" className="ms-4" inline label="🔒 Private board" />
+            </Form>
+          )}
+        </Formik>
+      </Modal.Body>
+    </Modal>
+  )
+}
