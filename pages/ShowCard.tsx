@@ -103,11 +103,11 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
     setCard(prevCard => update(prevCard, { comments: { $push: [comment] } }))
   const updateComment = (comment: Comment) =>
     setCard(prevCard => update(prevCard, {
-      comments: { $apply: xs => _.map(xs, x => (x.id === comment.id ? comment : x)) }
+      comments: xs => _.map(xs, x => (x.id === comment.id ? comment : x))
     }))
   const deleteComment = (id: Comment['id']) =>
     setCard(prevCard => update(prevCard, {
-      comments: { $apply: xs => _.filter(xs, x => (x.id !== id)) }
+      comments: xs => R.filter(x => (x.id !== id), xs)
     }))
 
   const settings = cardSettings(card)

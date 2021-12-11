@@ -23,6 +23,7 @@
     "module-alias": "^2.2.2",
     "next": "^12.0.4",
     "next-auth": "^0.0.0-pr.3217.87a21677",
+    "node-filter-async": "^3.0.0",
     "prosemirror-commands": "^1.1.12",
     "prosemirror-dropcursor": "^1.4.0",
     "prosemirror-gapcursor": "^1.2.0",

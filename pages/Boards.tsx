@@ -11,6 +11,8 @@ import { canSeeBoard } from '../lib/access'
 import { BoardCard } from '../components/boardCard'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
+import * as R from 'ramda'
+import filterAsync from 'node-filter-async'
 
 type Board_ = Board & { owner: { handle: string, displayName: string } }
 
@@ -34,7 +36,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
       where: { NOT: { ownerId: session.userId } },
       include,
       orderBy: { createdAt: "desc" }
-    }).then(x => x.filter(board => canSeeBoard(session.userId, board)))
+    }).then(x => filterAsync(x, board => canSeeBoard(session.userId, board)))
     return { props: serialize({ userId: session.userId, userBoards, otherBoards }) }
   } else {
     // Not logged in
@@ -42,7 +44,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     const otherBoards = await prisma.board.findMany({
       include,
       orderBy: { createdAt: "desc" }
-    }).then(x => x.filter(board => canSeeBoard(null, board)))
+    }).then(x => filterAsync(x, board => canSeeBoard(null, board)))
     return { props: serialize({ userId: null, userBoards, otherBoards }) }
   }
 }

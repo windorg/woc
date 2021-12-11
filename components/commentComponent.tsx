@@ -104,7 +104,10 @@ export function CommentComponent(props: {
             </Dropdown.Menu>
           </Dropdown>
 
-          {/* TODO implement editing and deletion */}
+          {/* TODO implement editing*/}
+          {/* TODO "edit" and most items shouldn't show up for others' comments */}
+          {/* TODO confirmation dialog for deletion */}
+          {/* TODO should not call 'deleteComment' on the DOM if deletion actually fails */}
         </div>
       </div>
       <div className="rendered-content">
