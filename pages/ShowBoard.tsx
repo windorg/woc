@@ -8,7 +8,7 @@ import { BoardsCrumb, UserCrumb, BoardCrumb } from '../components/breadcrumbs'
 import { CardCard } from '../components/cardCard'
 import React, { useState } from 'react'
 import _ from 'lodash'
-import { canEditBoard } from '../lib/access'
+import { canEditBoard, canSeeBoard } from '../lib/access'
 import { getSession } from 'next-auth/react'
 import { serialize, deserialize } from 'superjson'
 import { SuperJSONResult } from 'superjson/dist/types'
@@ -40,7 +40,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
       }
     }
   })
-  if (!board) { return { notFound: true } }
+  if (!board || !(await canSeeBoard(session?.userId, board))) { return { notFound: true } }
   const props: Props = {
     userId: session?.userId,
     board: { ...board, canEdit: await canEditBoard(session?.userId, board) },
