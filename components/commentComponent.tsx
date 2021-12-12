@@ -15,8 +15,12 @@ import styles from './commentComponent.module.scss'
 import { callDeleteComment } from 'pages/api/comments/delete'
 import { Tiptap, TiptapMethods } from './tiptap'
 
+type Comment_ = Comment & {
+  canEdit: boolean
+}
+
 // Timestamp & the little lock
-function InfoHeader(props: { card: Card, comment: Comment }) {
+function InfoHeader(props: { card: Card, comment: Comment_ }) {
   const settings = commentSettings(props.comment)
   const isPrivate = settings.visibility === 'private'
   return (
@@ -27,12 +31,12 @@ function InfoHeader(props: { card: Card, comment: Comment }) {
           <ReactTimeAgo timeStyle="twitter-minute-now" date={props.comment.createdAt} />
         </a>
       </Link>
-      {isPrivate && <span className="ms-2"> 🔒</span>}
+      {isPrivate && <span className="ms-2">🔒</span>}
     </span>
   )
 }
 
-function MenuCopyLink(props: { card: Card, comment: Comment }) {
+function MenuCopyLink(props: { card: Card, comment: Comment_ }) {
   return <Dropdown.Item
     onClick={() => { copy(`https://windofchange.me/ShowCard?cardId=${props.card.id}#comment-${props.comment.id}`) }}>
     <BiShareAlt className="icon" /><span>Copy link</span>
@@ -69,7 +73,7 @@ function MenuDelete(props: { deleteComment }) {
 // Component in "normal" mode
 function ShowComment(props: {
   card: Card
-  comment: Comment
+  comment: Comment_
   afterCommentUpdated: (newComment: Comment) => void
   afterCommentDeleted: () => void
   startEditing: () => void
@@ -98,24 +102,26 @@ function ShowComment(props: {
       <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
         <InfoHeader {...props} />
         <div className="d-inline-flex small text-muted" style={{ marginTop: "3px" }}>
-          <span className="link-button link-button-dashed d-flex align-items-center"
-            onClick={props.startEditing}>
-            <BiPencil className="me-1" /><span>Edit</span>
-          </span>
+          {props.comment.canEdit &&
+            <span className="link-button d-flex align-items-center"
+              onClick={props.startEditing}>
+              <BiPencil className="me-1" /><span>Edit</span>
+            </span>
+          }
           <Dropdown className={`${styles.moreButton} link-button ms-3 d-flex align-items-center`}>
             <Dropdown.Toggle as="span" className="d-flex align-items-center">
               <BiDotsHorizontal className="me-1" /><span>More</span>
             </Dropdown.Toggle>
             <Dropdown.Menu>
               <MenuCopyLink card={card} comment={comment} />
-              <MenuMakePrivate private={isPrivate} updateComment={updateComment} />
-              <MenuPin pinned={settings.pinned} updateComment={updateComment} />
-              <Dropdown.Divider />
-              <MenuDelete deleteComment={deleteComment} />
+              {props.comment.canEdit && <>
+                <MenuMakePrivate private={isPrivate} updateComment={updateComment} />
+                <MenuPin pinned={settings.pinned} updateComment={updateComment} />
+                <Dropdown.Divider />
+                <MenuDelete deleteComment={deleteComment} />
+              </>}
             </Dropdown.Menu>
           </Dropdown>
-
-          {/* TODO "edit" and most items shouldn't show up for others' comments */}
           {/* TODO confirmation dialog for deletion */}
           {/* TODO should not call 'deleteComment' on the DOM if deletion actually fails */}
         </div>
@@ -129,7 +135,7 @@ function ShowComment(props: {
 // Component in "edit" mode
 class EditComment extends React.Component<{
   card: Card
-  comment: Comment
+  comment: Comment_
   afterCommentUpdated: (newComment: Comment) => void
   afterCommentDeleted: () => void
   stopEditing: () => void
@@ -187,7 +193,7 @@ class EditComment extends React.Component<{
 
 export function CommentComponent(props: {
   card: Card
-  comment: Comment
+  comment: Comment_
   afterCommentUpdated: (newComment: Comment) => void
   afterCommentDeleted: () => void
 }) {

@@ -21,6 +21,7 @@ import { CommentComponent } from '../components/commentComponent'
 type Card_ = Card & {
   owner: User
   board: Board
+  // We assume that we can edit comments iff we can edit the card
   comments: Comment[]
   canEdit: boolean
 }
@@ -122,7 +123,7 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
       <div className="mb-3">
         {_.concat(R.reverse(pinnedComments), R.reverse(otherComments))
           .map(comment => (
-            <CommentComponent key={comment.id} card={card} comment={comment}
+            <CommentComponent key={comment.id} card={card} comment={{ ...comment, canEdit: card.canEdit }}
               afterCommentUpdated={updateComment}
               afterCommentDeleted={() => deleteComment(comment.id)}
             />
@@ -136,7 +137,7 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
       <div className="mt-4">
         {_.concat(pinnedComments, otherComments)
           .map(comment => (
-            <CommentComponent key={comment.id} card={card} comment={comment}
+            <CommentComponent key={comment.id} card={card} comment={{ ...comment, canEdit: card.canEdit }}
               afterCommentUpdated={updateComment}
               afterCommentDeleted={() => deleteComment(comment.id)}
             />
