@@ -4,18 +4,16 @@ import type { Board, User } from '@prisma/client'
 import { prisma } from '../lib/db'
 import React, { useState } from 'react'
 import Breadcrumb from 'react-bootstrap/Breadcrumb'
-import Button from 'react-bootstrap/Button'
 import { BoardsCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
 import { getSession } from 'next-auth/react'
 import { canSeeBoard } from '../lib/access'
-import { BoardCard } from '../components/boardCard'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
 import filterAsync from 'node-filter-async'
-import { CreateBoardModal } from '../components/createBoardModal'
 import update from 'immutability-helper'
 import _ from 'lodash'
+import { BoardsList } from 'components/boardsList'
 
 type Board_ = Board & { owner: { handle: string, displayName: string } }
 
@@ -89,40 +87,31 @@ const Boards: NextPage<SuperJSONResult> = (props) => {
       {user
         ?
         <>
-          <CreateBoardModal
-            show={createBoardShown}
-            onHide={() => setCreateBoardShown(false)}
-            afterBoardCreated={board => {
-              addUserBoard(board)
-              setCreateBoardShown(false)
-            }}
-          />
-          <h1 className="mt-5">
-            Your boards
-            {/* Without the lineHeight it looks very slightly weird*/}
-            <Button className="ms-4" size="sm" variant="outline-primary" style={{ lineHeight: 1.54 }}
-              onClick={() => setCreateBoardShown(true)}>
-              + New
-            </Button>
-          </h1>
-          <div className="row-cols-1 row-cols-md2">
-            {_.orderBy(userBoards, ['createdAt'], ['desc'])
-              .map(board => <BoardCard key={board.id} board={board} kind='own-board' />)}
-          </div>
-          <h1 className="mt-5">Others&apos; public boards</h1>
-          <div className="row-cols-1 row-cols-md2">
-            {_.orderBy(otherBoards, ['createdAt'], ['desc'])
-              .map(board => <BoardCard key={board.id} board={board} kind='other-board' />)}
-          </div>
+          <BoardsList
+            allowNewBoard={true}
+            afterBoardCreated={addUserBoard}
+            heading="Your boards"
+            boards={userBoards}
+            showUserHandles={false}
+            kind="own-board" />
+          <BoardsList
+            allowNewBoard={false}
+            heading="Others' public boards"
+            boards={otherBoards}
+            showUserHandles={false}
+            kind="other-board" />
         </>
         :
         <>
-          <p>To create your own boards, please <Link href="/LoginOrSignup"><a>sign up</a></Link>.</p>
-          <h1 className="mt-5">Public boards</h1>
-          <div className="row-cols-1 row-cols-md2">
-            {_.orderBy(otherBoards, ['createdAt'], ['desc'])
-              .map(board => <BoardCard key={board.id} board={board} kind='other-board' />)}
-          </div>
+          <p>
+            To create your own boards, please <Link href="/LoginOrSignup"><a>sign up</a></Link>.
+          </p>
+          <BoardsList
+            allowNewBoard={false}
+            heading="Public boards"
+            boards={otherBoards}
+            showUserHandles={false}
+            kind="other-board" />
         </>
       }
     </>
