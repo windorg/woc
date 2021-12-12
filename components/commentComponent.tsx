@@ -1,16 +1,36 @@
 import { Card, Comment } from '@prisma/client'
 import { commentSettings } from '../lib/model-settings'
 import { Dropdown } from 'react-bootstrap'
-import React from 'react'
+import React, { createRef, RefObject, useState } from 'react'
 import Link from 'next/link'
-import { renderMarkdown } from '../lib/markdown'
+import { RenderedMarkdown, markdownToHtml } from '../lib/markdown'
 import ReactTimeAgo from 'react-time-ago'
 import { BiLink, BiPencil, BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 'react-icons/bi'
 import { AiOutlinePushpin } from 'react-icons/ai'
 import copy from 'copy-to-clipboard'
+import Form from 'react-bootstrap/Form'
+import Button from 'react-bootstrap/Button'
 import { callUpdateComment } from '../pages/api/comments/update'
 import styles from './commentComponent.module.scss'
 import { callDeleteComment } from 'pages/api/comments/delete'
+import { Tiptap, TiptapMethods } from './tiptap'
+
+// Timestamp & the little lock
+function InfoHeader(props: { card: Card, comment: Comment }) {
+  const settings = commentSettings(props.comment)
+  const isPrivate = settings.visibility === 'private'
+  return (
+    <span className="small d-flex">
+      <Link href={`/ShowCard?cardId=${props.card.id}#comment-${props.comment.id}`}>
+        <a className="d-flex align-items-center">
+          <BiLink className="me-1" />
+          <ReactTimeAgo timeStyle="twitter-minute-now" date={props.comment.createdAt} />
+        </a>
+      </Link>
+      {isPrivate && <span className="ms-2"> 🔒</span>}
+    </span>
+  )
+}
 
 function MenuCopyLink(props: { card: Card, comment: Comment }) {
   return <Dropdown.Item
@@ -20,27 +40,23 @@ function MenuCopyLink(props: { card: Card, comment: Comment }) {
 }
 
 function MenuPin(props: { pinned, updateComment }) {
-  return props.pinned
-    ?
-    <Dropdown.Item onClick={() => props.updateComment({ pinned: false })}>
-      <AiOutlinePushpin className="icon" /><span>Unpin</span>
+  return (
+    <Dropdown.Item onClick={() => props.updateComment({ pinned: !props.pinned })}>
+      {props.pinned
+        ? <><AiOutlinePushpin className="icon" /><span>Unpin</span></>
+        : <><AiOutlinePushpin className="icon" /><span>Pin</span></>}
     </Dropdown.Item>
-    :
-    <Dropdown.Item onClick={() => props.updateComment({ pinned: true })}>
-      <AiOutlinePushpin className="icon" /><span>Pin</span>
-    </Dropdown.Item>
+  )
 }
 
 function MenuMakePrivate(props: { private, updateComment }) {
-  return props.private
-    ?
-    <Dropdown.Item onClick={() => props.updateComment({ private: false })}>
-      <BiLockOpen className="icon" /><span>Make public</span>
+  return (
+    <Dropdown.Item onClick={() => props.updateComment({ private: !props.private })}>
+      {props.private
+        ? <><BiLockOpen className="icon" /><span>Make public</span></>
+        : <><BiLock className="icon" /><span>Make private</span></>}
     </Dropdown.Item>
-    :
-    <Dropdown.Item onClick={() => props.updateComment({ private: true })}>
-      <BiLock className="icon" /><span>Make private</span>
-    </Dropdown.Item>
+  )
 }
 
 function MenuDelete(props: { deleteComment }) {
@@ -50,11 +66,13 @@ function MenuDelete(props: { deleteComment }) {
   </Dropdown.Item>
 }
 
-export function CommentComponent(props: {
+// Component in "normal" mode
+function ShowComment(props: {
   card: Card
   comment: Comment
   afterCommentUpdated: (newComment: Comment) => void
   afterCommentDeleted: () => void
+  startEditing: () => void
 }) {
   const { card, comment } = props
   const settings = commentSettings(comment)
@@ -78,17 +96,10 @@ export function CommentComponent(props: {
   return (
     <div key={comment.id} id={`comment-${comment.id}`} className={classes}>
       <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
-        <span className="text-muted small d-flex">
-          <Link href={`/ShowCard?cardId=${card.id}#comment-${comment.id}`}>
-            <a className="d-flex align-items-center">
-              <BiLink className="me-1" />
-              <ReactTimeAgo timeStyle="twitter-minute-now" date={comment.createdAt} />
-            </a>
-          </Link>
-          {isPrivate && <span className="ms-2"> 🔒</span>}
-        </span>
+        <InfoHeader {...props} />
         <div className="d-inline-flex small text-muted" style={{ marginTop: "3px" }}>
-          <span className="link-button link-button-dashed d-flex align-items-center">
+          <span className="link-button link-button-dashed d-flex align-items-center"
+            onClick={props.startEditing}>
             <BiPencil className="me-1" /><span>Edit</span>
           </span>
           <Dropdown className={`${styles.moreButton} link-button ms-3 d-flex align-items-center`}>
@@ -104,17 +115,87 @@ export function CommentComponent(props: {
             </Dropdown.Menu>
           </Dropdown>
 
-          {/* TODO implement editing*/}
           {/* TODO "edit" and most items shouldn't show up for others' comments */}
           {/* TODO confirmation dialog for deletion */}
           {/* TODO should not call 'deleteComment' on the DOM if deletion actually fails */}
         </div>
       </div>
-      <div className="rendered-content">
-        {renderMarkdown(comment.content)}
-      </div>
+      <RenderedMarkdown className="rendered-content" markdown={comment.content} />
       {/* TODO render replies */}
     </div>
+  )
+}
+
+// Component in "edit" mode
+class EditComment extends React.Component<{
+  card: Card
+  comment: Comment
+  afterCommentUpdated: (newComment: Comment) => void
+  afterCommentDeleted: () => void
+  stopEditing: () => void
+}> {
+  private editorRef: RefObject<TiptapMethods>
+  constructor(props) {
+    super(props)
+    this.editorRef = createRef()
+  }
+
+  render() {
+    const { card, comment } = this.props
+    const settings = commentSettings(comment)
+    const isPrivate = settings.visibility === 'private'
+    const classes = `
+      ${styles.comment}
+      ${isPrivate ? styles.commentPrivate : ""}
+      ${settings.pinned ? styles.commentPinned : ""}
+      `
+
+    const handleSubmit = async (e?: any) => {
+      e && e.preventDefault()
+      if (!this.editorRef.current) throw Error("Editor is not initialized")
+      const diff = await callUpdateComment({
+        commentId: comment.id,
+        content: this.editorRef.current.getMarkdown()
+      })
+      const newComment = { ...comment, ...diff }
+      this.props.stopEditing()
+      this.props.afterCommentUpdated(newComment)
+    }
+
+    return (
+      <div key={comment.id} id={`comment-${comment.id}`} className={classes}>
+        <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
+          <InfoHeader {...this.props} />
+        </div>
+        <Form onSubmit={handleSubmit} >
+          <div className="mb-2">
+            <Tiptap
+              content={markdownToHtml(this.props.comment.content)}
+              onSubmit={handleSubmit}
+              ref={this.editorRef} />
+          </div>
+          <Button size="sm" variant="primary" type="submit">Save</Button>
+          <Button size="sm" variant="secondary" type="button" className="ms-2"
+            onClick={this.props.stopEditing}>
+            Cancel
+          </Button>
+        </Form>
+      </div>
+    )
+  }
+}
+
+export function CommentComponent(props: {
+  card: Card
+  comment: Comment
+  afterCommentUpdated: (newComment: Comment) => void
+  afterCommentDeleted: () => void
+}) {
+  const [editing, setEditing] = useState(false)
+  return (
+    editing
+      ? <EditComment {...props} stopEditing={() => setEditing(false)} />
+      : <ShowComment {...props} startEditing={() => setEditing(true)} />
   )
 }
 
