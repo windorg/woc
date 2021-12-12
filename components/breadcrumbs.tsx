@@ -18,7 +18,7 @@ export function BoardsCrumb(props: { active?: boolean }) {
   )
 }
 
-export function UserCrumb(props: { active?: boolean, user: User }) {
+export function UserCrumb(props: { active?: boolean, user: Pick<User, 'id' | 'handle'> }) {
   return (
     <LinkItem active={props.active} href={`/ShowUser?userId=${props.user.id}`}>
       <em>@{props.user.handle}</em>

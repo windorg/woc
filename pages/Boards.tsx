@@ -72,8 +72,6 @@ const Boards: NextPage<SuperJSONResult> = (props) => {
     setUserBoards(prev => update(prev, { $push: [board_] }))
   }
 
-  const [createBoardShown, setCreateBoardShown] = useState(false)
-
   return (
     <>
       <Head>
