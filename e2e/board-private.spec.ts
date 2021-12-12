@@ -21,13 +21,10 @@ test('private boards should not be visible to others', async ({ page }) => {
   // Check that Alice can see the board
   await expect(page.locator('body')).toHaveText(/.*Alice's private board.*/)
 
-  // TODO: profile URL test
-  // TODO: "all public boards" test
-
-  // // Get Alice's profile URL
-  // await page.click('text=@alice')
-  // // await page.waitForURL(/.*\/ShowUser.*/)
-  // const aliceUrl = page.url()
+  // Get Alice's profile URL
+  await page.click('text=@alice')
+  await page.waitForURL(/.*\/ShowUser.*/)
+  const aliceUrl = page.url()
 
   await page.click('text=Log out')
 
@@ -42,7 +39,15 @@ test('private boards should not be visible to others', async ({ page }) => {
   await expect(page.locator('h1')).toHaveText(/404/)
   await expect(page.locator('body')).not.toHaveText(/.*Alice's private board.*/)
 
-  // // Expect that the board is not visible in Alice's profile
-  // await page.goto(aliceUrl)
-  // await expect(page.locator('body')).not.toHaveText(/.*Alice's private board.*/)
+  // Expect that the board is not visible in Alice's profile
+  await page.goto(aliceUrl)
+  await expect(page.locator('body')).not.toHaveText(/.*Alice's private board.*/)
+
+  // Log out and check that the board is not visible in the public boards list
+  await Promise.all([
+    page.waitForNavigation(),
+    page.click('text=Log out')
+  ])
+  await page.goto('/Boards')
+  await expect(page.locator('body')).not.toHaveText(/.*Alice's private board.*/)
 })
