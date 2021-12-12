@@ -31,8 +31,7 @@ export function BoardsList(props: {
     <h1 className="mt-5">
       {props.heading}
       {props.allowNewBoard && <>
-        {/* Without the lineHeight it looks very slightly weird*/}
-        <Button className="ms-4" size="sm" variant="outline-primary" style={{ lineHeight: 1.54 }}
+        <Button className="ms-4" size="sm" variant="outline-primary"
           onClick={() => setCreateBoardShown(true)}>
           + New
         </Button>

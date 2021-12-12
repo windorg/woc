@@ -14,8 +14,10 @@ import { serialize, deserialize } from 'superjson'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { callCreateCard } from './api/cards/create'
 import { TransitionGroup, CSSTransition } from 'react-transition-group'
-import { useFormik } from 'formik'
+import { Formik, useFormik } from 'formik'
 import update from 'immutability-helper'
+import { callUpdateBoard } from './api/boards/update'
+import { BiPencil } from 'react-icons/bi'
 
 type Card_ = Card & { _count: { comments: number } }
 type Board_ = Board & { owner: User, cards: Card_[], canEdit: boolean }
@@ -83,20 +85,78 @@ function AddCardForm(props: {
   )
 }
 
-const ShowBoard: NextPage<SuperJSONResult> = (props) => {
-  const { userId, board } = deserialize<Props>(props)
+class EditBoard extends React.Component<{
+  board: Board
+  afterBoardUpdated: (newBoard: Board) => void
+  stopEditing: () => void
+}> {
+  render() {
+    const { board } = this.props
+    const isPrivate = boardSettings(board).visibility == 'private'
+    return (
+      <Formik
+        initialValues={{ private: isPrivate, title: board.title }}
+        onSubmit={async (values) => {
+          const diff = await callUpdateBoard({ boardId: board.id, ...values })
+          this.props.stopEditing()
+          this.props.afterBoardUpdated({ ...board, ...diff })
+        }}
+      >
+        {props => (<>
+          <Form onSubmit={props.handleSubmit} className="mt-4 mb-5 p-4 rounded"
+            style={{ boxShadow: "0px 8px 50px 8px rgba(138,138,138,0.75)", maxWidth: "40rem" }}>
+            <Form.Group className="mb-3">
+              <Form.Control
+                name="title" id="title" value={props.values.title} onChange={props.handleChange}
+                type="text" placeholder="Board title"
+                style={{ maxWidth: "40rem", width: "100%", fontWeight: 600 }} />
+            </Form.Group>
+            <Button size="sm" variant="primary" type="submit">Save</Button>
+            <Button className="ms-2" size="sm" variant="secondary" type="button"
+              onClick={this.props.stopEditing}>
+              Cancel
+            </Button>
+            {/* TODO this should become an action instead */}
+            <Form.Check
+              name="private" id="private" checked={props.values.private} onChange={props.handleChange}
+              className="ms-4" type="checkbox" inline label="🔒 Private board" />
+            <p className="small text-muted mt-3">
+              <em>Ultra Material Design™️.</em> I will fix this later.
+            </p>
+          </Form>
+        </>)}
+      </Formik>
+    )
+  }
+}
 
-  const [cards, setCards] = useState(board.cards)
+const ShowBoard: NextPage<SuperJSONResult> = (props) => {
+  const { board: initialBoard } = deserialize<Props>(props)
+
+  const [cards, setCards] = useState(initialBoard.cards)
   const addCard = (card: Card) => {
     const card_ = { ...card, _count: { comments: 0 } }
     setCards(prevCards => update(prevCards, { $push: [card_] }))
   }
+
+  const [board, setBoard] = useState(_.omit(initialBoard, ['cards']))
+
+  const [editing, setEditing] = useState(false)
 
   const isPrivate = boardSettings(board).visibility === 'private'
   const [normalCards, archivedCards] =
     _.partition(
       _.orderBy(cards, ['createdAt'], ['desc']),
       card => (!cardSettings(card).archived))
+
+  const EditButton = () => (
+    <span
+      className="ms-4 text-muted link-button d-inline-flex align-items-center"
+      style={{ fontSize: "50%" }}
+      onClick={() => setEditing(true)}>
+      <BiPencil className="me-1" /><span>Edit</span>
+    </span>
+  )
 
   return (
     <>
@@ -111,10 +171,19 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
         <BoardCrumb board={board} active />
       </Breadcrumb>
 
-      <h1 style={{ marginBottom: "1em" }}>
-        {isPrivate ? "🔒 " : ""}
-        {board.title}
-      </h1>
+      {(board.canEdit && editing)
+        ?
+        <EditBoard
+          board={board}
+          afterBoardUpdated={board => setBoard(prev => ({ ...prev, ...board }))}
+          stopEditing={() => setEditing(false)} />
+        :
+        <h1 style={{ marginBottom: "1em" }}>
+          {isPrivate ? "🔒 " : ""}
+          {board.title}
+          <EditButton />
+        </h1>
+      }
       {board.canEdit && <AddCardForm boardId={board.id} afterCardCreated={addCard} />}
       <div style={{ marginTop: "30px" }}>
         <TransitionGroup>

@@ -190,6 +190,11 @@ footer {
   background-color: #efefef;
 }
 
+// Without the line-height it looks very slightly weird
+.btn.btn-sm {
+  line-height: 1.54 !important;
+}
+
 .woc-comment-replies .reply {
   margin-top: 0.9rem;
 }
