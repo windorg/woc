@@ -36,7 +36,7 @@ export function CreateBoardModal(props: {
                 <Form.Control
                   name="title" id="title" value={props.values.title} onChange={props.handleChange}
                   type="text" placeholder="Board title"
-                  style={{ width: "100%" }} ref={titleInputRef} />
+                  ref={titleInputRef} />
               </Form.Group>
               <Button variant="primary" type="submit">Create a board</Button>
               <Form.Check

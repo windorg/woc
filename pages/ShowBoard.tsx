@@ -18,6 +18,7 @@ import { Formik, useFormik } from 'formik'
 import update from 'immutability-helper'
 import { callUpdateBoard } from './api/boards/update'
 import { BiPencil } from 'react-icons/bi'
+import { EditBoardModal } from 'components/editBoardModal'
 
 type Card_ = Card & { _count: { comments: number } }
 type Board_ = Board & { owner: User, cards: Card_[], canEdit: boolean }
@@ -85,51 +86,6 @@ function AddCardForm(props: {
   )
 }
 
-class EditBoard extends React.Component<{
-  board: Board
-  afterBoardUpdated: (newBoard: Board) => void
-  stopEditing: () => void
-}> {
-  render() {
-    const { board } = this.props
-    const isPrivate = boardSettings(board).visibility === 'private'
-    return (
-      <Formik
-        initialValues={{ private: isPrivate, title: board.title }}
-        onSubmit={async (values) => {
-          const diff = await callUpdateBoard({ boardId: board.id, ...values })
-          this.props.stopEditing()
-          this.props.afterBoardUpdated({ ...board, ...diff })
-        }}
-      >
-        {props => (<>
-          <Form onSubmit={props.handleSubmit} className="mt-4 mb-5 p-4 rounded"
-            style={{ boxShadow: "0px 8px 50px 8px rgba(138,138,138,0.75)", maxWidth: "40rem" }}>
-            <Form.Group className="mb-3">
-              <Form.Control
-                name="title" id="title" value={props.values.title} onChange={props.handleChange}
-                type="text" placeholder="Board title" autoFocus
-                style={{ maxWidth: "40rem", width: "100%", fontWeight: 600 }} />
-            </Form.Group>
-            <Button size="sm" variant="primary" type="submit">Save</Button>
-            <Button className="ms-2" size="sm" variant="secondary" type="button"
-              onClick={this.props.stopEditing}>
-              Cancel
-            </Button>
-            {/* TODO this should become an action instead */}
-            <Form.Check
-              name="private" id="private" checked={props.values.private} onChange={props.handleChange}
-              className="ms-4" type="checkbox" inline label="🔒 Private board" />
-            <p className="small text-muted mt-3">
-              <em>Ultra Material Design™️.</em> I will fix this later.
-            </p>
-          </Form>
-        </>)}
-      </Formik>
-    )
-  }
-}
-
 const ShowBoard: NextPage<SuperJSONResult> = (props) => {
   const { board: initialBoard } = deserialize<Props>(props)
 
@@ -171,19 +127,23 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
         <BoardCrumb board={board} active />
       </Breadcrumb>
 
-      {(board.canEdit && editing)
-        ?
-        <EditBoard
-          board={board}
-          afterBoardUpdated={board => setBoard(prev => ({ ...prev, ...board }))}
-          stopEditing={() => setEditing(false)} />
-        :
-        <h1 style={{ marginBottom: "1em" }}>
-          {isPrivate ? "🔒 " : ""}
-          {board.title}
-          <EditButton />
-        </h1>
-      }
+      <h1 style={{ marginBottom: "1em" }}>
+        {isPrivate ? "🔒 " : ""}
+        {board.title}
+        {board.canEdit &&
+          <EditBoardModal
+            board={board}
+            show={editing}
+            onHide={() => setEditing(false)}
+            afterBoardUpdated={board => {
+              setBoard(prev => ({ ...prev, ...board }))
+              setEditing(false)
+            }}
+          />
+        }
+        {board.canEdit && <EditButton />}
+      </h1>
+
       {board.canEdit && <AddCardForm boardId={board.id} afterCardCreated={addCard} />}
       <div style={{ marginTop: "30px" }}>
         <TransitionGroup>
