@@ -108,7 +108,7 @@ class EditBoard extends React.Component<{
             <Form.Group className="mb-3">
               <Form.Control
                 name="title" id="title" value={props.values.title} onChange={props.handleChange}
-                type="text" placeholder="Board title"
+                type="text" placeholder="Board title" autoFocus
                 style={{ maxWidth: "40rem", width: "100%", fontWeight: 600 }} />
             </Form.Group>
             <Button size="sm" variant="primary" type="submit">Save</Button>

@@ -177,6 +177,7 @@ class EditComment extends React.Component<{
           <div className="mb-2">
             <Tiptap
               content={markdownToHtml(this.props.comment.content)}
+              autoFocus
               onSubmit={handleSubmit}
               ref={this.editorRef} />
           </div>

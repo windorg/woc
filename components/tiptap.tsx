@@ -34,6 +34,7 @@ export type TiptapMethods = {
 // Takes content in HTML
 let Tiptap = forwardRef((props: {
   content: string
+  autoFocus?: boolean
   onSubmit: () => void
 }, ref: React.ForwardedRef<TiptapMethods>) => {
   // NB: This rerenders on every keypress, which is apparently a feature:
@@ -55,6 +56,7 @@ let Tiptap = forwardRef((props: {
       }
     },
     content: props.content,
+    autofocus: props.autoFocus ? 'end' : null
   })
   const editorRef: React.MutableRefObject<Editor | null> = useRef(null)
   useImperativeHandle(ref, () => ({

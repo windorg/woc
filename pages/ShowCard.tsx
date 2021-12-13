@@ -83,7 +83,11 @@ class AddCommentForm extends React.Component<{
         {props => (
           <Form onSubmit={props.handleSubmit}>
             <div className="mb-3" style={{ maxWidth: "40rem", width: "100%" }}>
-              <Tiptap content="" onSubmit={props.handleSubmit} ref={this.editorRef} />
+              <Tiptap
+                content=""
+                autoFocus
+                onSubmit={props.handleSubmit}
+                ref={this.editorRef} />
             </div>
             <Button variant="primary" type="submit">Post</Button>
             <Form.Check
