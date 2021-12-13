@@ -22,7 +22,6 @@ export class EditCardModal extends React.Component<{
   }
   render() {
     const { card } = this.props
-    const isPrivate = cardSettings(card).visibility === 'private'
     return (
       <Modal
         size="lg"
@@ -35,7 +34,7 @@ export class EditCardModal extends React.Component<{
         </Modal.Header>
         <Modal.Body>
           <Formik
-            initialValues={{ private: isPrivate, title: card.title }}
+            initialValues={{ title: card.title }}
             onSubmit={async (values) => {
               const diff = await callUpdateCard({ cardId: card.id, ...values })
               this.props.afterCardUpdated({ ...card, ...diff })
@@ -53,10 +52,11 @@ export class EditCardModal extends React.Component<{
                   onClick={this.props.onHide}>
                   Cancel
                 </Button>
-                {/* TODO this should become an action instead */}
-                <Form.Check
-                  name="private" id="private" checked={props.values.private} onChange={props.handleChange}
-                  className="ms-4" type="checkbox" inline label="🔒 Private card" />
+                {/* TODO reverse order checkbox */}
+                {/* <Form.Check
+                  name="reverseOrder" id="reverseOrder" checked={props.values.reverseOrder}
+                  onChange={props.handleChange}
+                  className="ms-4" type="checkbox" inline label="Reverse order" /> */}
               </Form>
             </>)}
           </Formik>

@@ -16,10 +16,12 @@ import { getSession } from 'next-auth/react'
 import { callCreateComment } from './api/comments/create'
 import update from 'immutability-helper'
 import { Formik } from 'formik'
-import { CommentComponent } from '../components/commentComponent'
+import { CommentComponent } from 'components/commentComponent'
 import { callUpdateCard } from './api/cards/update'
 import { EditCardModal } from 'components/editCardModal'
+import { CardMenu } from 'components/cardMenu'
 import { BiPencil } from 'react-icons/bi'
+import { useRouter } from 'next/router'
 
 type Card_ = Card & {
   owner: User
@@ -154,13 +156,21 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
       </div>
     </>
 
+  const router = useRouter()
+
   const EditButton = () => (
     <span
-      className="ms-4 text-muted link-button d-inline-flex align-items-center"
-      style={{ fontSize: "50%" }}
+      className="text-muted me-3 link-button d-inline-flex align-items-center"
       onClick={() => setEditCardShown(true)}>
       <BiPencil className="me-1" /><span>Edit</span>
     </span>
+  )
+
+  const MoreButton = () => (
+    <CardMenu
+      card={card}
+      afterCardUpdated={card => setCard(prev => ({ ...prev, ...card }))}
+      afterCardDeleted={() => router.replace(`/ShowBoard?boardId=${card.boardId}`)} />
   )
 
   return (
@@ -193,9 +203,14 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
             }}
           />
         }
-        {card.canEdit && <EditButton />}
+        <span
+          className="ms-5"
+          style={{ fontSize: "50%" }}
+        >
+          {card.canEdit && <EditButton />}
+          <MoreButton />
+        </span>
 
-        {/* TODO card delete buttons */}
       </h1>
       {settings.reverseOrder ? reverseOrderComments : normalOrderComments}
     </>

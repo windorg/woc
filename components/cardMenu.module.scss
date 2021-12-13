@@ -1,21 +1,3 @@
-.comment {
-  padding: 0.5rem 1rem;
-  padding-top: 0.75rem;
-  margin: 1.25rem 0;
-  max-width: 40rem;
-  border-radius: 5px;
-}
-
-.commentPrivate {
-  background-color: var(--private-color);
-  margin-bottom: 1.75rem; /* Only for private ones! We don't want them to stick together. */
-}
-
-.commentPinned,
-.commentPrivate.commentPinned {
-  background-color: var(--pinned-color);
-}
-
 // Make the menu smaller & align icons properly
 .moreButton :global {
   .dropdown-menu {
