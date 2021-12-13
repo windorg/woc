@@ -157,7 +157,7 @@ class EditComment extends React.Component<{
       `
 
     const handleSubmit = async (e?: any) => {
-      e && e.preventDefault()
+      if (e) e.preventDefault()
       if (!this.editorRef.current) throw Error("Editor is not initialized")
       const diff = await callUpdateComment({
         commentId: comment.id,

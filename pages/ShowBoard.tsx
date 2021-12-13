@@ -92,7 +92,7 @@ class EditBoard extends React.Component<{
 }> {
   render() {
     const { board } = this.props
-    const isPrivate = boardSettings(board).visibility == 'private'
+    const isPrivate = boardSettings(board).visibility === 'private'
     return (
       <Formik
         initialValues={{ private: isPrivate, title: board.title }}

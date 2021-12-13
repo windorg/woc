@@ -7,6 +7,7 @@
       "esnext"
     ],
     "noImplicitAny": false,
+    "noFallthroughCasesInSwitch": true,
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
