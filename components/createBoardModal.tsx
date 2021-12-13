@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import Modal from 'react-bootstrap/Modal'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
@@ -11,11 +11,13 @@ export function CreateBoardModal(props: {
   onHide: () => void
   afterBoardCreated: (newBoard: Board) => void
 }) {
+  const titleInputRef: React.RefObject<HTMLInputElement> = useRef(null)
   return (
     <Modal
       size="lg"
       show={props.show}
       onHide={props.onHide}
+      onEntered={() => titleInputRef.current!.focus()}
     >
       <Modal.Header closeButton>
         <Modal.Title>Create a board</Modal.Title>
@@ -34,7 +36,7 @@ export function CreateBoardModal(props: {
                 <Form.Control
                   name="title" id="title" value={props.values.title} onChange={props.handleChange}
                   type="text" placeholder="Board title"
-                  style={{ width: "100%" }} />
+                  style={{ width: "100%" }} ref={titleInputRef} />
               </Form.Group>
               <Button variant="primary" type="submit">Create a board</Button>
               <Form.Check

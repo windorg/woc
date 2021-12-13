@@ -47,8 +47,6 @@ export default async function updateBoard(req: UpdateBoardRequest, res: NextApiR
       diff.title = body.title
     }
     if (body.private !== undefined) {
-      // TODO "settings.x" is probably wrong, should use boardSettings(settings) and create an ESLint rule, although I'm
-      // not certain
       diff.settings.visibility = (body.private ? "private" : "public")
     }
     await prisma.board.update({

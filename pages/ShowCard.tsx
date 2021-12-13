@@ -17,6 +17,9 @@ import { callCreateComment } from './api/comments/create'
 import update from 'immutability-helper'
 import { Formik } from 'formik'
 import { CommentComponent } from '../components/commentComponent'
+import { callUpdateCard } from './api/cards/update'
+import { EditCardModal } from 'components/editCardModal'
+import { BiPencil } from 'react-icons/bi'
 
 type Card_ = Card & {
   owner: User
@@ -115,6 +118,8 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
       comments: xs => R.filter(x => (x.id !== id), xs)
     }))
 
+  const [editCardShown, setEditCardShown] = useState(false)
+
   const settings = cardSettings(card)
   const isPrivate = settings.visibility === 'private'
   const [pinnedComments, otherComments] =
@@ -148,6 +153,16 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
           ))}
       </div>
     </>
+
+  const EditButton = () => (
+    <span
+      className="ms-4 text-muted link-button d-inline-flex align-items-center"
+      style={{ fontSize: "50%" }}
+      onClick={() => setEditCardShown(true)}>
+      <BiPencil className="me-1" /><span>Edit</span>
+    </span>
+  )
+
   return (
     <>
       <Head>
@@ -166,7 +181,21 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
         {cardSettings(card).archived && <Badge bg="secondary" className="me-2">Archived</Badge>}
         {isPrivate && "🔒 "}
         {card.title}
-        {/* TODO card edit & delete buttons */}
+
+        {card.canEdit &&
+          <EditCardModal
+            card={card}
+            show={editCardShown}
+            onHide={() => setEditCardShown(false)}
+            afterCardUpdated={card => {
+              setCard(prev => ({ ...prev, ...card }))
+              setEditCardShown(false)
+            }}
+          />
+        }
+        {card.canEdit && <EditButton />}
+
+        {/* TODO card delete buttons */}
       </h1>
       {settings.reverseOrder ? reverseOrderComments : normalOrderComments}
     </>
