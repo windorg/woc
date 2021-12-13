@@ -7,7 +7,8 @@ import TimeAgo from 'javascript-time-ago'
 import en from 'javascript-time-ago/locale/en.json'
 import SSRProvider from 'react-bootstrap/SSRProvider'
 
-TimeAgo.addDefaultLocale(en)
+TimeAgo.setDefaultLocale(en.locale)
+TimeAgo.addLocale(en)
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
