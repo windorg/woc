@@ -140,11 +140,7 @@ class EditComment extends React.Component<{
   afterCommentDeleted: () => void
   stopEditing: () => void
 }> {
-  private editorRef: RefObject<TiptapMethods>
-  constructor(props) {
-    super(props)
-    this.editorRef = createRef()
-  }
+  #editorRef: RefObject<TiptapMethods> = createRef()
 
   render() {
     const { card, comment } = this.props
@@ -158,10 +154,10 @@ class EditComment extends React.Component<{
 
     const handleSubmit = async (e?: any) => {
       if (e) e.preventDefault()
-      if (!this.editorRef.current) throw Error("Editor is not initialized")
+      if (!this.#editorRef.current) throw Error("Editor is not initialized")
       const diff = await callUpdateComment({
         commentId: comment.id,
-        content: this.editorRef.current.getMarkdown()
+        content: this.#editorRef.current.getMarkdown()
       })
       const newComment = { ...comment, ...diff }
       this.props.stopEditing()
@@ -179,7 +175,7 @@ class EditComment extends React.Component<{
               content={markdownToHtml(this.props.comment.content)}
               autoFocus
               onSubmit={handleSubmit}
-              ref={this.editorRef} />
+              ref={this.#editorRef} />
           </div>
           <Button size="sm" variant="primary" type="submit">Save</Button>
           <Button size="sm" variant="secondary" type="button" className="ms-2"

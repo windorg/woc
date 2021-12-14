@@ -15,11 +15,8 @@ export class EditCardModal extends React.Component<{
 }> {
   // NB: autoFocus is broken inside modals so we use a ref and onEntered instead.
   // See https://github.com/react-bootstrap/react-bootstrap/issues/5102
-  private titleInputRef: React.RefObject<HTMLInputElement>
-  constructor(props) {
-    super(props)
-    this.titleInputRef = React.createRef()
-  }
+  #titleInputRef: React.RefObject<HTMLInputElement> = React.createRef()
+
   render() {
     const { card } = this.props
     return (
@@ -27,7 +24,7 @@ export class EditCardModal extends React.Component<{
         size="lg"
         show={this.props.show}
         onHide={this.props.onHide}
-        onEntered={() => this.titleInputRef.current!.focus()}
+        onEntered={() => this.#titleInputRef.current!.focus()}
       >
         <Modal.Header closeButton>
           <Modal.Title>Edit card</Modal.Title>
@@ -45,7 +42,7 @@ export class EditCardModal extends React.Component<{
                 <Form.Group className="mb-3">
                   <Form.Control
                     name="title" id="title" value={props.values.title} onChange={props.handleChange}
-                    type="text" placeholder="Card title" ref={this.titleInputRef} />
+                    type="text" placeholder="Card title" ref={this.#titleInputRef} />
                 </Form.Group>
                 <Button variant="primary" type="submit">Save</Button>
                 <Button className="ms-2" variant="secondary" type="button"

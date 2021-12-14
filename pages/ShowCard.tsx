@@ -65,24 +65,21 @@ class AddCommentForm extends React.Component<{
   afterCommentCreated: (comment: Comment) => void
 }> {
   // NB: We use a class because refs are set to null on rerenders when using functional components
-  private editorRef: RefObject<TiptapMethods>
-  constructor(props) {
-    super(props)
-    this.editorRef = createRef()
-  }
+  #editorRef: RefObject<TiptapMethods> = createRef()
+
   render() {
     return (
       <Formik
         initialValues={{ private: false }}
         onSubmit={async (values) => {
-          if (!this.editorRef.current) throw Error("Editor is not initialized")
+          if (!this.#editorRef.current) throw Error("Editor is not initialized")
           const comment = await callCreateComment({
             cardId: this.props.cardId,
-            content: this.editorRef.current.getMarkdown(),
+            content: this.#editorRef.current.getMarkdown(),
             ...values
           })
           this.props.afterCommentCreated(comment)
-          this.editorRef.current.clearContent()
+          this.#editorRef.current.clearContent()
         }}
       >
         {props => (
@@ -92,7 +89,7 @@ class AddCommentForm extends React.Component<{
                 content=""
                 autoFocus
                 onSubmit={props.handleSubmit}
-                ref={this.editorRef} />
+                ref={this.#editorRef} />
             </div>
             <Button variant="primary" type="submit">Post</Button>
             <Form.Check

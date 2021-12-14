@@ -13,6 +13,7 @@ function ChangelogButton() {
   }
   useEffect(() => {
     if (typeof window !== 'undefined' && !(window as any).Headway) {
+      // TODO switch to 'next/script'?
       loadScript('https://cdn.headwayapp.co/widget.js', () => {
         if (!document.querySelector('#HW_badge')) {
           (window as any).Headway.init(headwayConfig)

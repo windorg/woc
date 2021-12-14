@@ -13,11 +13,8 @@ export class EditBoardModal extends React.Component<{
   onHide: () => void
   afterBoardUpdated: (newBoard: Board) => void
 }> {
-  private titleInputRef: React.RefObject<HTMLInputElement>
-  constructor(props) {
-    super(props)
-    this.titleInputRef = React.createRef()
-  }
+  #titleInputRef: React.RefObject<HTMLInputElement> = React.createRef()
+
   render() {
     const { board } = this.props
     const isPrivate = boardSettings(board).visibility === 'private'
@@ -26,7 +23,7 @@ export class EditBoardModal extends React.Component<{
         size="lg"
         show={this.props.show}
         onHide={this.props.onHide}
-        onEntered={() => this.titleInputRef.current!.focus()}
+        onEntered={() => this.#titleInputRef.current!.focus()}
       >
         <Modal.Header closeButton>
           <Modal.Title>Edit board</Modal.Title>
@@ -44,7 +41,7 @@ export class EditBoardModal extends React.Component<{
                 <Form.Group className="mb-3">
                   <Form.Control
                     name="title" id="title" value={props.values.title} onChange={props.handleChange}
-                    type="text" placeholder="Board title" ref={this.titleInputRef} />
+                    type="text" placeholder="Board title" ref={this.#titleInputRef} />
                 </Form.Group>
                 <Button variant="primary" type="submit">Save</Button>
                 <Button className="ms-2" variant="secondary" type="button"
