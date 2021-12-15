@@ -36,7 +36,7 @@ export default async function deleteCard(req: DeleteCardRequest, res: NextApiRes
       where: { id: body.cardId }
     })
 
-    return res.status(204)
+    return res.status(204).send()
   }
 }
 

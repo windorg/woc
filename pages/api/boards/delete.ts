@@ -33,7 +33,7 @@ export default async function deleteBoard(req: DeleteBoardRequest, res: NextApiR
       where: { id: body.boardId }
     })
 
-    return res.status(204)
+    return res.status(204).send()
   }
 }
 

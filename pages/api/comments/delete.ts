@@ -41,7 +41,7 @@ export default async function deleteComment(req: DeleteCommentRequest, res: Next
       where: { id: body.commentId }
     })
 
-    return res.status(204)
+    return res.status(204).send()
   }
 }
 

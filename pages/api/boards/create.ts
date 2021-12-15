@@ -26,6 +26,7 @@ export default async function createBoard(req: CreateBoardRequest, res: NextApiR
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
+    // TODO all 403s etc must end with send() otherwise they aren't sent
     if (!session) return res.status(403)
     const settings: Partial<BoardSettings> = {
       visibility: body.private ? 'private' : 'public'
