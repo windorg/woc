@@ -74,8 +74,9 @@ export function CardMenu(props: {
           <MenuArchive archived={settings.archived} updateCard={updateCard} />
           <Dropdown.Divider />
           <MenuDelete deleteCard={deleteCard} />
-        </>}
+        </>
+        }
       </Dropdown.Menu>
-    </Dropdown >
+    </Dropdown>
   )
 }

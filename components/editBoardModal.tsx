@@ -17,7 +17,6 @@ export class EditBoardModal extends React.Component<{
 
   render() {
     const { board } = this.props
-    const isPrivate = boardSettings(board).visibility === 'private'
     return (
       <Modal
         size="lg"
@@ -30,7 +29,7 @@ export class EditBoardModal extends React.Component<{
         </Modal.Header>
         <Modal.Body>
           <Formik
-            initialValues={{ private: isPrivate, title: board.title }}
+            initialValues={{ title: board.title }}
             onSubmit={async (values) => {
               const diff = await callUpdateBoard({ boardId: board.id, ...values })
               this.props.afterBoardUpdated({ ...board, ...diff })
@@ -48,10 +47,6 @@ export class EditBoardModal extends React.Component<{
                   onClick={this.props.onHide}>
                   Cancel
                 </Button>
-                {/* TODO this should become an action instead */}
-                <Form.Check
-                  name="private" id="private" checked={props.values.private} onChange={props.handleChange}
-                  className="ms-4" type="checkbox" inline label="🔒 Private board" />
               </Form>
             </>)}
           </Formik>

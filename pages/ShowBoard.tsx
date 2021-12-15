@@ -14,11 +14,12 @@ import { serialize, deserialize } from 'superjson'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { callCreateCard } from './api/cards/create'
 import { TransitionGroup, CSSTransition } from 'react-transition-group'
-import { Formik, useFormik } from 'formik'
+import { useFormik } from 'formik'
 import update from 'immutability-helper'
-import { callUpdateBoard } from './api/boards/update'
 import { BiPencil } from 'react-icons/bi'
 import { EditBoardModal } from 'components/editBoardModal'
+import { BoardMenu } from 'components/boardMenu'
+import { useRouter } from 'next/router'
 
 type Card_ = Card & { _count: { comments: number } }
 type Board_ = Board & { owner: User, cards: Card_[], canEdit: boolean }
@@ -105,13 +106,21 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
       _.orderBy(cards, ['createdAt'], ['desc']),
       card => (!cardSettings(card).archived))
 
+  const router = useRouter()
+
   const EditButton = () => (
     <span
-      className="ms-4 text-muted link-button d-inline-flex align-items-center"
-      style={{ fontSize: "50%" }}
+      className="text-muted me-3 link-button d-inline-flex align-items-center"
       onClick={() => setEditing(true)}>
       <BiPencil className="me-1" /><span>Edit</span>
     </span>
+  )
+
+  const MoreButton = () => (
+    <BoardMenu
+      board={board}
+      afterBoardUpdated={board => setBoard(prev => ({ ...prev, ...board }))}
+      afterBoardDeleted={() => router.replace(`/Boards`)} />
   )
 
   return (
@@ -141,7 +150,13 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
             }}
           />
         }
-        {board.canEdit && <EditButton />}
+        <span
+          className="ms-5"
+          style={{ fontSize: "50%" }}
+        >
+          {board.canEdit && <EditButton />}
+          <MoreButton />
+        </span>
       </h1>
 
       {board.canEdit && <AddCardForm boardId={board.id} afterCardCreated={addCard} />}
