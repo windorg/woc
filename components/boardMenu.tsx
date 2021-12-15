@@ -2,13 +2,14 @@ import { Board } from '@prisma/client'
 import { boardSettings } from '../lib/model-settings'
 import { Dropdown } from 'react-bootstrap'
 import React from 'react'
-import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt, BiArchiveOut, BiArchiveIn } from 'react-icons/bi'
+import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 'react-icons/bi'
 import copy from 'copy-to-clipboard'
 import { callUpdateBoard } from '../pages/api/boards/update'
 import styles from './actionMenu.module.scss'
 import { callDeleteBoard } from 'pages/api/boards/delete'
 
 function MenuCopyLink(props: { board: Board }) {
+  // TODO should use a local link instead of hardcoding windofchange.me (and in other places too)
   return <Dropdown.Item
     onClick={() => { copy(`https://windofchange.me/ShowBoard?boardId=${props.board.id}`) }}>
     <BiShareAlt className="icon" /><span>Copy link</span>

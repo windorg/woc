@@ -31,7 +31,7 @@ export class EditCardModal extends React.Component<{
         </Modal.Header>
         <Modal.Body>
           <Formik
-            initialValues={{ title: card.title }}
+            initialValues={{ title: card.title, reverseOrder: cardSettings(card).reverseOrder }}
             onSubmit={async (values) => {
               const diff = await callUpdateCard({ cardId: card.id, ...values })
               this.props.afterCardUpdated({ ...card, ...diff })
@@ -44,16 +44,23 @@ export class EditCardModal extends React.Component<{
                     name="title" id="title" value={props.values.title} onChange={props.handleChange}
                     type="text" placeholder="Card title" ref={this.#titleInputRef} />
                 </Form.Group>
+                <Form.Check name="reverseOrder" id="reverseOrder" className="mb-3">
+                  <Form.Check.Input
+                    name="reverseOrder" id="reverseOrder"
+                    checked={props.values.reverseOrder}
+                    onChange={props.handleChange} type="checkbox" />
+                  <Form.Check.Label>
+                    Show comments in reverse order<br />
+                    <span className="text-muted small">
+                      Good for cards that work like blog posts. Or maybe you just really like the reverse order.
+                    </span>
+                  </Form.Check.Label>
+                </Form.Check>
                 <Button variant="primary" type="submit">Save</Button>
                 <Button className="ms-2" variant="secondary" type="button"
                   onClick={this.props.onHide}>
                   Cancel
                 </Button>
-                {/* TODO reverse order checkbox */}
-                {/* <Form.Check
-                  name="reverseOrder" id="reverseOrder" checked={props.values.reverseOrder}
-                  onChange={props.handleChange}
-                  className="ms-4" type="checkbox" inline label="Reverse order" /> */}
               </Form>
             </>)}
           </Formik>
