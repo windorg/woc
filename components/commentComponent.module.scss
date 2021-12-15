@@ -15,25 +15,3 @@
 .commentPrivate.commentPinned {
   background-color: var(--pinned-color);
 }
-
-// Make the menu smaller & align icons properly
-.moreButton :global {
-  .dropdown-menu {
-    padding: 0.4rem 0;
-  }
-  .dropdown-divider {
-    margin: 0.4rem 0;
-  }
-  .dropdown-item {
-    display: flex;
-    align-items: center;
-    font-size: 0.85rem;
-    padding: 0.25rem 0.8rem;
-    line-height: 160%;
-    .icon {
-      height: 1rem;
-      width: 1rem;
-      margin-right: 0.4rem;
-    }
-  }
-}

@@ -1,8 +1,6 @@
-// Make the menu smaller & align icons properly
-.moreButton :global {
-  .dropdown-menu {
-    padding: 0.4rem 0;
-  }
+// Make a Dropdown.Menu smaller & align icons properly
+.actionMenu :global {
+  padding: 0.4rem 0;
   .dropdown-divider {
     margin: 0.4rem 0;
   }

@@ -5,7 +5,7 @@ import React from 'react'
 import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt, BiArchiveOut, BiArchiveIn } from 'react-icons/bi'
 import copy from 'copy-to-clipboard'
 import { callUpdateCard } from '../pages/api/cards/update'
-import styles from './cardMenu.module.scss'
+import styles from './actionMenu.module.scss'
 import { callDeleteCard } from 'pages/api/cards/delete'
 
 function MenuCopyLink(props: { card: Card }) {
@@ -63,11 +63,11 @@ export function CardMenu(props: {
   }
 
   return (
-    <Dropdown className={`${styles.moreButton} link-button text-muted d-inline-flex align-items-center`}>
+    <Dropdown className="link-button text-muted d-inline-flex align-items-center">
       <Dropdown.Toggle as="span" className="d-flex align-items-center">
         <BiDotsHorizontal className="me-1" /><span>More</span>
       </Dropdown.Toggle>
-      <Dropdown.Menu>
+      <Dropdown.Menu className={styles.actionMenu}>
         <MenuCopyLink card={card} />
         {props.card.canEdit && <>
           <MenuMakePrivate private={isPrivate} updateCard={updateCard} />
@@ -76,6 +76,6 @@ export function CardMenu(props: {
           <MenuDelete deleteCard={deleteCard} />
         </>}
       </Dropdown.Menu>
-    </Dropdown>
+    </Dropdown >
   )
 }

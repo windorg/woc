@@ -1,19 +1,16 @@
 import { Card, Comment } from '@prisma/client'
 import { commentSettings } from '../lib/model-settings'
-import { Dropdown } from 'react-bootstrap'
 import React, { createRef, RefObject, useState } from 'react'
 import Link from 'next/link'
 import { RenderedMarkdown, markdownToHtml } from '../lib/markdown'
 import ReactTimeAgo from 'react-time-ago'
-import { BiLink, BiPencil, BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 'react-icons/bi'
-import { AiOutlinePushpin } from 'react-icons/ai'
-import copy from 'copy-to-clipboard'
+import { BiLink, BiPencil } from 'react-icons/bi'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import { callUpdateComment } from '../pages/api/comments/update'
 import styles from './commentComponent.module.scss'
-import { callDeleteComment } from 'pages/api/comments/delete'
 import { Tiptap, TiptapMethods } from './tiptap'
+import { CommentMenu } from './commentMenu'
 
 type Comment_ = Comment & {
   canEdit: boolean
@@ -36,40 +33,6 @@ function InfoHeader(props: { card: Card, comment: Comment_ }) {
   )
 }
 
-function MenuCopyLink(props: { card: Card, comment: Comment_ }) {
-  return <Dropdown.Item
-    onClick={() => { copy(`https://windofchange.me/ShowCard?cardId=${props.card.id}#comment-${props.comment.id}`) }}>
-    <BiShareAlt className="icon" /><span>Copy link</span>
-  </Dropdown.Item>
-}
-
-function MenuPin(props: { pinned, updateComment }) {
-  return (
-    <Dropdown.Item onClick={() => props.updateComment({ pinned: !props.pinned })}>
-      {props.pinned
-        ? <><AiOutlinePushpin className="icon" /><span>Unpin</span></>
-        : <><AiOutlinePushpin className="icon" /><span>Pin</span></>}
-    </Dropdown.Item>
-  )
-}
-
-function MenuMakePrivate(props: { private, updateComment }) {
-  return (
-    <Dropdown.Item onClick={() => props.updateComment({ private: !props.private })}>
-      {props.private
-        ? <><BiLockOpen className="icon" /><span>Make public</span></>
-        : <><BiLock className="icon" /><span>Make private</span></>}
-    </Dropdown.Item>
-  )
-}
-
-function MenuDelete(props: { deleteComment }) {
-  return <Dropdown.Item className="text-danger"
-    onClick={() => props.deleteComment()}>
-    <BiTrashAlt className="icon" /><span>Delete</span>
-  </Dropdown.Item>
-}
-
 // Component in "normal" mode
 function ShowComment(props: {
   card: Card
@@ -87,16 +50,6 @@ function ShowComment(props: {
     ${settings.pinned ? styles.commentPinned : ""}
     `
 
-  const updateComment = async (data) => {
-    const diff = await callUpdateComment({ commentId: comment.id, ...data })
-    props.afterCommentUpdated({ ...comment, ...diff })
-  }
-
-  const deleteComment = async () => {
-    await callDeleteComment({ commentId: comment.id })
-    props.afterCommentDeleted()
-  }
-
   return (
     <div key={comment.id} id={`comment-${comment.id}`} className={classes}>
       <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
@@ -108,22 +61,7 @@ function ShowComment(props: {
               <BiPencil className="me-1" /><span>Edit</span>
             </span>
           }
-          <Dropdown className={`${styles.moreButton} link-button ms-3 d-flex align-items-center`}>
-            <Dropdown.Toggle as="span" className="d-flex align-items-center">
-              <BiDotsHorizontal className="me-1" /><span>More</span>
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <MenuCopyLink card={card} comment={comment} />
-              {props.comment.canEdit && <>
-                <MenuMakePrivate private={isPrivate} updateComment={updateComment} />
-                <MenuPin pinned={settings.pinned} updateComment={updateComment} />
-                <Dropdown.Divider />
-                <MenuDelete deleteComment={deleteComment} />
-              </>}
-            </Dropdown.Menu>
-          </Dropdown>
-          {/* TODO confirmation dialog for deletion */}
-          {/* TODO should not call 'deleteComment' on the DOM if deletion actually fails */}
+          <CommentMenu {...props} />
         </div>
       </div>
       <RenderedMarkdown className="rendered-content" markdown={comment.content} />
