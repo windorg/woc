@@ -67,7 +67,7 @@ export default async function updateComment(req: UpdateCommentRequest, res: Next
       // See https://github.com/prisma/prisma/issues/9247
       data: (diff as unknown) as Prisma.InputJsonObject
     })
-    // TODO if we ever have "updatedAt", we should also return it here
+    // If we ever have "updatedAt", we should also return it here
 
     return res.status(200).json(diff)
   }

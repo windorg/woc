@@ -87,6 +87,9 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   }
 }
 
+// TODO Currently autoFocus fires every time we e.g. edit a comment, and then the page is scrolled back to the top. This
+// is annoying.
+
 // TODO don't allow posting with empty content
 class AddCommentForm extends React.Component<{
   cardId: Card['id']

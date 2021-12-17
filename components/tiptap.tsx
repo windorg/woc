@@ -2,6 +2,7 @@ import Typography from '@tiptap/extension-typography'
 import { useEditor, EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
+import { TrailingNode } from 'tiptap/demos/src/Experiments/TrailingNode/Vue/trailing-node'
 import { Extension } from '@tiptap/core'
 import { forwardRef, useImperativeHandle, useRef } from 'react'
 import React from 'react'
@@ -47,7 +48,7 @@ let Tiptap = forwardRef((props: {
       }),
       Typography,
       Link,
-      // TODO TrailingNode,
+      TrailingNode,
       SubmitShortcut.configure({ onSubmit: props.onSubmit }),
     ],
     editorProps: {

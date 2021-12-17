@@ -54,7 +54,7 @@ export default async function updateBoard(req: UpdateBoardRequest, res: NextApiR
       // See https://github.com/prisma/prisma/issues/9247
       data: (diff as unknown) as Prisma.InputJsonObject
     })
-    // TODO if we ever have "updatedAt", we should also return it here
+    // If we ever have "updatedAt", we should also return it here
 
     return res.status(200).json(diff)
   }
