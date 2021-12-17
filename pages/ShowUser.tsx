@@ -10,7 +10,6 @@ import { canSeeBoard } from '../lib/access'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
 import filterAsync from 'node-filter-async'
-import update from 'immutability-helper'
 import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
 import { callUnfollowUser } from './api/users/unfollow'
@@ -84,7 +83,7 @@ const ShowUser: NextPage<SuperJSONResult> = (props) => {
   const [boards, setBoards] = useState(initialBoards)
   const addBoard = (board: Board) => {
     const board_ = { ...board, owner: user! }
-    setBoards(prev => update(prev, { $push: [board_] }))
+    setBoards(boards => boards.concat([board_]))
   }
 
   const [user, setUser] = useState(initialUser)

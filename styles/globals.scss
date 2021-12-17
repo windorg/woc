@@ -41,6 +41,19 @@ ol.breadcrumb {
   box-shadow: #ffe988 0px 0px 0px 3px;
 }
 
+.tiptap.small {
+  font-size: 0.875em;
+  // We don't want a huge focus shadow for reply editors etc
+  &.form-control:focus {
+    box-shadow: none;
+    -webkit-box-shadow: none;
+  }
+  // We also don't want the hint string for them
+  &::after {
+    content: "";
+  }
+}
+
 .tiptap,
 .rendered-content {
   h1,

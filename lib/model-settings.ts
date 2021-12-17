@@ -1,6 +1,6 @@
 // Settings types used in most models (Board, Card, etc)
 
-import { Board, Card, Comment, User } from "@prisma/client"
+import { Board, Card, Comment, Reply, User } from "@prisma/client"
 
 // If you ever change this, grep for 'private' and 'public'
 export type Visibility = 'private' | 'public'
@@ -32,7 +32,7 @@ export function cardSettings(card: Pick<Card, 'settings'>): CardSettings {
 
 export type CommentSettings = {
   visibility: Visibility
-  // Whether the card update is pinned. Several card updates can be pinned in the same card.
+  // Whether the comment is pinned. Several card updates can be pinned in the same card.
   pinned: boolean
   // Who is following the thread (e.g. all users that replied to it). Does not include the card owner.
   subscribers: User['id'][]
@@ -44,4 +44,14 @@ export function commentSettings(comment: Pick<Comment, 'settings'>): CommentSett
     subscribers: []
   }
   return { ...def, ...(comment.settings as object) }
+}
+
+export type ReplySettings = {
+  visibility: Visibility
+}
+export function replySettings(reply: Pick<Reply, 'settings'>): ReplySettings {
+  const def: ReplySettings = {
+    visibility: 'public',
+  }
+  return { ...def, ...(reply.settings as object) }
 }

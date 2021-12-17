@@ -15,7 +15,6 @@ import { SuperJSONResult } from 'superjson/dist/types'
 import { callCreateCard } from './api/cards/create'
 import { TransitionGroup, CSSTransition } from 'react-transition-group'
 import { useFormik } from 'formik'
-import update from 'immutability-helper'
 import { BiPencil } from 'react-icons/bi'
 import { EditBoardModal } from 'components/editBoardModal'
 import { BoardMenu } from 'components/boardMenu'
@@ -93,7 +92,7 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
   const [cards, setCards] = useState(initialBoard.cards)
   const addCard = (card: Card) => {
     const card_ = { ...card, _count: { comments: 0 } }
-    setCards(prevCards => update(prevCards, { $push: [card_] }))
+    setCards(cards => (cards.concat([card_])))
   }
 
   const [board, setBoard] = useState(_.omit(initialBoard, ['cards']))

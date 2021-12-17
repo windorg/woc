@@ -33,6 +33,7 @@ export type TiptapMethods = {
 
 // Takes content in HTML
 let Tiptap = forwardRef((props: {
+  className?: string
   content: string
   autoFocus?: boolean
   onSubmit: () => void
@@ -52,7 +53,7 @@ let Tiptap = forwardRef((props: {
     editorProps: {
       attributes: {
         // form-control comes from Bootstrap
-        class: 'tiptap form-control'
+        class: `tiptap form-control ${props.className || ""}`
       }
     },
     content: props.content,

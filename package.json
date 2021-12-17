@@ -17,7 +17,7 @@
     "deep-map": "^2.0.0",
     "es6-weak-map": "^2.0.3",
     "formik": "^2.2.9",
-    "immutability-helper": "^3.1.1",
+    "gravatar": "^1.8.2",
     "javascript-time-ago": "^2.3.10",
     "linkifyjs": "^3.0.4",
     "load-script": "^2.0.0",
@@ -52,6 +52,7 @@
   "devDependencies": {
     "@playwright/test": "^1.17.1",
     "@types/commonmark": "^0.27.5",
+    "@types/gravatar": "^1.8.3",
     "@types/lodash": "^4.14.177",
     "@types/node": "16.11.10",
     "@types/ramda": "^0.27.58",

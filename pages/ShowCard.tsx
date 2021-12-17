@@ -1,6 +1,6 @@
 import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
-import type { Board, User, Card, Comment } from '@prisma/client'
+import type { Board, User, Card, Comment, Reply } from '@prisma/client'
 import { prisma } from '../lib/db'
 import { cardSettings, commentSettings } from '../lib/model-settings'
 import { Badge, Breadcrumb, Button, Form } from 'react-bootstrap'
@@ -11,22 +11,22 @@ import _ from 'lodash'
 import * as R from 'ramda'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
-import { canEditCard } from 'lib/access'
+import { canDeleteReply, canEditCard, canEditReply } from 'lib/access'
 import { getSession } from 'next-auth/react'
 import { callCreateComment } from './api/comments/create'
-import update from 'immutability-helper'
 import { Formik } from 'formik'
-import { CommentComponent } from 'components/commentComponent'
+import { CommentComponent, Comment_ } from 'components/commentComponent'
 import { EditCardModal } from 'components/editCardModal'
 import { CardMenu } from 'components/cardMenu'
 import { BiPencil } from 'react-icons/bi'
 import { useRouter } from 'next/router'
+import { Reply_ } from 'components/replyComponent'
+import { deleteById, mergeById, updateById } from 'lib/array'
 
 type Card_ = Card & {
   owner: User
   board: Board
-  // We assume that we can edit comments iff we can edit the card
-  comments: Comment[]
+  comments: (Comment_ & { replies: Reply_[] })[]
   canEdit: boolean
 }
 
@@ -34,24 +34,52 @@ type Props = {
   initialCard: Card_
 }
 
+const cardFindSettings = {
+  include: {
+    owner: true,
+    board: true,
+    comments: {
+      include: {
+        replies: {
+          include: {
+            author: { select: { id: true, email: true, displayName: true } }
+          }
+        }
+      }
+    }
+  }
+}
+
 export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
   const session = await getSession(context)
-  let card = await prisma.card.findUnique({
+  const card = await prisma.card.findUnique({
     where: {
       id: context.query.cardId as string
     },
-    include: {
-      owner: true,
-      board: true,
-      comments: true
-    }
+    ...cardFindSettings
   })
   if (!card) { return { notFound: true } }
-  // TODO filter out private comments
+  const canEditCard_ = await canEditCard(session?.userId, card)
+
+  const augmentedCard: Card_ = {
+    ...card,
+    canEdit: canEditCard_,
+    comments: await Promise.all(card.comments.map(async comment => ({
+      ...comment,
+      // Augment comments with "canEdit". For speed we assume that if you can edit the card, you can edit the comments
+      canEdit: canEditCard_,
+      replies: await Promise.all(comment.replies.map(async reply => ({
+        ...reply,
+        // Augment replies with "canEdit" and "canDelete"
+        canEdit: await canEditReply(session?.userId, { ...reply, comment: { ...comment, card } }),
+        canDelete: await canDeleteReply(session?.userId, { ...reply, comment: { ...comment, card } })
+      })))
+    })))
+  }
+
+  // TODO filter out private comments & private replies
   const props: Props = {
-    initialCard: {
-      ...card, canEdit: await canEditCard(session?.userId, card)
-    }
+    initialCard: augmentedCard
   }
   return {
     props: serialize(props)
@@ -104,56 +132,81 @@ class AddCommentForm extends React.Component<{
 const ShowCard: NextPage<SuperJSONResult> = (props) => {
   const { initialCard } = deserialize<Props>(props)
 
+  // Card state & card-modifying methods
   const [card, setCard] = useState(initialCard)
-  const addComment = (comment: Comment) =>
-    setCard(prevCard => update(prevCard, { comments: { $push: [comment] } }))
-  const updateComment = (comment: Comment) =>
-    setCard(prevCard => update(prevCard, {
-      comments: xs => _.map(xs, x => (x.id === comment.id ? comment : x))
-    }))
-  const deleteComment = (id: Comment['id']) =>
-    setCard(prevCard => update(prevCard, {
-      comments: xs => R.filter(x => (x.id !== id), xs)
-    }))
+
+  // Assuming that this is only called for own comments (and therefore they can be edited). Shouldn't be called for
+  // e.g. comments coming from a websocket
+  const addComment = (comment: Comment) => setCard(card => ({
+    ...card,
+    comments: card.comments.concat([{ ...comment, replies: [], canEdit: true }])
+  }))
+
+  const updateComment = (comment: Comment) => setCard(card => ({
+    ...card,
+    comments: mergeById(card.comments, comment)
+  }))
+
+  const deleteComment = (commentId) => setCard(card => ({
+    ...card,
+    comments: deleteById(card.comments, commentId)
+  }))
+
+  const updateReply = (commentId, reply: Reply) => setCard(card => ({
+    ...card,
+    comments: updateById(card.comments, commentId, (comment => ({
+      ...comment,
+      replies: mergeById(comment.replies, reply)
+    })))
+  }))
+
+  const deleteReply = (commentId, replyId) => setCard(card => ({
+    ...card,
+    comments: updateById(card.comments, commentId, (comment => ({
+      ...comment,
+      replies: deleteById(comment.replies, replyId)
+    })))
+  }))
 
   const [editCardShown, setEditCardShown] = useState(false)
 
+  const renderCommentList = (comments) => comments.map(comment => (
+    <CommentComponent key={comment.id}
+      card={card}
+      comment={{ ...comment, canEdit: card.canEdit }}
+      replies={comment.replies}
+      afterCommentUpdated={updateComment}
+      afterCommentDeleted={() => deleteComment(comment.id)}
+      afterReplyUpdated={reply => updateReply(comment.id, reply)}
+      afterReplyDeleted={replyId => deleteReply(comment.id, replyId)}
+    />
+  ))
+
   const settings = cardSettings(card)
   const isPrivate = settings.visibility === 'private'
+
   const [pinnedComments, otherComments] =
     _.partition(
       _.orderBy(card.comments, ['createdAt'], ['desc']),
       comment => commentSettings(comment).pinned)
-  const reverseOrderComments =
-    <>
-      <p className="text-muted small">Comment order: oldest to newest.</p>
-      <div className="mb-3">
-        {_.concat(R.reverse(pinnedComments), R.reverse(otherComments))
-          .map(comment => (
-            <CommentComponent key={comment.id} card={card} comment={{ ...comment, canEdit: card.canEdit }}
-              afterCommentUpdated={updateComment}
-              afterCommentDeleted={() => deleteComment(comment.id)}
-            />
-          ))}
-      </div>
-      {card.canEdit && <AddCommentForm afterCommentCreated={addComment} cardId={card.id} />}
-    </>
-  const normalOrderComments =
-    <>
-      {card.canEdit && <AddCommentForm afterCommentCreated={addComment} cardId={card.id} />}
-      <div className="mt-4">
-        {_.concat(pinnedComments, otherComments)
-          .map(comment => (
-            <CommentComponent key={comment.id} card={card} comment={{ ...comment, canEdit: card.canEdit }}
-              afterCommentUpdated={updateComment}
-              afterCommentDeleted={() => deleteComment(comment.id)}
-            />
-          ))}
-      </div>
-    </>
+
+  const ReverseOrderComments = () => (<>
+    <p className="text-muted small">Comment order: oldest to newest.</p>
+    <div className="mb-3">
+      {renderCommentList(_.concat(R.reverse(pinnedComments), R.reverse(otherComments)))}
+    </div>
+    {card.canEdit && <AddCommentForm afterCommentCreated={addComment} cardId={card.id} />}
+  </>)
+  const NormalOrderComments = () => (<>
+    {card.canEdit && <AddCommentForm afterCommentCreated={addComment} cardId={card.id} />}
+    <div className="mt-4">
+      {renderCommentList(_.concat(pinnedComments, otherComments))}
+    </div>
+  </>)
 
   const router = useRouter()
 
+  // TODO move link-button into a separate component
   const EditButton = () => (
     <span
       className="text-muted me-3 link-button d-inline-flex align-items-center"
@@ -187,7 +240,6 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
         {cardSettings(card).archived && <Badge bg="secondary" className="me-2">Archived</Badge>}
         {isPrivate && "🔒 "}
         {card.title}
-
         {card.canEdit &&
           <EditCardModal
             card={card}
@@ -206,9 +258,8 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
           {card.canEdit && <EditButton />}
           <MoreButton />
         </span>
-
       </h1>
-      {settings.reverseOrder ? reverseOrderComments : normalOrderComments}
+      {settings.reverseOrder ? <ReverseOrderComments /> : <NormalOrderComments />}
     </>
   )
 }

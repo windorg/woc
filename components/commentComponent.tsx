@@ -1,4 +1,4 @@
-import { Card, Comment } from '@prisma/client'
+import { Card, Comment, Reply, User } from '@prisma/client'
 import { commentSettings } from '../lib/model-settings'
 import React, { createRef, RefObject, useState } from 'react'
 import Link from 'next/link'
@@ -11,8 +11,10 @@ import { callUpdateComment } from '../pages/api/comments/update'
 import styles from './commentComponent.module.scss'
 import { Tiptap, TiptapMethods } from './tiptap'
 import { CommentMenu } from './commentMenu'
+import _ from 'lodash'
+import { ReplyComponent, Reply_ } from './replyComponent'
 
-type Comment_ = Comment & {
+export type Comment_ = Comment & {
   canEdit: boolean
 }
 
@@ -33,29 +35,22 @@ function InfoHeader(props: { card: Card, comment: Comment_ }) {
   )
 }
 
-// Component in "normal" mode
-function ShowComment(props: {
+// Comment in "normal" mode
+function ShowCommentBody(props: {
   card: Card
   comment: Comment_
   afterCommentUpdated: (newComment: Comment) => void
   afterCommentDeleted: () => void
   startEditing: () => void
 }) {
-  const { card, comment } = props
-  const settings = commentSettings(comment)
-  const isPrivate = settings.visibility === 'private'
-  const classes = `
-    ${styles.comment}
-    ${isPrivate ? styles.commentPrivate : ""}
-    ${settings.pinned ? styles.commentPinned : ""}
-    `
+  const { comment } = props
 
   return (
-    <div key={comment.id} id={`comment-${comment.id}`} className={classes}>
+    <>
       <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
         <InfoHeader {...props} />
         <div className="d-inline-flex small text-muted" style={{ marginTop: "3px" }}>
-          {props.comment.canEdit &&
+          {comment.canEdit &&
             <span className="link-button d-flex align-items-center"
               onClick={props.startEditing}>
               <BiPencil className="me-1" /><span>Edit</span>
@@ -65,13 +60,12 @@ function ShowComment(props: {
         </div>
       </div>
       <RenderedMarkdown className="rendered-content" markdown={comment.content} />
-      {/* TODO render replies */}
-    </div>
+    </>
   )
 }
 
-// Component in "edit" mode
-class EditComment extends React.Component<{
+// Comment in "edit" mode
+class EditCommentBody extends React.Component<{
   card: Card
   comment: Comment_
   afterCommentUpdated: (newComment: Comment) => void
@@ -81,14 +75,7 @@ class EditComment extends React.Component<{
   #editorRef: RefObject<TiptapMethods> = createRef()
 
   render() {
-    const { card, comment } = this.props
-    const settings = commentSettings(comment)
-    const isPrivate = settings.visibility === 'private'
-    const classes = `
-      ${styles.comment}
-      ${isPrivate ? styles.commentPrivate : ""}
-      ${settings.pinned ? styles.commentPinned : ""}
-      `
+    const { comment } = this.props
 
     const handleSubmit = async (e?: any) => {
       if (e) e.preventDefault()
@@ -103,7 +90,7 @@ class EditComment extends React.Component<{
     }
 
     return (
-      <div key={comment.id} id={`comment-${comment.id}`} className={classes}>
+      <>
         <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
           <InfoHeader {...this.props} />
         </div>
@@ -121,22 +108,61 @@ class EditComment extends React.Component<{
             Cancel
           </Button>
         </Form>
-      </div>
+      </>
     )
   }
+}
+
+function Replies(props: {
+  card
+  replies
+  afterReplyUpdated: (newReply: Reply) => void
+  afterReplyDeleted: (id: Reply['id']) => void
+}) {
+  const replies =
+    _.orderBy(props.replies, ['createdAt'], ['asc'])
+  return (
+    <div className="woc-comment-replies ms-5">
+      {replies.map(reply => (
+        <ReplyComponent key={reply.id} card={props.card} reply={reply}
+          afterReplyUpdated={props.afterReplyUpdated}
+          afterReplyDeleted={() => props.afterReplyDeleted(reply.id)}
+        />
+      ))}
+    </div>
+  )
 }
 
 export function CommentComponent(props: {
   card: Card
   comment: Comment_
+  replies: Reply_[]
   afterCommentUpdated: (newComment: Comment) => void
   afterCommentDeleted: () => void
+  afterReplyUpdated: (newReply: Reply) => void
+  afterReplyDeleted: (id: Reply['id']) => void
 }) {
+  const { comment } = props
+
+  const settings = commentSettings(comment)
+  const isPrivate = settings.visibility === 'private'
+  const classes = `
+    ${styles.comment}
+    ${isPrivate ? styles.commentPrivate : ""}
+    ${settings.pinned ? styles.commentPinned : ""}
+    `
+
+  // Is the comment itself (not the replies) in the editing mode now?
   const [editing, setEditing] = useState(false)
+
   return (
-    editing
-      ? <EditComment {...props} stopEditing={() => setEditing(false)} />
-      : <ShowComment {...props} startEditing={() => setEditing(true)} />
+    <div id={`comment-${comment.id}`} className={classes}>
+      {editing
+        ? <EditCommentBody {...props} stopEditing={() => setEditing(false)} />
+        : <ShowCommentBody {...props} startEditing={() => setEditing(true)} />
+      }
+      <Replies {...props} />
+    </div>
   )
 }
 
