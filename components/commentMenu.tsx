@@ -66,7 +66,7 @@ export function CommentMenu(props: {
   // TODO confirmation dialog for deletion
   // TODO should not call 'deleteComment' on the DOM if deletion actually fails
   return (
-    <Dropdown className="link-button ms-3 d-flex align-items-center">
+    <Dropdown className="link-button d-flex align-items-center">
       <Dropdown.Toggle as="span" className="d-flex align-items-center">
         <BiDotsHorizontal className="me-1" /><span>More</span>
       </Dropdown.Toggle>

@@ -51,9 +51,10 @@ function ShowCommentBody(props: {
       <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
         <InfoHeader {...props} />
         <div className="d-inline-flex small text-muted" style={{ marginTop: "3px" }}>
-          {comment.canEdit &&
+          {comment.canEdit && <>
             <LinkButton onClick={props.startEditing} icon={<BiPencil />}>Edit</LinkButton>
-          }
+            <span className="me-3" />
+          </>}
           <CommentMenu {...props} />
         </div>
       </div>

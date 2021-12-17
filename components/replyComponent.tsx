@@ -13,6 +13,7 @@ import { Tiptap, TiptapMethods } from './tiptap'
 // import { ReplyMenu } from './replyMenu'
 import { Gravatar } from './gravatar'
 import { LinkButton } from './linkButton'
+import { ReplyMenu } from './replyMenu'
 
 export type Reply_ = Reply & {
   // The author can be 'null' if it was deleted. We don't delete replies if the author's account is gone.
@@ -94,13 +95,13 @@ function ShowReply(props: {
       <div className="flex-grow-1 ms-1" style={{ marginTop: "3px" }}>
         <div className="d-flex align-items-center" style={{ lineHeight: "100%", marginBottom: ".3em" }}>
           <InfoHeader {...props} />
-          <div className="d-inline-flex small text-muted ms-3 align-items-end">
+          <div className="d-inline-flex small text-muted ms-4 align-items-end">
             {props.reply.canEdit && <>
               <LinkButton onClick={props.startEditing} icon={<BiPencil />}>Edit</LinkButton>
               <span className="me-3" />
             </>
             }
-            {/* TODO <ReplyMenu {...props} /> */}
+            <ReplyMenu {...props} />
           </div>
         </div>
         <RenderedMarkdown className="woc-reply-content rendered-content small" markdown={reply.content} />

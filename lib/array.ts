@@ -1,4 +1,4 @@
-import R from 'ramda'
+import * as R from 'ramda'
 
 // Delete an element based on the 'id' field
 export function deleteById<T, I>(
