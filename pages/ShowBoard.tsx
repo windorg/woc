@@ -19,6 +19,7 @@ import { BiPencil } from 'react-icons/bi'
 import { EditBoardModal } from 'components/editBoardModal'
 import { BoardMenu } from 'components/boardMenu'
 import { useRouter } from 'next/router'
+import { LinkButton } from 'components/linkButton'
 
 type Card_ = Card & { _count: { comments: number } }
 type Board_ = Board & { owner: User, cards: Card_[], canEdit: boolean }
@@ -107,14 +108,6 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
 
   const router = useRouter()
 
-  const EditButton = () => (
-    <span
-      className="text-muted me-3 link-button d-inline-flex align-items-center"
-      onClick={() => setEditing(true)}>
-      <BiPencil className="me-1" /><span>Edit</span>
-    </span>
-  )
-
   const MoreButton = () => (
     <BoardMenu
       board={board}
@@ -153,7 +146,10 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
           className="ms-5"
           style={{ fontSize: "50%" }}
         >
-          {board.canEdit && <EditButton />}
+          {board.canEdit && <>
+            <LinkButton onClick={() => setEditing(true)} icon={<BiPencil />}>Edit</LinkButton>
+            <span className="me-3" />
+          </>}
           <MoreButton />
         </span>
       </h1>

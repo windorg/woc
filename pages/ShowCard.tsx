@@ -22,6 +22,7 @@ import { BiPencil } from 'react-icons/bi'
 import { useRouter } from 'next/router'
 import { Reply_ } from 'components/replyComponent'
 import { deleteById, mergeById, updateById } from 'lib/array'
+import { LinkButton } from 'components/linkButton'
 
 type Card_ = Card & {
   owner: User
@@ -206,15 +207,6 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
 
   const router = useRouter()
 
-  // TODO move link-button into a separate component
-  const EditButton = () => (
-    <span
-      className="text-muted me-3 link-button d-inline-flex align-items-center"
-      onClick={() => setEditCardShown(true)}>
-      <BiPencil className="me-1" /><span>Edit</span>
-    </span>
-  )
-
   const MoreButton = () => (
     <CardMenu
       card={card}
@@ -255,7 +247,10 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
           className="ms-5"
           style={{ fontSize: "50%" }}
         >
-          {card.canEdit && <EditButton />}
+          {card.canEdit && <>
+            <LinkButton onClick={() => setEditCardShown(true)} icon={<BiPencil />}>Edit</LinkButton>
+            <span className="me-3" />
+          </>}
           <MoreButton />
         </span>
       </h1>

@@ -13,6 +13,7 @@ import { Tiptap, TiptapMethods } from './tiptap'
 import { CommentMenu } from './commentMenu'
 import _ from 'lodash'
 import { ReplyComponent, Reply_ } from './replyComponent'
+import { LinkButton } from './linkButton'
 
 export type Comment_ = Comment & {
   canEdit: boolean
@@ -51,10 +52,7 @@ function ShowCommentBody(props: {
         <InfoHeader {...props} />
         <div className="d-inline-flex small text-muted" style={{ marginTop: "3px" }}>
           {comment.canEdit &&
-            <span className="link-button d-flex align-items-center"
-              onClick={props.startEditing}>
-              <BiPencil className="me-1" /><span>Edit</span>
-            </span>
+            <LinkButton onClick={props.startEditing} icon={<BiPencil />}>Edit</LinkButton>
           }
           <CommentMenu {...props} />
         </div>

@@ -12,6 +12,7 @@ import { callUpdateReply } from '../pages/api/replies/update'
 import { Tiptap, TiptapMethods } from './tiptap'
 // import { ReplyMenu } from './replyMenu'
 import { Gravatar } from './gravatar'
+import { LinkButton } from './linkButton'
 
 export type Reply_ = Reply & {
   // The author can be 'null' if it was deleted. We don't delete replies if the author's account is gone.
@@ -94,13 +95,12 @@ function ShowReply(props: {
         <div className="d-flex align-items-center" style={{ lineHeight: "100%", marginBottom: ".3em" }}>
           <InfoHeader {...props} />
           <div className="d-inline-flex small text-muted ms-3 align-items-end">
-            {props.reply.canEdit &&
-              <span className="link-button d-flex align-items-center"
-                onClick={props.startEditing}>
-                <BiPencil className="me-1" /><span>Edit</span>
-              </span>
+            {props.reply.canEdit && <>
+              <LinkButton onClick={props.startEditing} icon={<BiPencil />}>Edit</LinkButton>
+              <span className="me-3" />
+            </>
             }
-            {/* <ReplyMenu {...props} /> */}
+            {/* TODO <ReplyMenu {...props} /> */}
           </div>
         </div>
         <RenderedMarkdown className="woc-reply-content rendered-content small" markdown={reply.content} />
