@@ -74,6 +74,12 @@ export async function canEditComment(userId: User['id'] | null, comment: Comment
   return comment_.ownerId === userId
   // If this logic changes, you should also change the logic in ShowCard.tsx
 }
+export async function canReplyToComment(userId: User['id'] | null, comment: Comment['id'] | PComment) {
+  if (!userId) return false // logged-out users cannot reply to anything
+  const comment_ = typeof comment === 'object' ? comment : await findComment(comment)
+  // You can reply iff you can see the comment.
+  return (await canSeeComment(userId, comment_))
+}
 
 export async function canSeeReply(userId: User['id'] | null, reply: Reply['id'] | PReply) {
   const reply_ = typeof reply === 'object' ? reply : await findReply(reply)

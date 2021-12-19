@@ -156,6 +156,20 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
     comments: deleteById(card.comments, commentId)
   }))
 
+  // Should only be called for own replies. Assuming that card owner == current user.
+  const addReply = (commentId, reply: Reply) => setCard(card => ({
+    ...card,
+    comments: updateById(card.comments, commentId, (comment => ({
+      ...comment,
+      replies: comment.replies.concat([{
+        ...reply,
+        author: card.owner,
+        canEdit: true,
+        canDelete: true,
+      }])
+    })))
+  }))
+
   const updateReply = (commentId, reply: Reply) => setCard(card => ({
     ...card,
     comments: updateById(card.comments, commentId, (comment => ({
@@ -181,6 +195,7 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
       replies={comment.replies}
       afterCommentUpdated={updateComment}
       afterCommentDeleted={() => deleteComment(comment.id)}
+      afterReplyCreated={reply => addReply(comment.id, reply)}
       afterReplyUpdated={reply => updateReply(comment.id, reply)}
       afterReplyDeleted={replyId => deleteReply(comment.id, replyId)}
     />

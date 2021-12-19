@@ -83,7 +83,6 @@ function ShowReply(props: {
     ${isPrivate ? "reply-private" : ""}
     `
 
-  // TODO the "more" menu
   // TODO "mark as read"
 
   return (

@@ -4,7 +4,7 @@ import React, { createRef, RefObject, useState } from 'react'
 import Link from 'next/link'
 import { RenderedMarkdown, markdownToHtml } from '../lib/markdown'
 import ReactTimeAgo from 'react-time-ago'
-import { BiLink, BiPencil } from 'react-icons/bi'
+import { BiLink, BiPencil, BiCommentDetail } from 'react-icons/bi'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import { callUpdateComment } from '../pages/api/comments/update'
@@ -14,6 +14,7 @@ import { CommentMenu } from './commentMenu'
 import _ from 'lodash'
 import { ReplyComponent, Reply_ } from './replyComponent'
 import { LinkButton } from './linkButton'
+import { CreateReplyModal } from './createReplyModal'
 
 export type Comment_ = Comment & {
   canEdit: boolean
@@ -43,14 +44,19 @@ function ShowCommentBody(props: {
   afterCommentUpdated: (newComment: Comment) => void
   afterCommentDeleted: () => void
   startEditing: () => void
+  openReplyModal: () => void
 }) {
   const { comment } = props
+
+  // TODO it should be possible to quit editing the comment by pressing escape
 
   return (
     <>
       <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
         <InfoHeader {...props} />
         <div className="d-inline-flex small text-muted" style={{ marginTop: "3px" }}>
+          <LinkButton onClick={props.openReplyModal} icon={<BiCommentDetail />}>Reply</LinkButton>
+          <span className="me-3" />
           {comment.canEdit && <>
             <LinkButton onClick={props.startEditing} icon={<BiPencil />}>Edit</LinkButton>
             <span className="me-3" />
@@ -138,6 +144,7 @@ export function CommentComponent(props: {
   replies: Reply_[]
   afterCommentUpdated: (newComment: Comment) => void
   afterCommentDeleted: () => void
+  afterReplyCreated: (newReply: Reply) => void
   afterReplyUpdated: (newReply: Reply) => void
   afterReplyDeleted: (id: Reply['id']) => void
 }) {
@@ -154,11 +161,29 @@ export function CommentComponent(props: {
   // Is the comment itself (not the replies) in the editing mode now?
   const [editing, setEditing] = useState(false)
 
+  // Is the reply modal open?
+  const [replyModalShown, setReplyModalShown] = useState(false)
+
   return (
     <div id={`comment-${comment.id}`} className={classes}>
+      <CreateReplyModal
+        show={replyModalShown}
+        comment={props.comment}
+        onHide={() => setReplyModalShown(false)}
+        afterReplyCreated={(newReply) => {
+          setReplyModalShown(false)
+          props.afterReplyCreated(newReply)
+        }}
+      />
       {editing
-        ? <EditCommentBody {...props} stopEditing={() => setEditing(false)} />
-        : <ShowCommentBody {...props} startEditing={() => setEditing(true)} />
+        ?
+        <EditCommentBody {...props} stopEditing={() => setEditing(false)} />
+        :
+        <ShowCommentBody
+          {...props}
+          startEditing={() => setEditing(true)}
+          openReplyModal={() => setReplyModalShown(true)}
+        />
       }
       <Replies {...props} />
     </div>
