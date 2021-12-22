@@ -56,6 +56,7 @@
     "@types/lodash": "^4.14.177",
     "@types/node": "16.11.10",
     "@types/ramda": "^0.27.58",
+    "@types/random-words": "^1.1.2",
     "@types/react": "17.0.37",
     "@types/turndown": "^5.0.1",
     "eslint": "7.32.0",
@@ -63,6 +64,7 @@
     "eslint-plugin-ban": "^1.6.0",
     "eslint-plugin-compat": "^4.0.0",
     "prisma": "^3.5.0",
+    "random-words": "^1.1.1",
     "typescript": "4.5.2"
   },
   "browserslist": [
