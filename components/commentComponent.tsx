@@ -144,7 +144,7 @@ export function CommentComponent(props: {
   replies: Reply_[]
   afterCommentUpdated: (newComment: Comment) => void
   afterCommentDeleted: () => void
-  afterReplyCreated: (newReply: Reply) => void
+  afterReplyCreated: (newReply: Reply_) => void
   afterReplyUpdated: (newReply: Reply) => void
   afterReplyDeleted: (id: Reply['id']) => void
 }) {

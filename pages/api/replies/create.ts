@@ -6,7 +6,7 @@ import { SchemaOf } from 'yup'
 import axios from 'axios'
 import deepMap from 'deep-map'
 import { getSession } from 'next-auth/react'
-import { canReplyToComment } from 'lib/access'
+import { canDeleteReply, canEditReply, canReplyToComment } from 'lib/access'
 import { CommentSettings, commentSettings, ReplySettings } from 'lib/model-settings'
 import * as R from 'ramda'
 
@@ -25,6 +25,13 @@ const schema: SchemaOf<CreateReplyBody> = yup.object({
   content: yup.string().required(),
   // private: yup.boolean()
 })
+
+// An augmented reply type that we return from the API
+export type ReplyResponse = Reply & {
+  author: Pick<User, 'id' | 'email' | 'displayName'>
+  canEdit: boolean
+  canDelete: boolean
+}
 
 // Subscribe or unsubscribe a user to the reply thread of the comment, and return the current subscribers
 async function setUserSubscription(
@@ -63,7 +70,7 @@ async function setUserSubscription(
   })
 }
 
-export default async function createReply(req: CreateReplyRequest, res: NextApiResponse<Reply>) {
+export default async function createReply(req: CreateReplyRequest, res: NextApiResponse<ReplyResponse>) {
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
@@ -92,6 +99,17 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
         authorId: session.userId,
       }
     })
+
+    const replyAugmented = {
+      ...reply,
+      author: await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { id: true, displayName: true, email: true },
+        rejectOnNotFound: true
+      }),
+      canEdit: await canEditReply(session.userId, { ...reply, comment }),
+      canDelete: await canDeleteReply(session.userId, { ...reply, comment })
+    }
 
     // Subscribe the replier to the thread
     let currentSubscribers = commentSettings(comment).subscribers
@@ -123,11 +141,11 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
       }
     }
 
-    return res.status(201).json(reply)
+    return res.status(201).json(replyAugmented)
   }
 }
 
-export async function callCreateReply(body: CreateReplyBody): Promise<Reply> {
+export async function callCreateReply(body: CreateReplyBody): Promise<ReplyResponse> {
   const { data } = await axios.post('/api/replies/create', body)
   return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
 }

@@ -18,7 +18,7 @@ test("You can delete your own replies", async ({ page }) => {
 })
 
 test("You can delete others' replies to your comments", async ({ page, browser }) => {
-  const boardName = await createBoard(page, { navigate: true })
+  await createBoard(page, { navigate: true })
   await createCard(page, { navigate: true })
   const commentContent = await createComment(page)
   const cardUrl = page.url()

@@ -7,13 +7,14 @@ import { Formik } from 'formik'
 import { callCreateReply } from 'pages/api/replies/create'
 import { Reply } from '@prisma/client'
 import { Tiptap, TiptapMethods } from './tiptap'
+import { Reply_ } from 'components/replyComponent'
 
 export class CreateReplyModal extends React.Component<{
   show: boolean
   comment: Comment
   // This callback will be called when the user tries to hide the modal. (The modal can't hide itself.)
   onHide: () => void
-  afterReplyCreated: (newReply: Reply) => void
+  afterReplyCreated: (newReply: Reply_) => void
 }> {
   #editorRef: React.RefObject<TiptapMethods> = React.createRef()
 
