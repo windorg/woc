@@ -17,3 +17,5 @@ test('You can reply to your own comments', async ({ page }) => {
   await page.waitForSelector('_react=ReplyComponent')
   await expect(page.locator('_react=ReplyComponent')).toContainText(replyContent)
 })
+
+// TODO test that when you create a reply to someone else's comment, it shows your own name and not their name
