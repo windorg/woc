@@ -114,7 +114,7 @@ class AddCommentForm extends React.Component<{
         }}
       >
         {props => (
-          <Form onSubmit={props.handleSubmit}>
+          <Form onSubmit={props.handleSubmit} className="woc-comment-form">
             <div className="mb-3" style={{ maxWidth: "40rem", width: "100%" }}>
               <Tiptap
                 content=""

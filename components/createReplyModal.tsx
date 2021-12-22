@@ -41,7 +41,7 @@ export class CreateReplyModal extends React.Component<{
             }}
           >
             {props => (
-              <Form onSubmit={props.handleSubmit}>
+              <Form onSubmit={props.handleSubmit} className="woc-reply-form">
                 <div className="mb-3">
                   <Tiptap
                     autoFocus

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test.use({ storageState: 'alice.storageState.json' })
 
-test('private boards should not be visible to others', async ({ page, browser }) => {
+test('Private boards should not be visible to others', async ({ page, browser }) => {
   // Create a new private board
   await page.goto('/Boards')
   await page.click('text=+ New')

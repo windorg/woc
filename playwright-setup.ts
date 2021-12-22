@@ -1,6 +1,14 @@
 import { prisma } from './lib/db'
 import { Browser, chromium, FullConfig } from '@playwright/test'
 import { hashPassword } from './lib/password'
+import { execSync } from 'child_process'
+
+// Clear the database
+async function resetDatabase() {
+  const [{ current_database }] = await prisma.$queryRaw<{ current_database: string }[]>`select current_database()`
+  if (current_database !== 'db_dev') throw new Error(`Expected to connect to the dev database, got ${current_database}`)
+  execSync(`prisma migrate reset --force --skip-generate`)
+}
 
 // Create a user and save state to ${handle}.storageState.json
 async function createAndSaveUser(config, browser: Browser, { email, handle, displayName }) {
@@ -28,6 +36,8 @@ async function createAndSaveUser(config, browser: Browser, { email, handle, disp
 }
 
 async function globalSetup(config: FullConfig) {
+  await resetDatabase()
+
   const browser = await chromium.launch()
   await createAndSaveUser(config, browser, {
     email: 'alice@woc.test',
