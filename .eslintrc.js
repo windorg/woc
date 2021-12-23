@@ -1,7 +1,9 @@
 module.exports = {
   "extends": [
     "next/core-web-vitals",
-    "plugin:compat/recommended"
+    "plugin:compat/recommended",
+    "plugin:react/recommended",
+    "plugin:react/jsx-runtime",
   ],
   "plugins": [
     "ban"
@@ -32,6 +34,7 @@ module.exports = {
         "name": ["_", "reverse"],
         "message": "'reverse' mutates the array in-place; use R.reverse"
       }
-    ]
+    ],
+    "react/no-unstable-nested-components": ['error'],
   }
 }

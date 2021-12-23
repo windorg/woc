@@ -41,12 +41,12 @@ export class CreateReplyModal extends React.Component<{
               this.props.afterReplyCreated(reply)
             }}
           >
-            {props => (
-              <Form onSubmit={props.handleSubmit} className="woc-reply-form">
+            {formik => (
+              <Form onSubmit={formik.handleSubmit} className="woc-reply-form">
                 <div className="mb-3">
                   <Tiptap
                     autoFocus
-                    onSubmit={props.handleSubmit}
+                    onSubmit={formik.handleSubmit}
                     ref={this.#editorRef} />
                 </div>
                 {/* TODO why do we use "sm" here and in the other form? */}
@@ -56,7 +56,7 @@ export class CreateReplyModal extends React.Component<{
                   Cancel
                 </Button>
                 {/* <Form.Check
-                name="private" id="private" checked={props.values.private} onChange={props.handleChange}
+                name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
                 type="checkbox" className="ms-4" inline label="🔒 Private reply" /> */}
               </Form>
             )}

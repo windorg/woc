@@ -35,11 +35,11 @@ export class EditBoardModal extends React.Component<{
               this.props.afterBoardUpdated({ ...board, ...diff })
             }}
           >
-            {props => (<>
-              <Form onSubmit={props.handleSubmit}>
+            {formik => (<>
+              <Form onSubmit={formik.handleSubmit}>
                 <Form.Group className="mb-3">
                   <Form.Control
-                    name="title" id="title" value={props.values.title} onChange={props.handleChange}
+                    name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
                     type="text" placeholder="Board title" ref={this.#titleInputRef} />
                 </Form.Group>
                 <Button variant="primary" type="submit">Save</Button>

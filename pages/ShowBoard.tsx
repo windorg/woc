@@ -108,7 +108,7 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
 
   const router = useRouter()
 
-  const MoreButton = () => (
+  const moreButton = () => (
     <BoardMenu
       board={board}
       afterBoardUpdated={board => setBoard(prev => ({ ...prev, ...board }))}
@@ -150,7 +150,7 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
             <LinkButton onClick={() => setEditing(true)} icon={<BiPencil />}>Edit</LinkButton>
             <span className="me-3" />
           </>}
-          <MoreButton />
+          {moreButton()}
         </span>
       </h1>
 

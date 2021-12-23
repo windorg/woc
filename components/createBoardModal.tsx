@@ -30,17 +30,17 @@ export function CreateBoardModal(props: {
             props.afterBoardCreated(board)
           }}
         >
-          {props => (
-            <Form onSubmit={props.handleSubmit}>
+          {formik => (
+            <Form onSubmit={formik.handleSubmit}>
               <Form.Group className="mb-3">
                 <Form.Control
-                  name="title" id="title" value={props.values.title} onChange={props.handleChange}
+                  name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
                   type="text" placeholder="Board title"
                   ref={titleInputRef} />
               </Form.Group>
               <Button variant="primary" type="submit">Create a board</Button>
               <Form.Check
-                name="private" id="private" checked={props.values.private} onChange={props.handleChange}
+                name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
                 type="checkbox" className="ms-4" inline label="🔒 Private board" />
             </Form>
           )}

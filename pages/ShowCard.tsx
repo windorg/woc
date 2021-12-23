@@ -5,7 +5,7 @@ import { prisma } from '../lib/db'
 import { cardSettings, commentSettings } from '../lib/model-settings'
 import { Badge, Breadcrumb, Button, Form } from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb, CardCrumb } from '../components/breadcrumbs'
-import React, { createRef, RefObject, useState } from 'react'
+import React, { createRef, RefObject, useEffect, useState } from 'react'
 import { Tiptap, TiptapMethods } from '../components/tiptap'
 import _ from 'lodash'
 import * as R from 'ramda'
@@ -23,6 +23,7 @@ import { useRouter } from 'next/router'
 import { Reply_ } from 'components/replyComponent'
 import { deleteById, mergeById, updateById } from 'lib/array'
 import { LinkButton } from 'components/linkButton'
+import { useCallback } from 'react'
 
 type Card_ = Card & {
   owner: User
@@ -87,16 +88,18 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   }
 }
 
-// TODO Currently autoFocus fires every time we e.g. edit a comment, and then the page is scrolled back to the top. This
-// is annoying.
-
 // TODO don't allow posting with empty content
 class AddCommentForm extends React.Component<{
   cardId: Card['id']
   afterCommentCreated: (comment: Comment) => void
 }> {
-  // NB: We use a class because refs are set to null on rerenders when using functional components
+  // NB: We use a class because refs are set to null on rerenders when using functional components. Although now I'm not
+  // sure it's true anymore. Maybe re-check with useRef.
   #editorRef: RefObject<TiptapMethods> = createRef()
+
+  focus() {
+    this.#editorRef.current?.focus()
+  }
 
   render() {
     return (
@@ -113,18 +116,18 @@ class AddCommentForm extends React.Component<{
           this.#editorRef.current.clearContent()
         }}
       >
-        {props => (
-          <Form onSubmit={props.handleSubmit} className="woc-comment-form">
+        {formik => (
+          <Form onSubmit={formik.handleSubmit} className="woc-comment-form">
             <div className="mb-3" style={{ maxWidth: "40rem", width: "100%" }}>
               <Tiptap
                 content=""
+                onSubmit={formik.handleSubmit}
                 autoFocus
-                onSubmit={props.handleSubmit}
                 ref={this.#editorRef} />
             </div>
             <Button variant="primary" type="submit">Post</Button>
             <Form.Check
-              name="private" id="private" checked={props.values.private} onChange={props.handleChange}
+              name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
               type="checkbox" className="ms-4" inline label="🔒 Private comment" />
           </Form>
         )}
@@ -203,14 +206,14 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
       _.orderBy(card.comments, ['createdAt'], ['desc']),
       comment => commentSettings(comment).pinned)
 
-  const ReverseOrderComments = () => (<>
+  const reverseOrderComments = () => (<>
     <p className="text-muted small">Comment order: oldest to newest.</p>
     <div className="mb-3">
       {renderCommentList(_.concat(R.reverse(pinnedComments), R.reverse(otherComments)))}
     </div>
     {card.canEdit && <AddCommentForm afterCommentCreated={addComment} cardId={card.id} />}
   </>)
-  const NormalOrderComments = () => (<>
+  const normalOrderComments = () => (<>
     {card.canEdit && <AddCommentForm afterCommentCreated={addComment} cardId={card.id} />}
     <div className="mt-4">
       {renderCommentList(_.concat(pinnedComments, otherComments))}
@@ -219,7 +222,7 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
 
   const router = useRouter()
 
-  const MoreButton = () => (
+  const moreButton = () => (
     <CardMenu
       card={card}
       afterCardUpdated={card => setCard(prev => ({ ...prev, ...card }))}
@@ -263,10 +266,10 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
             <LinkButton onClick={() => setEditCardShown(true)} icon={<BiPencil />}>Edit</LinkButton>
             <span className="me-3" />
           </>}
-          <MoreButton />
+          {moreButton()}
         </span>
       </h1>
-      {settings.reverseOrder ? <ReverseOrderComments /> : <NormalOrderComments />}
+      {settings.reverseOrder ? reverseOrderComments() : normalOrderComments()}
     </>
   )
 }

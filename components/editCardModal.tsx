@@ -37,18 +37,18 @@ export class EditCardModal extends React.Component<{
               this.props.afterCardUpdated({ ...card, ...diff })
             }}
           >
-            {props => (<>
-              <Form onSubmit={props.handleSubmit}>
+            {formik => (<>
+              <Form onSubmit={formik.handleSubmit}>
                 <Form.Group className="mb-3">
                   <Form.Control
-                    name="title" id="title" value={props.values.title} onChange={props.handleChange}
+                    name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
                     type="text" placeholder="Card title" ref={this.#titleInputRef} />
                 </Form.Group>
                 <Form.Check name="reverseOrder" id="reverseOrder" className="mb-3">
                   <Form.Check.Input
                     name="reverseOrder" id="reverseOrder"
-                    checked={props.values.reverseOrder}
-                    onChange={props.handleChange} type="checkbox" />
+                    checked={formik.values.reverseOrder}
+                    onChange={formik.handleChange} type="checkbox" />
                   <Form.Check.Label>
                     Show comments in reverse order<br />
                     <span className="text-muted small">

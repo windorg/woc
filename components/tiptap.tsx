@@ -29,6 +29,7 @@ const SubmitShortcut = Extension.create<{ onSubmit: () => void }>({
 
 export type TiptapMethods = {
   focus: () => void
+  blur: () => void
   clearContent: () => void
   getMarkdown: () => string
 }
@@ -59,12 +60,15 @@ let Tiptap = forwardRef((props: {
       }
     },
     content: props.content || "",
-    autofocus: props.autoFocus ? 'end' : null
+    ...(props.autoFocus ? { autofocus: 'end' } : {})
   })
   const editorRef: React.MutableRefObject<Editor | null> = useRef(null)
   useImperativeHandle(ref, () => ({
     focus: () => {
       editorRef.current?.commands.focus()
+    },
+    blur: () => {
+      editorRef.current?.commands.blur()
     },
     clearContent: () => {
       editorRef.current?.commands.clearContent()
