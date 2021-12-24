@@ -36,5 +36,6 @@ module.exports = {
       }
     ],
     "react/no-unstable-nested-components": ['error'],
+    "react/prop-types": ['off'], // buggy
   }
 }

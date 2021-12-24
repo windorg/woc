@@ -39,12 +39,13 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
       where: { id: session.userId },
       select: { id: true, handle: true, displayName: true }
     })
+    const props: Props = {
+      user,
+      userBoards,
+      otherBoards
+    }
     return {
-      props: serialize({
-        user,
-        userBoards,
-        otherBoards
-      })
+      props: serialize(props)
     }
   } else {
     // Not logged in
@@ -52,12 +53,13 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     const otherBoards = await prisma.board.findMany({
       include
     }).then(x => filterAsync(x, board => canSeeBoard(null, board)))
+    const props: Props = {
+      user: null,
+      userBoards,
+      otherBoards
+    }
     return {
-      props: serialize({
-        user: null,
-        userBoards,
-        otherBoards
-      })
+      props: serialize(props)
     }
   }
 }

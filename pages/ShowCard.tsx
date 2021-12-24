@@ -23,7 +23,6 @@ import { useRouter } from 'next/router'
 import { Reply_ } from 'components/replyComponent'
 import { deleteById, mergeById, updateById } from 'lib/array'
 import { LinkButton } from 'components/linkButton'
-import { useCallback } from 'react'
 
 type Card_ = Card & {
   owner: User
