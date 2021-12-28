@@ -8,10 +8,12 @@ import copy from 'copy-to-clipboard'
 import { callUpdateComment } from 'pages/api/comments/update'
 import { callDeleteComment } from 'pages/api/comments/delete'
 import { commentSettings } from '../lib/model-settings'
+import { commentRoute } from 'lib/routes'
 
 function MenuCopyLink(props: { card: Card, comment: Comment }) {
+  const link = `https://windofchange.me${commentRoute({ cardId: props.card.id, commentId: props.comment.id })}`
   return <Dropdown.Item
-    onClick={() => { copy(`https://windofchange.me/ShowCard?cardId=${props.card.id}#comment-${props.comment.id}`) }}>
+    onClick={() => { copy(link) }}>
     <BiShareAlt className="icon" /><span>Copy link</span>
   </Dropdown.Item>
 }

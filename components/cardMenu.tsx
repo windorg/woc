@@ -7,10 +7,11 @@ import copy from 'copy-to-clipboard'
 import { callUpdateCard } from '../pages/api/cards/update'
 import styles from './actionMenu.module.scss'
 import { callDeleteCard } from 'pages/api/cards/delete'
+import { cardRoute } from 'lib/routes'
 
 function MenuCopyLink(props: { card: Card }) {
   return <Dropdown.Item
-    onClick={() => { copy(`https://windofchange.me/ShowCard?cardId=${props.card.id}`) }}>
+    onClick={() => { copy(`https://windofchange.me${cardRoute(props.card.id)}`) }}>
     <BiShareAlt className="icon" /><span>Copy link</span>
   </Dropdown.Item>
 }

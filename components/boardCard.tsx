@@ -2,6 +2,7 @@ import { boardSettings } from "../lib/model-settings"
 import Card from 'react-bootstrap/Card'
 import Link from 'next/link'
 import { Board, User } from "@prisma/client"
+import { boardRoute, userRoute } from "lib/routes"
 
 type Kind = 'own-board' | 'other-board'
 type Board_ = Board & { owner: Pick<User, 'handle' | 'displayName'> }
@@ -14,14 +15,14 @@ export function BoardCard(props: { board: Board_, kind: Kind }) {
       <Card.Body>
         <h3>
           {isPrivate && "🔒 "}
-          <Link href={`/ShowBoard?boardId=${board.id}`}>
+          <Link href={boardRoute(board.id)}>
             <a className={(kind === 'other-board') ? "text-muted" : ""}>
               {board.title}
             </a>
           </Link>
         </h3>
         {(kind === 'other-board') &&
-          <Link href={`/ShowUser?userId=${board.ownerId}`}>
+          <Link href={userRoute(board.ownerId)}>
             <a>
               <span>
                 <span className="me-2">{board.owner.displayName}</span>

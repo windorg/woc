@@ -3,6 +3,7 @@ import React from "react"
 import { Breadcrumb } from "react-bootstrap"
 import { boardSettings } from "../lib/model-settings"
 import Link from 'next/link'
+import { boardRoute, cardRoute, userRoute } from "lib/routes"
 
 function LinkItem(props: React.ComponentProps<typeof Link> & { active?: boolean }) {
   return props.active
@@ -20,7 +21,7 @@ export function BoardsCrumb(props: { active?: boolean }) {
 
 export function UserCrumb(props: { active?: boolean, user: Pick<User, 'id' | 'handle'> }) {
   return (
-    <LinkItem active={props.active} href={`/ShowUser?userId=${props.user.id}`}>
+    <LinkItem active={props.active} href={userRoute(props.user.id)}>
       <em>@{props.user.handle}</em>
     </LinkItem>
   )
@@ -29,7 +30,7 @@ export function UserCrumb(props: { active?: boolean, user: Pick<User, 'id' | 'ha
 export function BoardCrumb(props: { active?: boolean, board: Board }) {
   const isPrivate = boardSettings(props.board).visibility === 'private'
   return (
-    <LinkItem active={props.active} href={`/ShowBoard?boardId=${props.board.id}`}>
+    <LinkItem active={props.active} href={boardRoute(props.board.id)}>
       {isPrivate ? "🔒 " : ""}
       {props.board.title}
     </LinkItem>
@@ -39,7 +40,7 @@ export function BoardCrumb(props: { active?: boolean, board: Board }) {
 export function CardCrumb(props: { active?: boolean, card: Card }) {
   const isPrivate = boardSettings(props.card).visibility === 'private'
   return (
-    <LinkItem active={props.active} href={`/ShowCard?cardId=${props.card.id}`}>
+    <LinkItem active={props.active} href={cardRoute(props.card.id)}>
       {isPrivate ? "🔒 " : ""}
       {props.card.title}
     </LinkItem>

@@ -7,11 +7,12 @@ import copy from 'copy-to-clipboard'
 import { callUpdateBoard } from '../pages/api/boards/update'
 import styles from './actionMenu.module.scss'
 import { callDeleteBoard } from 'pages/api/boards/delete'
+import { boardRoute } from 'lib/routes'
 
 function MenuCopyLink(props: { board: Board }) {
   // TODO should use a local link instead of hardcoding windofchange.me (and in other places too)
   return <Dropdown.Item
-    onClick={() => { copy(`https://windofchange.me/ShowBoard?boardId=${props.board.id}`) }}>
+    onClick={() => { copy(`https://windofchange.me${boardRoute(props.board.id)}`) }}>
     <BiShareAlt className="icon" /><span>Copy link</span>
   </Dropdown.Item>
 }

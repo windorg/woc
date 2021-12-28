@@ -14,6 +14,7 @@ import { Tiptap, TiptapMethods } from './tiptap'
 import { Gravatar } from './gravatar'
 import { LinkButton } from './linkButton'
 import { ReplyMenu } from './replyMenu'
+import { replyRoute, userRoute } from 'lib/routes'
 
 export type Reply_ = Reply & {
   // The author can be 'null' if it was deleted. We don't delete replies if the author's account is gone.
@@ -28,7 +29,7 @@ function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
   return (
     props.author
       ?
-      <Link href={`/ShowUser?userId=${props.author.id}`}>
+      <Link href={userRoute(props.author.id)}>
         <a><Gravatar email={props.author.email} size="tiny" /></a>
       </Link>
       :
@@ -47,7 +48,7 @@ function InfoHeader(props: { card: Card, reply: Reply_ }) {
       <strong>
         {reply.author
           ?
-          <Link href={`/ShowUser?userId=${reply.authorId}`}>
+          <Link href={userRoute(reply.author.id)}>
             <a>{reply.author.displayName}</a>
           </Link>
           :
@@ -55,7 +56,7 @@ function InfoHeader(props: { card: Card, reply: Reply_ }) {
         }
       </strong>
       <span className="ms-2" />
-      <Link href={`/ShowCard?cardId=${props.card.id}#reply-${reply.id}`}>
+      <Link href={replyRoute({ cardId: props.card.id, replyId: reply.id })}>
         <a className="d-flex align-items-center">
           <BiLink className="me-1" />
           <ReactTimeAgo timeStyle="twitter-minute-now" date={reply.createdAt} />

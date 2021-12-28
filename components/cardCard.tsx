@@ -2,6 +2,7 @@ import { cardSettings } from "../lib/model-settings"
 import { Badge, Card as BSCard } from 'react-bootstrap'
 import Link from 'next/link'
 import { Card } from "@prisma/client"
+import { cardRoute } from "lib/routes"
 
 type Card_ = Card & { _count: { comments: number } }
 
@@ -12,7 +13,7 @@ export function CardCard({ card }: { card: Card_ }) {
     <BSCard className={`mb-2 woc-card ${isPrivate ? "woc-card-private" : ""}`}>
       <BSCard.Body>
         {isPrivate ? "🔒 " : ""}
-        <Link href={`/ShowCard?cardId=${card.id}`}><a className="stretched-link">{card.title}</a></Link>
+        <Link href={cardRoute(card.id)}><a className="stretched-link">{card.title}</a></Link>
         <Badge pill style={{ marginLeft: ".5em" }} bg="secondary">{card._count.comments}</Badge>
       </BSCard.Body>
     </BSCard>

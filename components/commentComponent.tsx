@@ -15,6 +15,7 @@ import _ from 'lodash'
 import { ReplyComponent, Reply_ } from './replyComponent'
 import { LinkButton } from './linkButton'
 import { CreateReplyModal } from './createReplyModal'
+import { commentRoute } from 'lib/routes'
 
 export type Comment_ = Comment & {
   canEdit: boolean
@@ -26,7 +27,7 @@ function InfoHeader(props: { card: Card, comment: Comment_ }) {
   const isPrivate = settings.visibility === 'private'
   return (
     <span className="small d-flex">
-      <Link href={`/ShowCard?cardId=${props.card.id}#comment-${props.comment.id}`}>
+      <Link href={commentRoute({ cardId: props.card.id, commentId: props.comment.id })}>
         <a className="d-flex align-items-center">
           <BiLink className="me-1" />
           <ReactTimeAgo timeStyle="twitter-minute-now" date={props.comment.createdAt} />

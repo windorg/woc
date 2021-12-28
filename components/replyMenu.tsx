@@ -1,16 +1,17 @@
-import { Card, Comment, Reply } from '@prisma/client'
+import { Card, Reply } from '@prisma/client'
 import { Dropdown } from 'react-bootstrap'
 import React from 'react'
-import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 'react-icons/bi'
+import { BiDotsHorizontal, BiTrashAlt, BiShareAlt } from 'react-icons/bi'
 import actionMenuStyles from './actionMenu.module.scss'
 import copy from 'copy-to-clipboard'
-import { callUpdateReply } from 'pages/api/replies/update'
 import { callDeleteReply } from 'pages/api/replies/delete'
 import { replySettings } from '../lib/model-settings'
+import { replyRoute } from 'lib/routes'
 
 function MenuCopyLink(props: { card: Card, reply: Reply }) {
+  const link = `https://windofchange.me${replyRoute({ cardId: props.card.id, replyId: props.reply.id })}`
   return <Dropdown.Item
-    onClick={() => { copy(`https://windofchange.me/ShowCard?cardId=${props.card.id}#reply-${props.reply.id}`) }}>
+    onClick={() => { copy(link) }}>
     <BiShareAlt className="icon" /><span>Copy link</span>
   </Dropdown.Item>
 }

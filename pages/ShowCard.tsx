@@ -23,6 +23,7 @@ import { useRouter } from 'next/router'
 import { Reply_ } from 'components/replyComponent'
 import { deleteById, mergeById, updateById } from 'lib/array'
 import { LinkButton } from 'components/linkButton'
+import { boardRoute } from 'lib/routes'
 
 type Card_ = Card & {
   owner: User
@@ -225,7 +226,7 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
     <CardMenu
       card={card}
       afterCardUpdated={card => setCard(prev => ({ ...prev, ...card }))}
-      afterCardDeleted={() => router.replace(`/ShowBoard?boardId=${card.boardId}`)} />
+      afterCardDeleted={() => router.replace(boardRoute(card.boardId))} />
   )
 
   return (
