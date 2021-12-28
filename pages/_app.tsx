@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react"
 import TimeAgo from 'javascript-time-ago'
 import en from 'javascript-time-ago/locale/en.json'
 import SSRProvider from 'react-bootstrap/SSRProvider'
+import { SWRConfig } from 'swr'
 
 TimeAgo.setDefaultLocale(en.locale)
 TimeAgo.addLocale(en)
@@ -13,11 +14,18 @@ TimeAgo.addLocale(en)
 function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
     <SSRProvider>
-      <SessionProvider session={session}>
-        <Layout>
-          <Component {...pageProps} />
-        </Layout>
-      </SessionProvider>
+      <SWRConfig
+        value={{
+          refreshInterval: 3000,
+          fetcher: (resource, init) => fetch(resource, init).then(res => res.json())
+        }}
+      >
+        <SessionProvider session={session}>
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
+        </SessionProvider>
+      </SWRConfig>
     </SSRProvider>
   )
 }

@@ -1,17 +1,11 @@
 import { Comment, Reply, User } from '@prisma/client'
+import { InboxItem } from 'lib/inbox'
 import { RenderedMarkdown } from 'lib/markdown'
 import { replyRoute, userRoute } from 'lib/routes'
 import Link from 'next/link'
 import { BiLink } from 'react-icons/bi'
 import ReactTimeAgo from 'react-time-ago'
 import { Gravatar } from './gravatar'
-
-// Might be more options later
-export type InboxItem =
-  { tag: "reply" } & Reply & {
-    author: Pick<User, 'id' | 'email' | 'displayName'> | null
-    comment: Pick<Comment, 'cardId'>
-  }
 
 function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
   return (

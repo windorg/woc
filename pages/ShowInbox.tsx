@@ -6,13 +6,12 @@ import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import { BoardsCrumb, InboxCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
 import { getSession, useSession } from 'next-auth/react'
-import { canSeeReply } from '../lib/access'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
-import filterAsync from 'node-filter-async'
 import _ from 'lodash'
 import styles from './ShowInbox.module.scss'
-import { InboxItem, InboxItemComponent } from 'components/inboxItem'
+import { InboxItemComponent } from 'components/inboxItem'
+import { getInboxItems, InboxItem } from 'lib/inbox'
 
 type Props = {
   inboxItems: InboxItem[]
@@ -22,26 +21,8 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   const session = await getSession(context)
   if (session) {
     // Logged in
-    const unreadReplies: InboxItem[] =
-      await prisma.subscriptionUpdate.findMany({
-        where: {
-          subscriberId: session.userId,
-          updateKind: 'suk_reply',
-          isRead: false,
-        },
-        include: {
-          reply: {
-            include: {
-              author: { select: { id: true, email: true, displayName: true } },
-              comment: { select: { cardId: true } },
-            }
-          },
-        },
-      }).then(xs => _.compact(xs.map(x => x.reply)))
-        .then(xs => filterAsync(xs, x => canSeeReply(session.userId, x.id)))
-        .then(xs => xs.map(x => ({ ...x, tag: 'reply' })))
     const props: Props = {
-      inboxItems: unreadReplies
+      inboxItems: await getInboxItems(session.userId)
     }
     return {
       props: serialize(props)
