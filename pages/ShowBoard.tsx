@@ -31,7 +31,7 @@ type Props = {
 
 export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
   const session = await getSession(context)
-  let board = await prisma.board.findUnique({
+  const board = await prisma.board.findUnique({
     where: {
       id: context.query.boardId as string
     },

@@ -51,6 +51,7 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^12.0.7",
     "@playwright/test": "^1.17.1",
     "@types/commonmark": "^0.27.5",
     "@types/gravatar": "^1.8.3",
@@ -61,12 +62,13 @@
     "@types/react": "17.0.37",
     "@types/turndown": "^5.0.1",
     "eslint": "7.32.0",
-    "eslint-config-next": "12.0.4",
+    "eslint-config-next": "12.0.7",
     "eslint-plugin-ban": "^1.6.0",
     "eslint-plugin-compat": "^4.0.0",
     "prisma": "^3.5.0",
     "random-words": "^1.1.1",
-    "typescript": "4.5.2"
+    "typescript": "4.5.2",
+    "@typescript-eslint/eslint-plugin": "^5.8.1"
   },
   "browserslist": [
     "defaults",

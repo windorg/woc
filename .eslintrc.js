@@ -1,12 +1,23 @@
 module.exports = {
+  "overrides": [
+    {
+      files: ['*.ts', '*.tsx'],
+      parserOptions: {
+        project: ['./tsconfig.json'],
+      },
+    },
+  ],
+  "parser": '@typescript-eslint/parser',
   "extends": [
-    "next/core-web-vitals",
+    "plugin:@typescript-eslint/recommended",
     "plugin:compat/recommended",
     "plugin:react/recommended",
     "plugin:react/jsx-runtime",
+    "next/core-web-vitals",
   ],
   "plugins": [
-    "ban"
+    "@typescript-eslint",
+    "ban",
   ],
   "env": {
     "browser": true
@@ -14,7 +25,14 @@ module.exports = {
   "rules": {
     "array-callback-return": ['error', { allowImplicit: true }],
     'default-case': ['error', { commentPattern: '^no default$' }],
-    eqeqeq: ['error', 'always', { null: 'ignore' }],
+    'eqeqeq': ['error', 'always', { null: 'ignore' }],
+    '@typescript-eslint/no-misused-promises': ['error'],
+    '@typescript-eslint/no-unused-vars': ['off'],
+    '@typescript-eslint/no-non-null-assertion': ['off'],
+    '@typescript-eslint/no-explicit-any': ['off'],
+    '@typescript-eslint/no-namespace': ['off'],
+    '@typescript-eslint/ban-ts-comment': ['off'],
+    'prefer-const': ['off'],
     'no-unused-expressions': ['error', {
       allowShortCircuit: false,
       allowTernary: false,

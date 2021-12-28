@@ -1,5 +1,5 @@
 import { signIn, signOut, useSession } from "next-auth/react"
-import { PropsWithChildren, useEffect } from "react"
+import { ReactNode, useEffect } from "react"
 import loadScript from 'load-script'
 
 function ChangelogButton() {
@@ -55,7 +55,7 @@ function NavHeader() {
   )
 }
 
-export default function Layout({ children }: PropsWithChildren<{}>): JSX.Element {
+export default function Layout({ children }: { children?: ReactNode | undefined }): JSX.Element {
   return (
     <div id="layout">
       <div className="container mt-4">
