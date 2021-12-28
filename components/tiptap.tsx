@@ -10,6 +10,8 @@ import TurndownService from 'turndown'
 
 const turndownService = new TurndownService()
 
+// TODO fix codeblock to not require a space after ```
+
 const SubmitShortcut = Extension.create<{ onSubmit: () => void }>({
   name: 'SubmitShortcut',
   addOptions() {

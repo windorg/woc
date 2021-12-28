@@ -19,6 +19,14 @@ export function FeedCrumb(props: { active?: boolean }) {
   )
 }
 
+export function InboxCrumb(props: { active?: boolean }) {
+  return (
+    <LinkItem active={props.active} href={`/ShowInbox`}>
+      Inbox
+    </LinkItem>
+  )
+}
+
 export function BoardsCrumb(props: { active?: boolean }) {
   return (
     <LinkItem active={props.active} href={`/Boards`}>

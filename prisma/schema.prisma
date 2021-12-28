@@ -101,7 +101,7 @@ model SubscriptionUpdate {
   card         Card?                    @relation(fields: [cardId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_card_id")
   comment      Comment?                 @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_card_update_id")
   reply        Reply?                   @relation(fields: [replyId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "subscription_updates_ref_reply_id")
-  user         User                     @relation(fields: [subscriberId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_subscriber_id")
+  subscriber   User                     @relation(fields: [subscriberId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_subscriber_id")
 
   @@index([boardId], map: "subscription_updates_board_id_index")
   @@index([cardId], map: "subscription_updates_card_id_index")

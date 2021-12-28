@@ -42,6 +42,10 @@ function NavHeader() {
     session
       ? <div className="me-4"><Link href='/ShowFeed'><a>Feed</a></Link></div>
       : null
+  const inbox =
+    session
+      ? <div className="me-4"><Link href='/ShowInbox'><a>Inbox</a></Link></div>
+      : null
   return (
     <div className="d-flex justify-content-end align-items-center align-self-center mb-3">
       {/* TODO LOGO
@@ -54,7 +58,7 @@ function NavHeader() {
       <div className="d-flex" style={{ flex: "1" }}></div>
       <ChangelogButton />
       {feed}
-      {/* TODO {inbox} */}
+      {inbox}
       <div>{loginOrLogout}</div>
     </div>
   )

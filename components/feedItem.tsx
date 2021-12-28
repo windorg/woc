@@ -2,6 +2,7 @@ import type { Card, Comment, User } from '@prisma/client'
 import { RenderedMarkdown } from 'lib/markdown'
 import { commentRoute, userRoute } from 'lib/routes'
 import Link from 'next/link'
+import { BiLink } from 'react-icons/bi'
 import ReactTimeAgo from 'react-time-ago'
 import { Gravatar } from './gravatar'
 
@@ -32,7 +33,10 @@ export function FeedItemComponent(props: { item: FeedItem }) {
         <div>
           <span className="text-muted small">
             <Link href={commentRoute({ cardId: item.cardId, commentId: item.id })}>
-              <a><ReactTimeAgo timeStyle="twitter-minute-now" date={item.createdAt} /></a>
+              <a className="d-flex align-items-center">
+                <BiLink className="me-1" />
+                <ReactTimeAgo timeStyle="twitter-minute-now" date={item.createdAt} />
+              </a>
             </Link>
           </span>
           {/* TODO when private lockIcon */}

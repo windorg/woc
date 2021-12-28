@@ -1,12 +1,11 @@
 import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
-import type { Board, User, Comment } from '@prisma/client'
 import { prisma } from '../lib/db'
-import React, { useState } from 'react'
+import React from 'react'
 import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import { BoardsCrumb, FeedCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
-import { getSession } from 'next-auth/react'
+import { getSession, useSession } from 'next-auth/react'
 import { canSeeComment } from '../lib/access'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
@@ -17,7 +16,6 @@ import { FeedItem, FeedItemComponent } from 'components/feedItem'
 import styles from './ShowFeed.module.scss'
 
 type Props = {
-  userId: User['id'] | null
   feedItems: FeedItem[]
 }
 
@@ -42,7 +40,6 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     }).then(xs => filterAsync(xs, x => canSeeComment(session.userId, x.id)))
       .then(xs => xs.map(x => ({ ...x, tag: 'comment' })))
     const props: Props = {
-      userId: session.userId,
       feedItems
     }
     return {
@@ -51,7 +48,6 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   } else {
     // Not logged in
     const props: Props = {
-      userId: null,
       feedItems: []
     }
     return {
@@ -61,7 +57,8 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
 }
 
 const ShowFeed: NextPage<SuperJSONResult> = (props) => {
-  const { userId, feedItems } = deserialize<Props>(props)
+  const { data: session } = useSession()
+  const { feedItems } = deserialize<Props>(props)
 
   return (
     <>
@@ -76,7 +73,7 @@ const ShowFeed: NextPage<SuperJSONResult> = (props) => {
 
       <h1>Feed</h1>
 
-      {userId
+      {session
         ?
         <div className={styles.feedItems}>
           {_.orderBy(feedItems, ['createdAt'], ['desc'])

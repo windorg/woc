@@ -32,7 +32,7 @@ ol.breadcrumb {
 
 /* https://stackoverflow.com/questions/36247140/why-dont-flex-items-shrink-past-content-size 
    This is needed to prevent code blocks from breaking the viewport in the feed. */
-.media-body {
+.flex-grow-1 {
   min-width: 0;
 }
 
@@ -217,15 +217,6 @@ footer {
 .woc-comment-replies:not(:empty) {
   margin-bottom: 1.75rem;
   margin-top: 1.25rem;
-}
-
-.woc-inbox .reply {
-  max-width: 40rem;
-  margin-bottom: 2rem;
-}
-
-.woc-feed-item-comment {
-  max-width: 40rem;
 }
 
 .userpic {

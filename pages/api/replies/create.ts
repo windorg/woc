@@ -116,6 +116,7 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
     if (session.userId !== comment.ownerId) {
       currentSubscribers = await setUserSubscription(session.userId, body.commentId, 'subscribe')
     }
+    currentSubscribers = currentSubscribers.concat([comment.ownerId])
 
     // Notify all current subscribers
     for (const subscriber of currentSubscribers) {

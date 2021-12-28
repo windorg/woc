@@ -1,13 +1,16 @@
 import { prisma } from './lib/db'
 import { Browser, chromium, FullConfig } from '@playwright/test'
 import { hashPassword } from './lib/password'
-import { execSync } from 'child_process'
 
 // Clear the database
 async function resetDatabase() {
   const [{ current_database }] = await prisma.$queryRaw<{ current_database: string }[]>`select current_database()`
   if (current_database !== 'db_dev') throw new Error(`Expected to connect to the dev database, got ${current_database}`)
-  execSync(`prisma migrate reset --force --skip-generate`)
+  // NB: we can't use 'prisma migrate reset' because it will recreate enums and we'll end up with outdated type
+  // references in the running server
+  prisma.subscriptionUpdate.deleteMany()
+  prisma.reply.deleteMany()
+  prisma.user.deleteMany()
 }
 
 // Create a user and save state to ${handle}.storageState.json

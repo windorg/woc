@@ -9,7 +9,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@prisma/client": "^3.5.0",
+    "@prisma/client": "^3.7.0",
     "axios": "^0.24.0",
     "bootstrap": "^5.1.3",
     "commonmark": "^0.30.0",
@@ -61,14 +61,14 @@
     "@types/random-words": "^1.1.2",
     "@types/react": "17.0.37",
     "@types/turndown": "^5.0.1",
+    "@typescript-eslint/eslint-plugin": "^5.8.1",
     "eslint": "7.32.0",
     "eslint-config-next": "12.0.7",
     "eslint-plugin-ban": "^1.6.0",
     "eslint-plugin-compat": "^4.0.0",
-    "prisma": "^3.5.0",
+    "prisma": "^3.7.0",
     "random-words": "^1.1.1",
-    "typescript": "4.5.2",
-    "@typescript-eslint/eslint-plugin": "^5.8.1"
+    "typescript": "4.5.2"
   },
   "browserslist": [
     "defaults",
