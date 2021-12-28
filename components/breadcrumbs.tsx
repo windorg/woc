@@ -11,6 +11,14 @@ function LinkItem(props: React.ComponentProps<typeof Link> & { active?: boolean 
     : (<Link href={props.href} passHref><Breadcrumb.Item>{props.children}</Breadcrumb.Item></Link>)
 }
 
+export function FeedCrumb(props: { active?: boolean }) {
+  return (
+    <LinkItem active={props.active} href={`/ShowFeed`}>
+      Feed
+    </LinkItem>
+  )
+}
+
 export function BoardsCrumb(props: { active?: boolean }) {
   return (
     <LinkItem active={props.active} href={`/Boards`}>

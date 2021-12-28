@@ -1,6 +1,7 @@
 import { signIn, signOut, useSession } from "next-auth/react"
 import { ReactNode, useEffect } from "react"
 import loadScript from 'load-script'
+import Link from "next/link"
 
 function ChangelogButton() {
   const headwayConfig = {
@@ -37,6 +38,10 @@ function NavHeader() {
     session
       ? <button onClick={() => signOut()}>Log out</button>
       : <button onClick={() => signIn()}>Log in</button>
+  const feed =
+    session
+      ? <div className="me-4"><Link href='/ShowFeed'><a>Feed</a></Link></div>
+      : null
   return (
     <div className="d-flex justify-content-end align-items-center align-self-center mb-3">
       {/* TODO LOGO
@@ -48,8 +53,8 @@ function NavHeader() {
             </div> */}
       <div className="d-flex" style={{ flex: "1" }}></div>
       <ChangelogButton />
-      {/* TODO {feed}
-          TODO {inbox} */}
+      {feed}
+      {/* TODO {inbox} */}
       <div>{loginOrLogout}</div>
     </div>
   )

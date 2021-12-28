@@ -16,18 +16,18 @@ export function FeedItemComponent(props: { item: FeedItem }) {
   const { item } = props
   const author = item.owner
   return (
-    <div className="woc-feed-item woc-feed-item-comment">
+    <div className="woc-feed-item woc-feed-item-comment d-flex">
       <div className="flex-shrink-0">
         <Link href={userRoute(author.id)}>
           <a><Gravatar email={author.email} size="small" /></a>
         </Link>
       </div>
-      <div className="flex-grow-1">
+      <div className="flex-grow-1 ms-2">
         <strong>
           <Link href={userRoute(author.id)}>
             <a>{author.displayName}</a>
           </Link>
-          — {item.card.title}
+          {" — "}{item.card.title}
         </strong>
         <div>
           <span className="text-muted small">
@@ -37,7 +37,7 @@ export function FeedItemComponent(props: { item: FeedItem }) {
           </span>
           {/* TODO when private lockIcon */}
         </div>
-        <RenderedMarkdown className="woc-feed-item-content rendered-content small" markdown={item.content} />
+        <RenderedMarkdown className="woc-feed-item-content rendered-content mt-1" markdown={item.content} />
       </div>
     </div>
   )
