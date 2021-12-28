@@ -1,5 +1,6 @@
 import { Parser, HtmlRenderer } from 'commonmark'
 import React from 'react'
+import _ from 'lodash'
 
 export function markdownToHtml(markdown: string): string {
   const reader = new Parser()
@@ -9,7 +10,7 @@ export function markdownToHtml(markdown: string): string {
 
 export function RenderedMarkdown(props: React.HTMLAttributes<HTMLDivElement> & { markdown: string }) {
   return React.createElement("div", {
-    ...props,
+    ...(_.omit(props, ['markdown'])),
     dangerouslySetInnerHTML: { __html: markdownToHtml(props.markdown) }
   })
 }
