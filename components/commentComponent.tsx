@@ -154,6 +154,7 @@ export function CommentComponent(props: {
   const settings = commentSettings(comment)
   const isPrivate = settings.visibility === 'private'
   const classes = `
+    woc-comment
     ${styles.comment}
     ${isPrivate ? styles.commentPrivate : ""}
     ${settings.pinned ? styles.commentPinned : ""}

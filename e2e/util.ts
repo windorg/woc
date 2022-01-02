@@ -1,6 +1,43 @@
 import { expect, Page } from '@playwright/test'
 import { prisma } from '../lib/db'
 import randomWords from 'random-words'
+import { hashPassword } from '../lib/password'
+
+// Create a user (must be logged out) and save state to ${handle}.storageState.json
+//
+// Returns the handle
+export async function createAndSaveUser(
+  page: Page,
+  options?: { logout?: boolean },
+  data?: { email, handle, displayName },
+): Promise<string> {
+  const randomHandle = randomWords(2).join('_')
+  const { email, handle, displayName } =
+    data ?? {
+      email: `${randomHandle}@woc.test`,
+      handle: randomHandle,
+      displayName: randomHandle,
+    }
+  await prisma.user.deleteMany({
+    where: { handle }
+  })
+  await prisma.user.create({
+    data: {
+      email,
+      handle,
+      displayName,
+      passwordHash: hashPassword('test')
+    }
+  })
+  await page.goto('/Boards')
+  await page.click('text=Log in')
+  await page.fill('input[name="email"]', email)
+  await page.fill('input[name="password"]', 'test')
+  await page.click('text=Sign in with credentials')
+  await page.context().storageState({ path: `${handle}.storageState.json` })
+  if (options?.logout) await page.click('text=Log out')
+  return handle
+}
 
 export async function createBoard(
   page: Page,
@@ -46,12 +83,18 @@ export async function createCard(
 
 // Create a comment. Assumes we are at the card page
 export async function createComment(
-  page: Page
+  page: Page,
+  options?: {
+    private?: boolean
+  }
 ): Promise<string> {
   expect(page.url().includes('/ShowCard'))
   const content = randomWords(4).join(' ')
   await page.click('.woc-comment-form .tiptap')
   await page.keyboard.type(content)
+  if (options?.private) {
+    await page.check('input[name="private"]')
+  }
   await page.click('button:has-text("Post")')
   return content
 }

@@ -1,8 +1,8 @@
 import { Reply, User, Comment } from '@prisma/client'
 import { prisma } from 'lib/db'
-import filterAsync from 'node-filter-async'
 import { canSeeReply } from 'lib/access'
 import _ from 'lodash'
+import { filterAsync } from 'lib/array'
 
 // Might be more options later
 export type InboxItem =

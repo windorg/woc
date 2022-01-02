@@ -19,8 +19,9 @@ function ChangelogButton() {
     if (typeof window !== 'undefined' && !(window as any).Headway) {
       // TODO switch to 'next/script'?
       loadScript('https://cdn.headwayapp.co/widget.js', () => {
-        if (!document.querySelector('#HW_badge')) {
-          (window as any).Headway.init(headwayConfig)
+        const Headway = (window as any).Headway
+        if (!document.querySelector('#HW_badge') && Headway) {
+          Headway.init(headwayConfig)
         }
       })
     }

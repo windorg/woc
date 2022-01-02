@@ -11,7 +11,7 @@ import _ from 'lodash'
 import * as R from 'ramda'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
-import { canDeleteReply, canEditCard, canEditReply } from 'lib/access'
+import { canDeleteReply, canEditCard, canEditReply, canSeeComment, canSeeReply } from 'lib/access'
 import { getSession } from 'next-auth/react'
 import { callCreateComment } from './api/comments/create'
 import { Formik } from 'formik'
@@ -21,9 +21,10 @@ import { CardMenu } from 'components/cardMenu'
 import { BiPencil } from 'react-icons/bi'
 import { useRouter } from 'next/router'
 import { Reply_ } from 'components/replyComponent'
-import { deleteById, mergeById, updateById } from 'lib/array'
+import { deleteById, mapAsync, mergeById, updateById } from 'lib/array'
 import { LinkButton } from 'components/linkButton'
 import { boardRoute } from 'lib/routes'
+import { filterAsync } from 'lib/array'
 
 type Card_ = Card & {
   owner: User
@@ -54,6 +55,7 @@ const cardFindSettings = {
 
 export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
   const session = await getSession(context)
+  const userId = session?.userId
   const card = await prisma.card.findUnique({
     where: {
       id: context.query.cardId as string
@@ -61,27 +63,30 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     ...cardFindSettings
   })
   if (!card) { return { notFound: true } }
-  const canEditCard_ = await canEditCard(session?.userId, card)
+  const canEditCard_ = await canEditCard(userId, card)
 
-  const augmentedCard: Card_ = {
+  const card_: Card_ = {
     ...card,
     canEdit: canEditCard_,
-    comments: await Promise.all(card.comments.map(async comment => ({
-      ...comment,
-      // Augment comments with "canEdit". For speed we assume that if you can edit the card, you can edit the comments
-      canEdit: canEditCard_,
-      replies: await Promise.all(comment.replies.map(async reply => ({
-        ...reply,
-        // Augment replies with "canEdit" and "canDelete"
-        canEdit: await canEditReply(session?.userId, { ...reply, comment: { ...comment, card } }),
-        canDelete: await canDeleteReply(session?.userId, { ...reply, comment: { ...comment, card } })
-      })))
-    })))
+    comments: await mapAsync(
+      await filterAsync(card.comments, comment => canSeeComment(userId, comment.id)),
+      async comment => ({
+        ...comment,
+        // Augment comments with "canEdit". For speed we assume that if you can edit the card, you can edit the comments
+        canEdit: canEditCard_,
+        replies: await mapAsync(
+          await filterAsync(comment.replies, reply => canSeeReply(userId, reply.id)),
+          async reply => ({
+            ...reply,
+            // Augment replies with "canEdit" and "canDelete"
+            canEdit: await canEditReply(session?.userId, { ...reply, comment: { ...comment, card } }),
+            canDelete: await canDeleteReply(session?.userId, { ...reply, comment: { ...comment, card } })
+          }))
+      }))
   }
 
-  // TODO filter out private comments & private replies
   const props: Props = {
-    initialCard: augmentedCard
+    initialCard: card_
   }
   return {
     props: serialize(props)
