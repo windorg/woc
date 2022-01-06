@@ -44,7 +44,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   const boards = await prisma.board.findMany({
     include: { owner: { select: { handle: true, displayName: true } } },
     where: { ownerId: context.query.userId as string }
-  }).then(x => filterAsync(x, board => canSeeBoard(session?.userId, board)))
+  }).then(async x => filterAsync(x, async board => canSeeBoard(session?.userId, board)))
   const props: Props = {
     user: { ...user, followed },
     loggedInUser: session?.userId,
@@ -60,16 +60,16 @@ function FollowButton(props: { user, afterFollowUser, afterUnfollowUser }) {
     props.user.followed
       ?
       <Button size="sm" variant="outline-secondary"
-        onClick={() => {
-          callUnfollowUser({ userId: props.user.id })
+        onClick={async () => {
+          await callUnfollowUser({ userId: props.user.id })
           props.afterUnfollowUser()
         }}>
         Unfollow
       </Button>
       :
       <Button size="sm" variant="outline-primary"
-        onClick={() => {
-          callFollowUser({ userId: props.user.id })
+        onClick={async () => {
+          await callFollowUser({ userId: props.user.id })
           props.afterFollowUser()
         }}>
         Follow

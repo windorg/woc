@@ -37,7 +37,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
         owner: { select: { id: true, email: true, displayName: true } },
         card: { select: { title: true } }
       }
-    }).then(xs => filterAsync(xs, x => canSeeComment(session.userId, x.id)))
+    }).then(async xs => filterAsync(xs, async x => canSeeComment(session.userId, x.id)))
       .then(xs => xs.map(x => ({ ...x, tag: 'comment' })))
     const props: Props = {
       feedItems

@@ -34,6 +34,7 @@ export async function createAndSaveUser(
   await page.fill('input[name="email"]', email)
   await page.fill('input[name="password"]', 'test')
   await page.click('text=Sign in with credentials')
+  await page.waitForSelector('text=Log out')
   await page.context().storageState({ path: `${handle}.storageState.json` })
   if (options?.logout) await page.click('text=Log out')
   return handle
@@ -56,7 +57,7 @@ export async function createBoard(
   await page.click('button:has-text("Create a board")')
   if (options?.navigate) {
     await Promise.all([
-      page.waitForNavigation(),
+      page.waitForNavigation({ url: '**/ShowBoard*' }),
       page.click(`text=${name}`)
     ])
   }
@@ -74,7 +75,7 @@ export async function createCard(
   await page.press('[placeholder="Card title"]', 'Enter')
   if (options?.navigate) {
     await Promise.all([
-      page.waitForNavigation(),
+      page.waitForNavigation({ url: '**/ShowCard*' }),
       page.click(`text=${name}`)
     ])
   }
@@ -106,8 +107,8 @@ export async function createReply(
 ): Promise<string> {
   expect(page.url().includes('/ShowCard'))
   const content = randomWords(4).join(' ')
-  const commentHandle = await page.waitForSelector(`*_react=CommentComponent >> :has-text("${comment}")`);
-  (await commentHandle.$('text=Reply'))?.click()
+  const commentHandle = await page.locator('.woc-comment', { hasText: comment }).elementHandle()
+  await (await commentHandle!.$('text=Reply'))?.click()
   await page.click('.woc-reply-form .tiptap')
   await page.keyboard.type(content)
   await page.click('button:has-text("Post a reply")')

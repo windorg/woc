@@ -12,8 +12,10 @@ test('Private comments should not be visible to others', async ({ page, browser 
   const privateComment = await createComment(page, { private: true })
 
   // Get Alice's profile URL
-  await page.click('text=@alice')
-  await page.waitForURL(/.*\/ShowUser.*/)
+  await Promise.all([
+    page.waitForNavigation({ url: '**/ShowUser*' }),
+    page.click('text=@alice')
+  ])
   const aliceUrl = page.url()
 
   // Create a new user just for this test. Then, check that they can't see Alice's private comment *and* can't see it in
@@ -24,14 +26,14 @@ test('Private comments should not be visible to others', async ({ page, browser 
     await createAndSaveUser(xPage, { logout: false })
     // They can see the public comment but not the private comment
     await xPage.goto(cardUrl)
-    await xPage.waitForSelector(`.woc-comment >> text="${publicComment}"`)
+    await xPage.locator('.woc-comment', { hasText: publicComment }).waitFor()
     await expect(xPage.locator('body')).not.toContainText(privateComment)
     // After following, they can see the public comment in the feed but not the private comment
     await xPage.goto(aliceUrl)
     await xPage.click('text="Follow"')
     await xPage.waitForSelector('text="Unfollow"')
     await xPage.goto('/ShowFeed')
-    await xPage.waitForSelector(`.woc-feed-item >> text="${publicComment}"`)
+    await xPage.locator('.woc-feed-item', { hasText: publicComment }).waitFor()
     await expect(xPage.locator('body')).not.toContainText(privateComment)
   }
 
@@ -41,7 +43,7 @@ test('Private comments should not be visible to others', async ({ page, browser 
     const anonPage = await anonContext.newPage()
     // They can see the public comment but not the private comment
     await anonPage.goto(cardUrl)
-    await anonPage.waitForSelector(`.woc-comment >> text="${publicComment}"`)
+    await anonPage.locator('.woc-comment', { hasText: publicComment }).waitFor()
     await expect(anonPage.locator('body')).not.toContainText(privateComment)
   }
 })

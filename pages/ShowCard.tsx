@@ -69,13 +69,13 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     ...card,
     canEdit: canEditCard_,
     comments: await mapAsync(
-      await filterAsync(card.comments, comment => canSeeComment(userId, comment.id)),
+      await filterAsync(card.comments, async comment => canSeeComment(userId, comment.id)),
       async comment => ({
         ...comment,
         // Augment comments with "canEdit". For speed we assume that if you can edit the card, you can edit the comments
         canEdit: canEditCard_,
         replies: await mapAsync(
-          await filterAsync(comment.replies, reply => canSeeReply(userId, reply.id)),
+          await filterAsync(comment.replies, async reply => canSeeReply(userId, reply.id)),
           async reply => ({
             ...reply,
             // Augment replies with "canEdit" and "canDelete"
@@ -231,7 +231,7 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
     <CardMenu
       card={card}
       afterCardUpdated={card => setCard(prev => ({ ...prev, ...card }))}
-      afterCardDeleted={() => router.replace(boardRoute(card.boardId))} />
+      afterCardDeleted={async () => router.replace(boardRoute(card.boardId))} />
   )
 
   return (

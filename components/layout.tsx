@@ -38,7 +38,6 @@ function ChangelogButton() {
 
 function InboxLink() {
   const { data, error } = useSWR<CountInbox>('/api/inbox/count')
-  console.log({ data, error })
   return (
     <Link href='/ShowInbox'>
       <a>
@@ -58,8 +57,8 @@ function NavHeader() {
   const { data: session } = useSession()
   const loginOrLogout =
     session
-      ? <button onClick={() => signOut()}>Log out</button>
-      : <button onClick={() => signIn()}>Log in</button>
+      ? <button onClick={async () => signOut()}>Log out</button>
+      : <button onClick={async () => signIn()}>Log in</button>
   return (
     <div className="d-flex justify-content-end align-items-center align-self-center mb-3">
       {/* TODO LOGO

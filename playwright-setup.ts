@@ -8,9 +8,10 @@ async function resetDatabase() {
   if (current_database !== 'db_dev') throw new Error(`Expected to connect to the dev database, got ${current_database}`)
   // NB: we can't use 'prisma migrate reset' because it will recreate enums and we'll end up with outdated type
   // references in the running server
-  prisma.subscriptionUpdate.deleteMany()
-  prisma.reply.deleteMany()
-  prisma.user.deleteMany()
+  await prisma.subscriptionUpdate.deleteMany()
+  await prisma.reply.deleteMany()
+  await prisma.user.deleteMany()
+  console.log('The database has been reset')
 }
 
 async function globalSetup(config: FullConfig) {

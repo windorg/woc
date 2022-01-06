@@ -10,7 +10,7 @@ test("You can delete your own replies", async ({ page }) => {
   const replyContent = await createReply(page, commentContent)
 
   // Delete the reply
-  await page.click('_react=ReplyComponent >> text=More')
+  await page.click('.woc-reply >> text=More')
   await page.click('a[role="button"]:has-text("Delete")')
 
   // The reply should not be visible
@@ -36,7 +36,7 @@ test("You can delete others' replies to your comments", async ({ page, browser }
   await page.waitForTimeout(1000)
   await page.reload()
   await page.waitForSelector(`:has-text("${replyContent}")`)
-  await page.click('_react=ReplyComponent >> text=More')
+  await page.click('.woc-reply >> text=More')
   await page.click('a[role="button"]:has-text("Delete")')
 
   // The reply should not be visible

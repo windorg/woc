@@ -11,8 +11,10 @@ test('Private boards should not be visible to others', async ({ page, browser })
   await expect(page.locator('body')).toContainText(boardName)
 
   // Get Alice's profile URL
-  await page.click('text=@alice')
-  await page.waitForURL(/.*\/ShowUser.*/)
+  await Promise.all([
+    page.waitForNavigation({ url: '**/ShowUser*' }),
+    page.click('text=@alice')
+  ])
   const aliceUrl = page.url()
 
   // Log in as Bob

@@ -34,7 +34,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     const otherBoards = await prisma.board.findMany({
       where: { NOT: { ownerId: session.userId } },
       include
-    }).then(x => filterAsync(x, board => canSeeBoard(session.userId, board)))
+    }).then(async x => filterAsync(x, async board => canSeeBoard(session.userId, board)))
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
       select: { id: true, handle: true, displayName: true }
@@ -52,7 +52,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     const userBoards: Board_[] = []
     const otherBoards = await prisma.board.findMany({
       include
-    }).then(x => filterAsync(x, board => canSeeBoard(null, board)))
+    }).then(async x => filterAsync(x, async board => canSeeBoard(null, board)))
     const props: Props = {
       user: null,
       userBoards,

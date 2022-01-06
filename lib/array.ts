@@ -29,6 +29,7 @@ export async function filterAsync<T>(
   array: readonly T[],
   callback: (value: T, index: number) => Promise<boolean>
 ): Promise<T[]> {
+  // eslint-disable-next-line @typescript-eslint/promise-function-async
   const results = await Promise.all(array.map((value, index) => callback(value, index)))
   // eslint-disable-next-line no-restricted-syntax
   return array.filter((_, i) => results[i])
@@ -38,5 +39,6 @@ export async function mapAsync<T, O>(
   array: readonly T[],
   callback: (value: T, index: number) => Promise<O>
 ): Promise<O[]> {
+  // eslint-disable-next-line @typescript-eslint/promise-function-async
   return Promise.all(array.map((value, index) => callback(value, index)))
 }

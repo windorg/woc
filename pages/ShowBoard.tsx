@@ -112,7 +112,7 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
     <BoardMenu
       board={board}
       afterBoardUpdated={board => setBoard(prev => ({ ...prev, ...board }))}
-      afterBoardDeleted={() => router.replace(`/Boards`)} />
+      afterBoardDeleted={async () => router.replace(`/Boards`)} />
   )
 
   return (

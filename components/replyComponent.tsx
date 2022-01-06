@@ -79,6 +79,7 @@ function ShowReply(props: {
   const settings = replySettings(reply)
   const isPrivate = settings.visibility === 'private'
   const classes = `
+    woc-reply
     d-flex
     reply
     ${isPrivate ? "reply-private" : ""}
@@ -125,6 +126,7 @@ class EditReply extends React.Component<{
     const settings = replySettings(reply)
     const isPrivate = settings.visibility === 'private'
     const classes = `
+      woc-reply
       d-flex
       reply
       ${isPrivate ? "reply-private" : ""}

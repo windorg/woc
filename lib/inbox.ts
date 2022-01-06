@@ -27,7 +27,7 @@ async function getUnreadReplies(userId: User['id']): Promise<InboxItem[]> {
       },
     },
   }).then(xs => _.compact(xs.map(x => x.reply)))
-    .then(xs => filterAsync(xs, x => canSeeReply(userId, x.id)))
+    .then(async xs => filterAsync(xs, async x => canSeeReply(userId, x.id)))
     .then(xs => xs.map(x => ({ ...x, tag: 'reply' })))
 }
 
@@ -39,7 +39,7 @@ async function getUnreadRepliesCount(userId: User['id']): Promise<number> {
       isRead: false,
     },
   }).then(xs => _.compact(xs.map(x => x.replyId)))
-    .then(xs => filterAsync(xs, x => canSeeReply(userId, x)))
+    .then(async xs => filterAsync(xs, async x => canSeeReply(userId, x)))
     .then(xs => xs.length)
 }
 
