@@ -27,7 +27,7 @@ import { boardRoute } from 'lib/routes'
 import { filterAsync } from 'lib/array'
 
 type Card_ = Card & {
-  owner: User
+  owner: Pick<User, 'id' | 'displayName' | 'handle'>
   board: Board
   comments: (Comment_ & { replies: Reply_[] })[]
   canEdit: boolean
@@ -39,7 +39,7 @@ type Props = {
 
 const cardFindSettings = {
   include: {
-    owner: true,
+    owner: { select: { id: true, displayName: true, handle: true } },
     board: true,
     comments: {
       include: {

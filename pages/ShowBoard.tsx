@@ -22,7 +22,11 @@ import { useRouter } from 'next/router'
 import { LinkButton } from 'components/linkButton'
 
 type Card_ = Card & { _count: { comments: number } }
-type Board_ = Board & { owner: User, cards: Card_[], canEdit: boolean }
+type Board_ = Board & {
+  owner: Pick<User, 'id' | 'handle'>
+  cards: Card_[]
+  canEdit: boolean
+}
 
 type Props = {
   userId: User['id'] | null
@@ -36,7 +40,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
       id: context.query.boardId as string
     },
     include: {
-      owner: true,
+      owner: { select: { id: true, handle: true } },
       cards: {
         include: {
           _count: { select: { comments: true } }

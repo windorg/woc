@@ -5,7 +5,7 @@ import { prisma } from '../lib/db'
 import React, { useState } from 'react'
 import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import { BoardsCrumb, UserCrumb } from '../components/breadcrumbs'
-import { getSession } from 'next-auth/react'
+import { getSession, useSession } from 'next-auth/react'
 import { canSeeBoard } from '../lib/access'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
@@ -22,7 +22,6 @@ type Board_ = Board & { owner: { handle: string, displayName: string } }
 type Props = {
   // The 'followed' field be null if there's no logged-in user
   user: Pick<User, 'id' | 'handle' | 'displayName'> & { followed: boolean | null }
-  loggedInUser: User['id'] | null
   boards: Board_[]
 }
 
@@ -30,6 +29,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   const session = await getSession(context)
   const user = await prisma.user.findUnique({
     where: { id: context.query.userId as string },
+    select: { id: true, handle: true, displayName: true },
     rejectOnNotFound: true,
   })
   const followed: boolean | null =
@@ -47,7 +47,6 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   }).then(async x => filterAsync(x, async board => canSeeBoard(session?.userId, board)))
   const props: Props = {
     user: { ...user, followed },
-    loggedInUser: session?.userId,
     boards
   }
   return {
@@ -78,7 +77,8 @@ function FollowButton(props: { user, afterFollowUser, afterUnfollowUser }) {
 }
 
 const ShowUser: NextPage<SuperJSONResult> = (props) => {
-  const { user: initialUser, loggedInUser, boards: initialBoards } = deserialize<Props>(props)
+  const { data: session } = useSession()
+  const { user: initialUser, boards: initialBoards } = deserialize<Props>(props)
 
   const [boards, setBoards] = useState(initialBoards)
   const addBoard = (board: Board) => {
@@ -116,7 +116,7 @@ const ShowUser: NextPage<SuperJSONResult> = (props) => {
       </h1>
 
       <BoardsList
-        allowNewBoard={loggedInUser === user.id}
+        allowNewBoard={session?.userId === user.id}
         afterBoardCreated={addBoard}
         heading="Boards"
         boards={boards}
