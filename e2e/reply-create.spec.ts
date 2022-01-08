@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { createBoard, createCard, createComment, createReply, expectReplyGone } from './util'
 
-test.use({ storageState: 'alice.storageState.json' })
+test.use({ storageState: 'test-tmp/alice.storageState.json' })
 
 test("You can reply to your own comments", async ({ page }) => {
   const boardName = await createBoard(page, { navigate: true })
@@ -24,7 +24,7 @@ test("When you reply to someone else's comment, it shows your name", async ({ pa
   const cardUrl = page.url()
   // Leave a reply as Bob
   {
-    const bobContext = await browser.newContext({ storageState: 'bob.storageState.json' })
+    const bobContext = await browser.newContext({ storageState: 'test-tmp/bob.storageState.json' })
     const bobPage = await bobContext.newPage()
     await bobPage.goto(cardUrl)
     const replyContent = await createReply(bobPage, commentContent)
@@ -41,7 +41,7 @@ test("Your replies show up in the other person's inbox", async ({ page, browser 
   // Leave a reply as Bob
   let replyContent
   {
-    const bobContext = await browser.newContext({ storageState: 'bob.storageState.json' })
+    const bobContext = await browser.newContext({ storageState: 'test-tmp/bob.storageState.json' })
     const bobPage = await bobContext.newPage()
     await bobPage.goto(cardUrl)
     replyContent = await createReply(bobPage, commentContent)

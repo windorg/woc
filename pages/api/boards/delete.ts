@@ -38,5 +38,5 @@ export default async function deleteBoard(req: DeleteBoardRequest, res: NextApiR
 }
 
 export async function callDeleteBoard(body: DeleteBoardBody): Promise<void> {
-  axios.post('/api/boards/delete', body)
+  await axios.post('/api/boards/delete', body)
 }

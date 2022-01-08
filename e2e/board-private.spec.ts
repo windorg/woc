@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { createBoard } from './util'
 
-test.use({ storageState: 'alice.storageState.json' })
+test.use({ storageState: 'test-tmp/alice.storageState.json' })
 
 test('Private boards should not be visible to others', async ({ page, browser }) => {
   const boardName = await createBoard(page, { private: true, navigate: true })
@@ -19,7 +19,7 @@ test('Private boards should not be visible to others', async ({ page, browser })
 
   // Log in as Bob
   {
-    const bobContext = await browser.newContext({ storageState: 'bob.storageState.json' })
+    const bobContext = await browser.newContext({ storageState: 'test-tmp/bob.storageState.json' })
     const bobPage = await bobContext.newPage()
     // Expect that the board is not accessible by the direct link
     await bobPage.goto(boardUrl)

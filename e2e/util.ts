@@ -3,7 +3,7 @@ import { prisma } from '../lib/db'
 import randomWords from 'random-words'
 import { hashPassword } from '../lib/password'
 
-// Create a user (must be logged out) and save state to ${handle}.storageState.json
+// Create a user (must be logged out) and save state to test-tmp/${handle}.storageState.json
 //
 // Returns the handle
 export async function createAndSaveUser(
@@ -35,7 +35,7 @@ export async function createAndSaveUser(
   await page.fill('input[name="password"]', 'test')
   await page.click('text=Sign in with credentials')
   await page.waitForSelector('text=Log out')
-  await page.context().storageState({ path: `${handle}.storageState.json` })
+  await page.context().storageState({ path: `test-tmp/${handle}.storageState.json` })
   if (options?.logout) await page.click('text=Log out')
   return handle
 }

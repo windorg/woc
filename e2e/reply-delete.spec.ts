@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { createBoard, createCard, createComment, createReply, expectReplyGone } from './util'
 
-test.use({ storageState: 'alice.storageState.json' })
+test.use({ storageState: 'test-tmp/alice.storageState.json' })
 
 test("You can delete your own replies", async ({ page }) => {
   const boardName = await createBoard(page, { navigate: true })
@@ -26,7 +26,7 @@ test("You can delete others' replies to your comments", async ({ page, browser }
   // Leave a reply as Bob
   let replyContent: string
   {
-    const bobContext = await browser.newContext({ storageState: 'bob.storageState.json' })
+    const bobContext = await browser.newContext({ storageState: 'test-tmp/bob.storageState.json' })
     const bobPage = await bobContext.newPage()
     await bobPage.goto(cardUrl)
     replyContent = await createReply(bobPage, commentContent)

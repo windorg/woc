@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { createAndSaveUser, createBoard, createCard, createComment } from './util'
 
-test.use({ storageState: 'alice.storageState.json' })
+test.use({ storageState: 'test-tmp/alice.storageState.json' })
 
 test('Private comments should not be visible to others', async ({ page, browser }) => {
   await createBoard(page, { navigate: true })
