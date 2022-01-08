@@ -64,26 +64,24 @@ let Tiptap = forwardRef((props: {
     content: props.content || "",
     ...(props.autoFocus ? { autofocus: 'end' } : {})
   })
-  const editorRef: React.MutableRefObject<Editor | null> = useRef(null)
   useImperativeHandle(ref, () => ({
     focus: () => {
-      editorRef.current?.commands.focus()
+      editor?.commands.focus()
     },
     blur: () => {
-      editorRef.current?.commands.blur()
+      editor?.commands.blur()
     },
     clearContent: () => {
-      editorRef.current?.commands.clearContent()
+      editor?.commands.clearContent()
     },
     getMarkdown: () => {
       let html: string
-      if (editorRef.current) html = editorRef.current?.getHTML()
+      if (editor) html = editor.getHTML()
       else throw new Error(`Could not fetch editor content`)
       return turndownService.turndown(html)
     }
   }))
   if (!editor) return null
-  editorRef.current = editor
   return (
     <EditorContent editor={editor} />
   )
