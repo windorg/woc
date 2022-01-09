@@ -14,6 +14,7 @@ const config: PlaywrightTestConfig = {
   use: {
     baseURL: "http://localhost:3000",
     // trace: 'retain-on-failure',
-  }
+  },
+  testDir: './e2e',
 }
 export default config
