@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test'
 import { createBoard } from './util'
 
+// TODO this test should use the leakage machinery
+
 test.use({ storageState: 'test-tmp/alice.storageState.json' })
 
 test('Private boards should not be visible to others', async ({ page, browser }) => {

@@ -6,7 +6,7 @@ import React, { useState } from 'react'
 import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import { BoardsCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
-import { getSession } from 'next-auth/react'
+import { getSession, signIn } from 'next-auth/react'
 import { canSeeBoard } from '../lib/access'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
@@ -103,7 +103,7 @@ const Boards: NextPage<SuperJSONResult> = (props) => {
         :
         <>
           <p>
-            To create your own boards, please <Link href="/LoginOrSignup"><a>sign up</a></Link>.
+            To create your own boards, please <a href="#" onClick={async () => signIn()}>log in</a> or <Link href="/Signup"><a>sign up</a></Link>.
           </p>
           <BoardsList
             allowNewBoard={false}

@@ -14,6 +14,7 @@ import _ from 'lodash'
 import moment from 'moment'
 import { FeedItem, FeedItemComponent } from 'components/feedItem'
 import styles from './ShowFeed.module.scss'
+import { signIn } from "next-auth/react"
 
 type Props = {
   feedItems: FeedItem[]
@@ -83,7 +84,7 @@ const ShowFeed: NextPage<SuperJSONResult> = (props) => {
         :
         <>
           <p>
-            Please <Link href="/LoginOrSignup"><a>log in</a></Link> to see your feed.
+            Please <a href="#" onClick={async () => signIn()}>log in</a> to see your feed.
           </p>
         </>
       }

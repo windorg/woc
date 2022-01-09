@@ -1,6 +1,7 @@
 import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
 import { prisma } from '../lib/db'
+import { signIn } from "next-auth/react"
 import React from 'react'
 import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import { BoardsCrumb, InboxCrumb } from '../components/breadcrumbs'
@@ -65,7 +66,7 @@ const ShowInbox: NextPage<SuperJSONResult> = (props) => {
         :
         <>
           <p>
-            Please <Link href="/LoginOrSignup"><a>log in</a></Link> to see your inbox.
+            Please <a href="#" onClick={async () => signIn()}>log in</a> to see your inbox.
           </p>
         </>
       }

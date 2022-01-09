@@ -57,8 +57,11 @@ function NavHeader() {
   const { data: session } = useSession()
   const loginOrLogout =
     session
-      ? <button onClick={async () => signOut()}>Log out</button>
-      : <button onClick={async () => signIn()}>Log in</button>
+      ? <a href="#" onClick={async () => signOut()}>Log out</a>
+      : <>
+        <Link href="/Signup"><a className="me-4">Sign up</a></Link>
+        <a href="#" onClick={async () => signIn()}>Log in</a>
+      </>
   return (
     <div className="d-flex justify-content-end align-items-center align-self-center mb-3">
       {/* TODO LOGO
