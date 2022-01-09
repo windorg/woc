@@ -2,6 +2,8 @@ import { expect, Page, Request, Route } from '@playwright/test'
 import { prisma } from '../lib/db'
 import randomWords from 'random-words'
 import { hashPassword } from '../lib/password'
+import * as R from 'ramda'
+import { fail } from 'assert'
 
 // Create a user (must be logged out) and save state to test-tmp/${handle}.storageState.json
 //
@@ -11,7 +13,7 @@ export async function createAndSaveUser(
   options?: { logout?: boolean },
   data?: { email, handle, displayName },
 ): Promise<string> {
-  const randomHandle = randomWords(2).join('_')
+  const randomHandle = randomWords(2).join('-')
   const { email, handle, displayName } =
     data ?? {
       email: `${randomHandle}@woc.test`,
@@ -47,7 +49,7 @@ export async function createBoard(
     navigate?: boolean
   }
 ): Promise<string> {
-  const name = randomWords(3).join(' ')
+  const name = randomWords(3).join('-')
   await page.goto('/Boards')
   await page.click('text=+ New')
   await page.fill('[placeholder="Board title"]', name)
@@ -70,7 +72,7 @@ export async function createCard(
   options?: { navigate?: boolean }
 ): Promise<string> {
   expect(page.url().includes('/ShowBoard'))
-  const name = randomWords(3).join(' ')
+  const name = randomWords(3).join('-')
   await page.fill('[placeholder="Card title"]', name)
   await page.press('[placeholder="Card title"]', 'Enter')
   if (options?.navigate) {
@@ -90,7 +92,7 @@ export async function createComment(
   }
 ): Promise<string> {
   expect(page.url().includes('/ShowCard'))
-  const content = randomWords(4).join(' ')
+  const content = randomWords(4).join('-')
   await page.click('.woc-comment-form .tiptap')
   await page.keyboard.type(content)
   if (options?.private) {
@@ -106,7 +108,7 @@ export async function createReply(
   comment: string
 ): Promise<string> {
   expect(page.url().includes('/ShowCard'))
-  const content = randomWords(4).join(' ')
+  const content = randomWords(4).join('-')
   const commentHandle = await page.locator('.woc-comment', { hasText: comment }).elementHandle()
   await (await commentHandle!.$('text=Reply'))?.click()
   await page.click('.woc-reply-form .tiptap')
@@ -154,4 +156,17 @@ export async function interceptResponses<T>(
     await page.unroute('**', handler)
   }
   return { responses, result }
+}
+
+export function expectNoLeakage(
+  responses: [Request, string][],
+  blacklist: string[]
+) {
+  for (const [request, response] of responses) {
+    const matches = R.filter(word => response.includes(word), blacklist)
+    if (matches.length > 0) {
+      // @ts-ignore
+      expect(null).fail(`The response for ${request.url()} leaks data: ${matches}`)
+    }
+  }
 }

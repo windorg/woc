@@ -1,52 +1,41 @@
 import { test, expect, Page } from '@playwright/test'
-import { createAndSaveUser, createBoard, createCard, createComment, createReply, interceptResponses } from './util'
+import { createAndSaveUser, createBoard, createCard, createComment, createReply, expectNoLeakage, interceptResponses } from '../util'
 
 test.use({ storageState: 'test-tmp/alice.storageState.json' })
 
-async function expectNoLeakage(
-  pages: Page[],
-  actions: (ps: Page[]) => Promise<void>
-) {
-  const { responses } = await interceptResponses(pages, async () => actions(pages))
-  for (const [request, response] of responses) {
-    const matches = response.match(/(passwordHash|sha256|lockedAt)/g)
-    if (matches) {
-      console.error(`The response for ${request.url()} leaks data: ${matches}`)
-      expect(true).toBeFalsy()
-    }
-  }
-}
+const keywords = ['passwordHash', 'sha256', 'lockedAt']
 
 test("Don't leak user data in user view", async ({ page, browser }) => {
-  await expectNoLeakage([page], async ([page]) => {
+  const { responses } = await interceptResponses([page], async () => {
     await createBoard(page, { navigate: true })
     await Promise.all([
       page.waitForNavigation({ url: '**/ShowUser*' }),
       page.click('text=@alice')
     ])
   })
+  expectNoLeakage(responses, keywords)
 })
 
 test("Don't leak user data in board view", async ({ page, browser }) => {
-  await expectNoLeakage([page], async ([page]) => {
+  const { responses } = await interceptResponses([page], async () => {
     await createBoard(page, { navigate: true })
   })
+  expectNoLeakage(responses, keywords)
 })
 
 test("Don't leak user data in card view", async ({ page, browser }) => {
-  await expectNoLeakage([page], async ([page]) => {
+  const { responses } = await interceptResponses([page], async () => {
     await createBoard(page, { navigate: true })
     await createCard(page, { navigate: true })
   })
+  expectNoLeakage(responses, keywords)
 })
 
 test("Don't leak user data in the inbox", async ({ page, browser }) => {
-  const makePages = async () => {
-    const bobContext = await browser.newContext({ storageState: 'test-tmp/bob.storageState.json' })
-    const bobPage = await bobContext.newPage()
-    return [page, bobPage]
-  }
-  await expectNoLeakage(await makePages(), async ([page, bobPage]) => {
+  const bobContext = await browser.newContext({ storageState: 'test-tmp/bob.storageState.json' })
+  const bobPage = await bobContext.newPage()
+
+  const { responses } = await interceptResponses([page, bobPage], async () => {
     await createBoard(page, { navigate: true })
     await createCard(page, { navigate: true })
     const commentContent = await createComment(page)
@@ -61,16 +50,15 @@ test("Don't leak user data in the inbox", async ({ page, browser }) => {
     await page.waitForTimeout(250)
     await page.goto('/ShowInbox')
   })
+  expectNoLeakage(responses, keywords)
 })
 
 test("Don't leak user data in the feed", async ({ page, browser }) => {
-  const makePages = async () => {
-    const xContext = await browser.newContext({ storageState: { cookies: [], origins: [] } })
-    const xPage = await xContext.newPage()
-    await createAndSaveUser(xPage, { logout: false })
-    return [page, xPage]
-  }
-  await expectNoLeakage(await makePages(), async ([page, xPage]) => {
+  const xContext = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  const xPage = await xContext.newPage()
+  await createAndSaveUser(xPage, { logout: false })
+
+  const { responses } = await interceptResponses([page, xPage], async () => {
     await createBoard(page, { navigate: true })
     await createCard(page, { navigate: true })
     await createComment(page)
@@ -86,4 +74,5 @@ test("Don't leak user data in the feed", async ({ page, browser }) => {
       await xPage.goto('/ShowFeed')
     }
   })
+  expectNoLeakage(responses, keywords)
 })

@@ -46,9 +46,10 @@ test("Your replies show up in the other person's inbox", async ({ page, browser 
     await bobPage.goto(cardUrl)
     replyContent = await createReply(bobPage, commentContent)
     // TODO instead this should wait for the reply to end up in the database
-    await page.waitForTimeout(250)
+    await bobPage.waitForTimeout(500)
   }
   // Check that the reply shows up in Alice's inbox
+  await page.waitForTimeout(500)
   await page.goto('/ShowInbox')
   await page.locator('.woc-inbox-item', { hasText: replyContent }).waitFor()
 })

@@ -1,4 +1,13 @@
-import { PlaywrightTestConfig } from '@playwright/test'
+import { expect, PlaywrightTestConfig } from '@playwright/test'
+
+expect.extend({
+  fail(_: null, msg: string) {
+    return {
+      message: () => msg,
+      pass: false
+    }
+  }
+})
 
 const config: PlaywrightTestConfig = {
   globalSetup: './playwright-setup.ts',
