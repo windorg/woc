@@ -1,5 +1,5 @@
-import { test, expect, Page, Request } from '@playwright/test'
-import { createAndSaveUser, createBoard, createCard, createComment, createReply } from './util'
+import { test, expect, Page } from '@playwright/test'
+import { createAndSaveUser, createBoard, createCard, createComment, createReply, interceptResponses } from './util'
 
 test.use({ storageState: 'test-tmp/alice.storageState.json' })
 
@@ -7,24 +7,8 @@ async function expectNoLeakage(
   pages: Page[],
   actions: (ps: Page[]) => Promise<void>
 ) {
-  let requests: [Request, string][] = []
-  for (const page of pages) {
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    await page.route(() => true, async route => {
-      try {
-        const response = await page.request.fetch(route.request())
-        let body = await response.text()
-        requests.push([route.request(), body])
-        await route.fulfill({ response })
-      } catch (error) {
-        const re = /(Response has been disposed|Request context disposed|Failed to find browser context|browser has been closed)/g
-        // @ts-ignore
-        if (error.message.match(re)) return; else throw error
-      }
-    })
-  }
-  await actions(pages)
-  for (const [request, response] of requests) {
+  const { responses } = await interceptResponses(pages, async () => actions(pages))
+  for (const [request, response] of responses) {
     const matches = response.match(/(passwordHash|sha256|lockedAt)/g)
     if (matches) {
       console.error(`The response for ${request.url()} leaks data: ${matches}`)

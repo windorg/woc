@@ -48,7 +48,7 @@ test("Your replies show up in the other person's inbox", async ({ page, browser 
     // TODO instead this should wait for the reply to end up in the database
     await page.waitForTimeout(250)
   }
-  // Check that the reply shows up at the top of Alice's inbox
+  // Check that the reply shows up in Alice's inbox
   await page.goto('/ShowInbox')
-  await expect(page.locator('.woc-inbox-item >> nth=0')).toContainText(replyContent)
+  await page.locator('.woc-inbox-item', { hasText: replyContent }).waitFor()
 })

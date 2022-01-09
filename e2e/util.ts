@@ -1,4 +1,4 @@
-import { expect, Page } from '@playwright/test'
+import { expect, Page, Request, Route } from '@playwright/test'
 import { prisma } from '../lib/db'
 import randomWords from 'random-words'
 import { hashPassword } from '../lib/password'
@@ -125,4 +125,33 @@ export async function expectReplyGone(page: Page, replyContent: string) {
     }
   })
   expect(reply === null)
+}
+
+export async function interceptResponses<T>(
+  pages: Page[],
+  action: () => Promise<T>
+): Promise<{ responses: [Request, string][], result: T }> {
+  let responses: [Request, string][] = []
+  const handler = async (route: Route, request: Request) => {
+    try {
+      const response = await request.frame().page().request.fetch(route.request())
+      let body = await response.text()
+      responses.push([route.request(), body])
+      await route.fulfill({ response })
+    } catch (error) {
+      const re = /(Response has been disposed|Request context disposed|Failed to find browser context|browser has been closed)/g
+      // @ts-ignore
+      if (error.message.match(re)) return; else throw error
+    }
+  }
+  for (const page of pages) {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    await page.route('**', handler)
+  }
+  const result = await action()
+  for (const page of pages) {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    await page.unroute('**', handler)
+  }
+  return { responses, result }
 }

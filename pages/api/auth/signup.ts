@@ -6,7 +6,7 @@ import { SchemaOf } from 'yup'
 import { getSession } from 'next-auth/react'
 import _ from 'lodash'
 import { hashPassword } from 'lib/password'
-import axios, { AxiosError } from 'axios'
+import axios from 'axios'
 
 interface SignupRequest extends NextApiRequest {
   body: {
