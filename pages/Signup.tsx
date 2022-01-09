@@ -42,7 +42,6 @@ function SignupForm(props) {
             callbackUrl: '/Boards'
           })
         } else {
-          console.log(result.errors)
           actions.setErrors(result.errors)
         }
       }}
