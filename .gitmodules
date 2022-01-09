@@ -1,0 +1,3 @@
+[submodule "tiptap"]
+	path = tiptap
+	url = https://github.com/windorg/tiptap

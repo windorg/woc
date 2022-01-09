@@ -36,8 +36,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 
-# vendored deps
-/tiptap
-
 # playwright
 /test-tmp
