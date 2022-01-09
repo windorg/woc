@@ -12,10 +12,8 @@ test('Private comments should not be visible to others', async ({ page, browser 
   const privateComment = await createComment(page, { private: true })
 
   // Get Alice's profile URL
-  await Promise.all([
-    page.waitForNavigation({ url: '**/ShowUser*' }),
-    page.click('text=@alice')
-  ])
+  await page.click('text=@alice')
+  await page.waitForURL('**/ShowUser*')
   const aliceUrl = page.url()
 
   const xContext = await browser.newContext({ storageState: { cookies: [], origins: [] } })

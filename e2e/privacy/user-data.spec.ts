@@ -8,10 +8,8 @@ const keywords = ['passwordHash', 'sha256', 'lockedAt']
 test("Don't leak user data in user view", async ({ page, browser }) => {
   const { responses } = await interceptResponses([page], async () => {
     await createBoard(page, { navigate: true })
-    await Promise.all([
-      page.waitForNavigation({ url: '**/ShowUser*' }),
-      page.click('text=@alice')
-    ])
+    await page.click('text=@alice')
+    await page.waitForURL('**/ShowUser*')
   })
   expectNoLeakage(responses, keywords)
 })
@@ -62,10 +60,8 @@ test("Don't leak user data in the feed", async ({ page, browser }) => {
     await createBoard(page, { navigate: true })
     await createCard(page, { navigate: true })
     await createComment(page)
-    await Promise.all([
-      page.waitForNavigation({ url: '**/ShowUser*' }),
-      page.click('text=@alice')
-    ])
+    await page.click('text=@alice')
+    await page.waitForURL('**/ShowUser*')
     const aliceUrl = page.url()
     {
       await xPage.goto(aliceUrl)

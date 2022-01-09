@@ -16,10 +16,8 @@ test('Private boards should not be visible to others', async ({ page, browser })
   // Check that Alice can see the board
   await expect(page.locator('body')).toContainText(boardName)
   // Get Alice's profile URL
-  await Promise.all([
-    page.waitForNavigation({ url: '**/ShowUser*' }),
-    page.click('text=@alice')
-  ])
+  await page.click('text=@alice')
+  await page.waitForURL('**/ShowUser*')
   const aliceUrl = page.url()
 
   const { responses } = await interceptResponses([bobPage, anonPage], async () => {

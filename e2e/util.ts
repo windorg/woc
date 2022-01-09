@@ -58,10 +58,8 @@ export async function createBoard(
   }
   await page.click('button:has-text("Create a board")')
   if (options?.navigate) {
-    await Promise.all([
-      page.waitForNavigation({ url: '**/ShowBoard*' }),
-      page.click(`text=${name}`)
-    ])
+    await page.click(`text=${name}`)
+    await page.waitForURL('**/ShowBoard*')
   }
   return name
 }
@@ -76,10 +74,8 @@ export async function createCard(
   await page.fill('[placeholder="Card title"]', name)
   await page.press('[placeholder="Card title"]', 'Enter')
   if (options?.navigate) {
-    await Promise.all([
-      page.waitForNavigation({ url: '**/ShowCard*' }),
-      page.click(`text=${name}`)
-    ])
+    await page.click(`text=${name}`)
+    await page.waitForURL('**/ShowCard*')
   }
   return name
 }
