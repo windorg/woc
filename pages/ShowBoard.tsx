@@ -1,4 +1,4 @@
-import type { GetServerSideProps, NextPage } from 'next'
+import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
 import type { Board, User, Card } from '@prisma/client'
 import { prisma } from '../lib/db'
@@ -20,39 +20,26 @@ import { EditBoardModal } from 'components/editBoardModal'
 import { BoardMenu } from 'components/boardMenu'
 import { useRouter } from 'next/router'
 import { LinkButton } from 'components/linkButton'
-
-type Card_ = Card & { _count: { comments: number } }
-type Board_ = Board & {
-  owner: Pick<User, 'id' | 'handle'>
-  cards: Card_[]
-  canEdit: boolean
-}
+import { PageWithControl, WithControl } from 'lib/props-control'
+import { callGetBoard, GetBoardResponse, serverGetBoard } from './api/boards/get'
 
 type Props = {
-  userId: User['id'] | null
-  board: Board_
+  board: GetBoardResponse
 }
 
-export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
+// OK, what do we want?
+//
+// * On the client, we want 1) to make API requests to the server and 2) cache them (later).
+// * In next/link, we want to call the component's getInitialProps during prefetch.
+// * On the server, we want to make direct requests.
+
+async function getInitialProps(context: NextPageContext): Promise<WithControl<SuperJSONResult>> {
   const session = await getSession(context)
-  const board = await prisma.board.findUnique({
-    where: {
-      id: context.query.boardId as string
-    },
-    include: {
-      owner: { select: { id: true, handle: true } },
-      cards: {
-        include: {
-          _count: { select: { comments: true } }
-        }
-      }
-    }
-  })
-  if (!board || !(await canSeeBoard(session?.userId, board))) { return { notFound: true } }
-  const props: Props = {
-    userId: session?.userId,
-    board: { ...board, canEdit: await canEditBoard(session?.userId, board) },
-  }
+  const response = typeof window === 'undefined'
+    ? await serverGetBoard(session, { boardId: context.query.boardId as string })
+    : await callGetBoard({ boardId: context.query.boardId as string })
+  if (!response) return { notFound: true }
+  const props: Props = { board: response }
   return { props: serialize(props) }
 }
 
@@ -91,7 +78,7 @@ function AddCardForm(props: {
   )
 }
 
-const ShowBoard: NextPage<SuperJSONResult> = (props) => {
+const ShowBoard: NextPage<SuperJSONResult, WithControl<SuperJSONResult>> = (props) => {
   const { board: initialBoard } = deserialize<Props>(props)
 
   const [cards, setCards] = useState(initialBoard.cards)
@@ -180,4 +167,6 @@ const ShowBoard: NextPage<SuperJSONResult> = (props) => {
   )
 }
 
-export default ShowBoard
+ShowBoard.getInitialProps = getInitialProps
+
+export default PageWithControl(ShowBoard)
