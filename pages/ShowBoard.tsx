@@ -34,9 +34,8 @@ type Props = {
 // * On the server, we want to make direct requests.
 
 async function getInitialProps(context: NextPageContext): Promise<WithControl<SuperJSONResult>> {
-  const session = await getSession(context)
   const response = typeof window === 'undefined'
-    ? await serverGetBoard(session, { boardId: context.query.boardId as string })
+    ? await serverGetBoard(await getSession(context), { boardId: context.query.boardId as string })
     : await callGetBoard({ boardId: context.query.boardId as string })
   if (!response) return { notFound: true }
   const props: Props = { board: response }
