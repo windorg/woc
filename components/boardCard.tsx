@@ -3,6 +3,7 @@ import Card from 'react-bootstrap/Card'
 import Link from 'next/link'
 import { Board, User } from "@prisma/client"
 import { boardRoute, userRoute } from "lib/routes"
+import { LinkPreload } from "lib/link-preload"
 
 type Kind = 'own-board' | 'other-board'
 type Board_ = Board & { owner: Pick<User, 'handle' | 'displayName'> }
@@ -15,11 +16,11 @@ export function BoardCard(props: { board: Board_, kind: Kind }) {
       <Card.Body>
         <h3>
           {isPrivate && "🔒 "}
-          <Link href={boardRoute(board.id)}>
+          <LinkPreload href={boardRoute(board.id)}>
             <a className={(kind === 'other-board') ? "text-muted" : ""}>
               {board.title}
             </a>
-          </Link>
+          </LinkPreload>
         </h3>
         {(kind === 'other-board') &&
           <Link href={userRoute(board.ownerId)}>

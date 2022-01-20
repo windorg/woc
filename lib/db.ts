@@ -10,7 +10,7 @@ declare global {
 
 let prisma: PrismaClient
 
-if (typeof window === "undefined") {
+if (typeof window === 'undefined') {
   if (process.env.NODE_ENV === "production") {
     prisma = new PrismaClient()
   } else {

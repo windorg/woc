@@ -1,14 +1,12 @@
 import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
-import type { Board, User, Card } from '@prisma/client'
-import { prisma } from '../lib/db'
+import type { Board, Card } from '@prisma/client'
 import { boardSettings, cardSettings } from '../lib/model-settings'
-import { Accordion, Badge, Breadcrumb, Button, Card as BSCard, Form } from 'react-bootstrap'
+import { Accordion, Alert, Badge, Breadcrumb, Button, Card as BSCard, Form, Spinner } from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb } from '../components/breadcrumbs'
 import { CardCard } from '../components/cardCard'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import _ from 'lodash'
-import { canEditBoard, canSeeBoard } from '../lib/access'
 import { getSession } from 'next-auth/react'
 import { serialize, deserialize } from 'superjson'
 import { SuperJSONResult } from 'superjson/dist/types'
@@ -20,26 +18,38 @@ import { EditBoardModal } from 'components/editBoardModal'
 import { BoardMenu } from 'components/boardMenu'
 import { useRouter } from 'next/router'
 import { LinkButton } from 'components/linkButton'
-import { PageWithControl, WithControl } from 'lib/props-control'
 import { callGetBoard, GetBoardResponse, serverGetBoard } from './api/boards/get'
+import { PreloadContext } from 'lib/link-preload'
+import { QueryFunction, QueryKey, useQuery, useQueryClient } from 'react-query'
+import NextError from 'next/error'
 
 type Props = {
-  board: GetBoardResponse
+  boardId: Board['id']
+  // The following are only available when the page is rendered server-side
+  board: GetBoardResponse | null
 }
 
-// OK, what do we want?
-//
-// * On the client, we want 1) to make API requests to the server and 2) cache them (later).
-// * In next/link, we want to call the component's getInitialProps during prefetch.
-// * On the server, we want to make direct requests.
+const getBoardKey = (boardId: string) => ['getBoard', { boardId }]
 
-async function getInitialProps(context: NextPageContext): Promise<WithControl<SuperJSONResult>> {
-  const response = typeof window === 'undefined'
-    ? await serverGetBoard(await getSession(context), { boardId: context.query.boardId as string })
-    : await callGetBoard({ boardId: context.query.boardId as string })
-  if (!response) return { notFound: true }
-  const props: Props = { board: response }
-  return { props: serialize(props) }
+async function preload(context: PreloadContext): Promise<void> {
+  const boardId = context.query.boardId as string
+  await context.queryClient.prefetchQuery(
+    getBoardKey(boardId),
+    async () => callGetBoard({ boardId })
+  )
+}
+
+async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
+  const boardId = context.query.boardId as string
+  const props: Props = {
+    boardId,
+    board: null
+  }
+  // Server-side, we want to fetch the data so that we can SSR the page. Client-side, we assume the data is either
+  // already preloaded or will be loaded in the component itself, so we don't fetch the board.
+  if (typeof window === 'undefined')
+    props.board = await serverGetBoard(await getSession(context), { boardId })
+  return serialize(props)
 }
 
 function AddCardForm(props: {
@@ -77,8 +87,10 @@ function AddCardForm(props: {
   )
 }
 
-const ShowBoard: NextPage<SuperJSONResult, WithControl<SuperJSONResult>> = (props) => {
-  const { board: initialBoard } = deserialize<Props>(props)
+function ShowBoardLoaded(props: { initialBoard: Extract<GetBoardResponse, { success: true }>['data'] }) {
+  const router = useRouter()
+  const [editing, setEditing] = useState(false)
+  const { initialBoard } = props
 
   const [cards, setCards] = useState(initialBoard.cards)
   const addCard = (card: Card) => {
@@ -88,15 +100,11 @@ const ShowBoard: NextPage<SuperJSONResult, WithControl<SuperJSONResult>> = (prop
 
   const [board, setBoard] = useState(_.omit(initialBoard, ['cards']))
 
-  const [editing, setEditing] = useState(false)
-
   const isPrivate = boardSettings(board).visibility === 'private'
   const [normalCards, archivedCards] =
     _.partition(
       _.orderBy(cards, ['createdAt'], ['desc']),
       card => (!cardSettings(card).archived))
-
-  const router = useRouter()
 
   const moreButton = () => (
     <BoardMenu
@@ -166,6 +174,68 @@ const ShowBoard: NextPage<SuperJSONResult, WithControl<SuperJSONResult>> = (prop
   )
 }
 
-ShowBoard.getInitialProps = getInitialProps
+type QueryOnceResult<T> =
+  | { status: 'loading', data: undefined, error: undefined }
+  | { status: 'error', data: undefined, error: string }
+  | { status: 'success', data: T, error: undefined }
 
-export default PageWithControl(ShowBoard)
+// Like 'useQuery' but never refetches. Returns cached data if present.
+function useQueryOnce<T>(queryKey: QueryKey, queryFn: QueryFunction<T>): QueryOnceResult<T> {
+  const queryClient = useQueryClient()
+  const existingData = queryClient.getQueryData<T>(queryKey)
+  const [status, setStatus] = useState<'loading' | 'error' | 'success'>(!!existingData ? 'success' : 'loading')
+  const [data, setData] = useState<T | undefined>(existingData)
+  const [error, setError] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    if (status === 'loading')
+      queryClient.fetchQuery(queryKey, queryFn)
+        .then(data => {
+          setData(data)
+          setStatus('success')
+        })
+        .catch(err => {
+          setStatus('error')
+          setError((err as Error).message)
+        })
+  }, [queryKey, queryFn, queryClient, status])
+  // @ts-expect-error
+  return { status, data, error }
+}
+
+const ShowBoard: NextPage<SuperJSONResult> = (serializedInitialProps) => {
+  const initialProps = deserialize<Props>(serializedInitialProps)
+  const { boardId } = initialProps
+
+  // We don't want to refetch the data in realtime — imagine reading the page and then new posts appear/disappear and
+  // the page jumps around. We want the following:
+  //
+  //   * We show existing data (without a spinner even if the data is stale)
+  //   * When the page has been displayed properly, we clear the cache — to preserve the property that shown data can
+  //     *never* omit items that the user has already posted
+
+  const queryClient = useQueryClient()
+  if (initialProps.board) queryClient.setQueryData(getBoardKey(boardId), initialProps.board)
+  const query = useQueryOnce(
+    getBoardKey(boardId),
+    async () => callGetBoard({ boardId })
+  )
+  // Erase the query cache whenever it's successfully loaded
+  useEffect(() => {
+    if (query.status !== 'loading') queryClient.setQueryData(getBoardKey(boardId), undefined)
+  }, [query.status, boardId, queryClient])
+  const renderData = (response: GetBoardResponse) => {
+    if (response.success) return <ShowBoardLoaded initialBoard={response.data} />
+    if (response.error.notFound) return <NextError statusCode={404} />
+    return <NextError statusCode={500} />
+  }
+  if (query.status === 'loading') return <Spinner animation="border" />
+  if (query.status === 'error') return <Alert variant="danger">Could not load the board: {query.error}</Alert>
+  if (query.status === 'success') return renderData(query.data)
+  return <Alert variant="danger">Could not load the board: unknown error</Alert>
+}
+
+ShowBoard.getInitialProps = getInitialProps
+// @ts-expect-error: preload not found
+ShowBoard.preload = preload
+
+export default ShowBoard

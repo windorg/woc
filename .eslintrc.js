@@ -26,6 +26,7 @@ module.exports = {
     "array-callback-return": ['error', { allowImplicit: true }],
     'default-case': ['error', { commentPattern: '^no default$' }],
     'eqeqeq': ['error', 'always', { null: 'ignore' }],
+    'valid-typeof': ["error", { "requireStringLiterals": true }],
     '@typescript-eslint/no-floating-promises': 'error',
     '@typescript-eslint/no-misused-promises': 'error',
     '@typescript-eslint/promise-function-async': 'error',

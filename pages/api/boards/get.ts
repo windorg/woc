@@ -22,14 +22,22 @@ const schema: SchemaOf<GetBoardQuery> = yup.object({
   boardId: yup.string().uuid().required(),
 })
 
-export type GetBoardResponse = Board & {
-  owner: Pick<User, 'id' | 'handle'>
-  cards: (Card & { _count: { comments: number } })[]
-  canEdit: boolean
-}
+export type GetBoardResponse =
+  | {
+    success: true,
+    data: Board & {
+      owner: Pick<User, 'id' | 'handle'>
+      cards: (Card & { _count: { comments: number } })[]
+      canEdit: boolean
+    }
+  }
+  | {
+    success: false,
+    error: { notFound: true }
+  }
 
 // NB: Assumes that the query is already validated
-export async function serverGetBoard(session: Session | null, query: GetBoardQuery): Promise<GetBoardResponse | null> {
+export async function serverGetBoard(session: Session | null, query: GetBoardQuery): Promise<GetBoardResponse> {
   const board = await prisma.board.findUnique({
     where: { id: query.boardId },
     include: {
@@ -41,8 +49,14 @@ export async function serverGetBoard(session: Session | null, query: GetBoardQue
       }
     }
   })
-  if (!board || !(await canSeeBoard(session?.userId, board))) return null
-  return { ...board, canEdit: await canEditBoard(session?.userId, board) }
+  if (!board || !(await canSeeBoard(session?.userId, board))) return {
+    success: false,
+    error: { notFound: true }
+  }
+  return {
+    success: true,
+    data: { ...board, canEdit: await canEditBoard(session?.userId, board) }
+  }
 }
 
 export default async function apiGetBoard(req: GetBoardRequest, res: NextApiResponse<GetBoardResponse>) {
@@ -50,18 +64,11 @@ export default async function apiGetBoard(req: GetBoardRequest, res: NextApiResp
     const session = await getSession({ req })
     const query = await schema.validate(req.query)
     const response = await serverGetBoard(session, query)
-    if (!response) return res.status(404).send(null as unknown as GetBoardResponse)
     return res.status(200).json(response)
   }
 }
 
-export async function callGetBoard(query: GetBoardQuery): Promise<GetBoardResponse | null> {
-  const { data, status } = await axios.get('/api/boards/get', {
-    params: query,
-    validateStatus: status => (status < 400 || status === 404)
-  })
-  if (status === 200)
-    return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
-  else
-    return null
+export async function callGetBoard(query: GetBoardQuery): Promise<GetBoardResponse> {
+  const { data } = await axios.get('/api/boards/get', { params: query })
+  return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
 }

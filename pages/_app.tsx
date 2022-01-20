@@ -9,11 +9,16 @@ import en from 'javascript-time-ago/locale/en.json'
 import SSRProvider from 'react-bootstrap/SSRProvider'
 import { SWRConfig } from 'swr'
 import { Session } from 'next-auth'
+import { QueryClient, QueryClientProvider } from 'react-query'
+import { ReactQueryDevtools } from 'react-query/devtools'
+import React from 'react'
 
 TimeAgo.setDefaultLocale(en.locale)
 TimeAgo.addLocale(en)
 
 function MyApp(props) {
+  const [queryClient] = React.useState(() => new QueryClient())
+
   const { Component, pageProps } = props
   return (
     <SSRProvider>
@@ -21,16 +26,20 @@ function MyApp(props) {
           we make sure to not provide any session at all so that the session cache maintained
           by the SessionProvider would be reused. */}
       <SessionProvider {...(props.session !== undefined) ? { session: props.session } : {}}>
-        <SWRConfig
-          value={{
-            refreshInterval: 3000,
-            fetcher: async (resource, init) => fetch(resource, init).then(async res => res.json())
-          }}
-        >
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
-        </SWRConfig>
+        <QueryClientProvider client={queryClient}>
+          {/* TODO switch from SWR to react-query */}
+          <SWRConfig
+            value={{
+              refreshInterval: 3000,
+              fetcher: async (resource, init) => fetch(resource, init).then(async res => res.json())
+            }}
+          >
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </SWRConfig>
+          <ReactQueryDevtools />
+        </QueryClientProvider>
       </SessionProvider>
     </SSRProvider>
   )
