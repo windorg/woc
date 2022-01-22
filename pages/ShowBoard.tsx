@@ -22,6 +22,7 @@ import { callGetBoard, GetBoardResponse, serverGetBoard } from './api/boards/get
 import { PreloadContext } from 'lib/link-preload'
 import { QueryFunction, QueryKey, useQuery, useQueryClient } from 'react-query'
 import NextError from 'next/error'
+import { unsafeCanSee } from 'lib/access'
 
 type Props = {
   boardId: Board['id']
@@ -94,7 +95,8 @@ function ShowBoardLoaded(props: { initialBoard: Extract<GetBoardResponse, { succ
 
   const [cards, setCards] = useState(initialBoard.cards)
   const addCard = (card: Card) => {
-    const card_ = { ...card, _count: { comments: 0 } }
+    // You can see things that you already have
+    const card_ = unsafeCanSee({ ...card, _count: { comments: 0 } })
     setCards(cards => (cards.concat([card_])))
   }
 

@@ -1,6 +1,6 @@
 import { Prisma, Reply, User, Comment, subscription_update_kind } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from '../../../lib/db'
+import { prisma } from 'lib/db'
 import * as yup from 'yup'
 import { SchemaOf } from 'yup'
 import axios from 'axios'
@@ -9,6 +9,7 @@ import { getSession } from 'next-auth/react'
 import { canDeleteReply, canEditReply, canReplyToComment } from 'lib/access'
 import { CommentSettings, commentSettings, ReplySettings } from 'lib/model-settings'
 import * as R from 'ramda'
+import { filterSync } from 'lib/array'
 
 interface CreateReplyRequest extends NextApiRequest {
   body: {
@@ -56,7 +57,7 @@ async function setUserSubscription(
       const newSubscribers =
         action === 'subscribe'
           ? settings.subscribers.concat([userId])
-          : R.filter(x => x !== userId, settings.subscribers)
+          : filterSync(settings.subscribers, x => x !== userId)
       const newSettings: CommentSettings = {
         ...settings,
         subscribers: newSubscribers

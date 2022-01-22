@@ -13,9 +13,10 @@ import _ from 'lodash'
 import styles from './ShowInbox.module.scss'
 import { InboxItemComponent } from 'components/inboxItem'
 import { getInboxItems, InboxItem } from 'lib/inbox'
+import { CanSee } from 'lib/access'
 
 type Props = {
-  inboxItems: InboxItem[]
+  inboxItems: (CanSee & InboxItem)[]
 }
 
 export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {

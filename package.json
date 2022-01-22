@@ -47,6 +47,7 @@
     "sharp": "^0.29.3",
     "superjson": "^1.8.0",
     "swr": "^1.1.2",
+    "taghiro": "^0.3.5",
     "tippy.js": "^6.3.7",
     "turndown": "^7.1.1",
     "utility-types": "^3.10.0",

@@ -6,9 +6,10 @@ import { SchemaOf } from 'yup'
 import axios from 'axios'
 import deepMap from 'deep-map'
 import { getSession } from 'next-auth/react'
-import { canEditBoard, canSeeBoard } from 'lib/access'
+import { canEditBoard, CanSee, canSeeBoard, canSeeCard, PCard } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
+import { filterSync } from 'lib/array'
 
 interface GetBoardRequest extends NextApiRequest {
   query: {
@@ -25,9 +26,9 @@ const schema: SchemaOf<GetBoardQuery> = yup.object({
 export type GetBoardResponse =
   | {
     success: true,
-    data: Board & {
+    data: CanSee & Board & {
       owner: Pick<User, 'id' | 'handle'>
-      cards: (Card & { _count: { comments: number } })[]
+      cards: (CanSee & Card & { _count: { comments: number } })[]
       canEdit: boolean
     }
   }
@@ -48,14 +49,23 @@ export async function serverGetBoard(session: Session | null, query: GetBoardQue
         }
       }
     }
-  })
-  if (!board || !(await canSeeBoard(session?.userId, board))) return {
+  }).then(async board => board
+    ? {
+      ...board,
+      // NB: unfortunately this pattern (lambda + type guard signature) isn't entirely typesafe because of
+      // https://github.com/microsoft/TypeScript/issues/12798
+      cards: filterSync(board.cards, (card): card is typeof card & CanSee => canSeeCard(session?.userId, { ...card, board })),
+      canEdit: await canEditBoard(session?.userId, board)
+    }
+    : null
+  )
+  if (!board || !canSeeBoard(session?.userId, board)) return {
     success: false,
     error: { notFound: true }
   }
   return {
     success: true,
-    data: { ...board, canEdit: await canEditBoard(session?.userId, board) }
+    data: board,
   }
 }
 

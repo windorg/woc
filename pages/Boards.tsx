@@ -7,14 +7,16 @@ import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import { BoardsCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
 import { getSession, signIn } from 'next-auth/react'
-import { canSeeBoard } from '../lib/access'
+import { CanSee, canSeeBoard, unsafeCanSee } from '../lib/access'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
-import { filterAsync } from 'lib/array'
+import { filterAsync, filterSync } from 'lib/array'
+import * as R from 'ramda'
 import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
+import assert from 'assert'
 
-type Board_ = Board & { owner: { handle: string, displayName: string } }
+type Board_ = CanSee & Board & { owner: { handle: string, displayName: string } }
 
 type Props = {
   user: Pick<User, 'id' | 'handle' | 'displayName'> | null
@@ -27,14 +29,17 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   const session = await getSession(context)
   if (session) {
     // Logged in
+
+    // NB: we don't need to use 'canSeeBoard' here because of course the user can see their own boards, but it's
+    // type-safer this way
     const userBoards = await prisma.board.findMany({
       where: { ownerId: session.userId },
       include
-    })
+    }).then(xs => filterSync(xs, (board): board is Board_ => canSeeBoard(session.userId, board)))
     const otherBoards = await prisma.board.findMany({
       where: { NOT: { ownerId: session.userId } },
       include
-    }).then(async x => filterAsync(x, async board => canSeeBoard(session.userId, board)))
+    }).then(xs => filterSync(xs, (board): board is Board_ => canSeeBoard(session.userId, board)))
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
       select: { id: true, handle: true, displayName: true }
@@ -52,7 +57,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     const userBoards: Board_[] = []
     const otherBoards = await prisma.board.findMany({
       include
-    }).then(async x => filterAsync(x, async board => canSeeBoard(null, board)))
+    }).then(xs => filterSync(xs, (board): board is Board_ => canSeeBoard(null, board)))
     const props: Props = {
       user: null,
       userBoards,
@@ -69,7 +74,8 @@ const Boards: NextPage<SuperJSONResult> = (props) => {
 
   const [userBoards, setUserBoards] = useState(initialUserBoards)
   const addUserBoard = (board: Board) => {
-    const board_ = { ...board, owner: user! }
+    // You can see things that you already have
+    const board_ = unsafeCanSee({ ...board, owner: user! })
     setUserBoards(userBoards => (userBoards.concat([board_])))
   }
 

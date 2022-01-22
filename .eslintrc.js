@@ -45,8 +45,8 @@ module.exports = {
     "no-restricted-syntax": [
       "warn",
       {
-        "selector": "MemberExpression[property.name='filter'][object.name!='R']",
-        "message": "_.filter and Array.filter have too permissive typings, use R.filter"
+        "selector": "MemberExpression[property.name='filter']",
+        "message": "_.filter and Array.filter have too permissive typings, use filterSync"
       }
     ],
     "ban/ban": [

@@ -2,8 +2,7 @@ import { expect, Page, Request, Route } from '@playwright/test'
 import { prisma } from '../lib/db'
 import randomWords from 'random-words'
 import { hashPassword } from '../lib/password'
-import * as R from 'ramda'
-import { fail } from 'assert'
+import { filterSync } from '../lib/array'
 
 // Create a user (must be logged out) and save state to test-tmp/${handle}.storageState.json
 //
@@ -165,7 +164,7 @@ export function expectNoLeakage(
   blacklist: string[]
 ) {
   for (const [request, response] of responses) {
-    const matches = R.filter(word => response.includes(word), blacklist)
+    const matches = filterSync(blacklist, word => response.includes(word))
     if (matches.length > 0) {
       // @ts-ignore
       expect(null).fail(`The response for ${request.url()} leaks data: ${matches}`)

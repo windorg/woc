@@ -5,7 +5,7 @@ export function deleteById<T, I>(
   xs: (T & { id: I })[],
   id: I
 ) {
-  return R.filter(x => x.id !== id, xs)
+  return filterSync(xs, x => x.id !== id)
 }
 
 // Find an element based on the 'id' field and update it
@@ -41,4 +41,20 @@ export async function mapAsync<T, O>(
 ): Promise<O[]> {
   // eslint-disable-next-line @typescript-eslint/promise-function-async
   return Promise.all(array.map((value, index) => callback(value, index)))
+}
+
+export function filterSync<T, S extends T>(
+  array: readonly T[],
+  predicate: (value: T, index: number) => value is S
+): S[]
+export function filterSync<T>(
+  array: readonly T[],
+  predicate: (value: T, index: number) => boolean
+): T[]
+export function filterSync<T>(
+  array: readonly T[],
+  predicate: (value: T, index: number) => boolean
+): T[] {
+  // eslint-disable-next-line no-restricted-syntax
+  return array.filter(predicate)
 }

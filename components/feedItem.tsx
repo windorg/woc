@@ -6,12 +6,13 @@ import { BiLink } from 'react-icons/bi'
 import ReactTimeAgo from 'react-time-ago'
 import { Gravatar } from './gravatar'
 
-// Might be more options later
+export type FeedItemComment = Comment & {
+  owner: Pick<User, 'id' | 'email' | 'displayName'>
+  card: Pick<Card, 'title'>
+}
+
 export type FeedItem =
-  { tag: "comment" } & Comment & {
-    owner: Pick<User, 'id' | 'email' | 'displayName'>
-    card: Pick<Card, 'title'>
-  }
+  | { tag: "comment" } & FeedItemComment
 
 export function FeedItemComponent(props: { item: FeedItem }) {
   const { item } = props

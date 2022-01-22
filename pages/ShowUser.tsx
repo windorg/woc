@@ -6,18 +6,19 @@ import React, { useState } from 'react'
 import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import { BoardsCrumb, UserCrumb } from '../components/breadcrumbs'
 import { getSession, useSession } from 'next-auth/react'
-import { canSeeBoard } from '../lib/access'
+import { CanSee, canSeeBoard, unsafeCanSee } from '../lib/access'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
-import { filterAsync } from 'lib/array'
 import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
 import { callUnfollowUser } from './api/users/unfollow'
 import Button from 'react-bootstrap/Button'
 import { callFollowUser } from './api/users/follow'
+import { filterSync } from 'lib/array'
+import assert from 'assert'
 
 // Strictly speaking the owner is not necessary here, but it's easier types-wise this way
-type Board_ = Board & { owner: { handle: string, displayName: string } }
+type Board_ = CanSee & Board & { owner: { handle: string, displayName: string } }
 
 type Props = {
   // The 'followed' field be null if there's no logged-in user
@@ -44,7 +45,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   const boards = await prisma.board.findMany({
     include: { owner: { select: { handle: true, displayName: true } } },
     where: { ownerId: context.query.userId as string }
-  }).then(async x => filterAsync(x, async board => canSeeBoard(session?.userId, board)))
+  }).then(xs => filterSync(xs, (board): board is Board_ => canSeeBoard(session?.userId, board)))
   const props: Props = {
     user: { ...user, followed },
     boards
@@ -82,7 +83,8 @@ const ShowUser: NextPage<SuperJSONResult> = (props) => {
 
   const [boards, setBoards] = useState(initialBoards)
   const addBoard = (board: Board) => {
-    const board_ = { ...board, owner: user! }
+    // You can see things that you already have
+    const board_ = unsafeCanSee({ ...board, owner: user! })
     setBoards(boards => boards.concat([board_]))
   }
 

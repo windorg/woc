@@ -11,7 +11,7 @@ import _ from 'lodash'
 import * as R from 'ramda'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
-import { canDeleteReply, canEditCard, canEditReply, canSeeComment, canSeeReply } from 'lib/access'
+import { canDeleteReply, canEditCard, canEditReply, CanSee, canSeeBoard, canSeeCard, canSeeComment, canSeeReply, pCardSelect, unsafeCanSee } from 'lib/access'
 import { getSession } from 'next-auth/react'
 import { callCreateComment } from './api/comments/create'
 import { Formik } from 'formik'
@@ -21,15 +21,16 @@ import { CardMenu } from 'components/cardMenu'
 import { BiPencil } from 'react-icons/bi'
 import { useRouter } from 'next/router'
 import { Reply_ } from 'components/replyComponent'
-import { deleteById, mapAsync, mergeById, updateById } from 'lib/array'
+import { deleteById, filterSync, mapAsync, mergeById, updateById } from 'lib/array'
 import { LinkButton } from 'components/linkButton'
 import { boardRoute } from 'lib/routes'
-import { filterAsync } from 'lib/array'
+import assert from 'assert'
 
-type Card_ = Card & {
+type Card_ = CanSee & Card & {
   owner: Pick<User, 'id' | 'displayName' | 'handle'>
-  board: Board
-  comments: (Comment_ & { replies: Reply_[] })[]
+  // TODO: honestly we only need the title from here.
+  board: CanSee & Board
+  comments: (CanSee & Comment_ & { replies: (CanSee & Reply_)[] })[]
   canEdit: boolean
 }
 
@@ -62,20 +63,27 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
     },
     ...cardFindSettings
   })
-  if (!card) { return { notFound: true } }
+  if (!card || !canSeeCard(userId, card)) { return { notFound: true } }
   const canEditCard_ = await canEditCard(userId, card)
+
+  // We assume that if you can see the card, you can see the board. For now (Jan 2022) it is always true.
+  const board = card.board
+  // NB: we can't write canSeeBoard(userId, card.board) because it wouldn't refine the type of card.board, so we have to
+  // work around like this.
+  assert(canSeeBoard(userId, board))
 
   const card_: Card_ = {
     ...card,
+    board,
     canEdit: canEditCard_,
     comments: await mapAsync(
-      await filterAsync(card.comments, async comment => canSeeComment(userId, comment.id)),
+      filterSync(card.comments, (comment): comment is (typeof comment & CanSee) => canSeeComment(userId, { ...comment, card })),
       async comment => ({
         ...comment,
         // Augment comments with "canEdit". For speed we assume that if you can edit the card, you can edit the comments
         canEdit: canEditCard_,
         replies: await mapAsync(
-          await filterAsync(comment.replies, async reply => canSeeReply(userId, reply.id)),
+          filterSync(comment.replies, (reply): reply is (typeof reply & CanSee) => canSeeReply(userId, { ...reply, comment: { ...comment, card } })),
           async reply => ({
             ...reply,
             // Augment replies with "canEdit" and "canDelete"
@@ -149,10 +157,14 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
 
   // Assuming that this is only called for own comments (and therefore they can be edited). Shouldn't be called for
   // e.g. comments coming from a websocket
-  const addComment = (comment: Comment) => setCard(card => ({
-    ...card,
-    comments: card.comments.concat([{ ...comment, replies: [], canEdit: true }])
-  }))
+  const addComment = (comment: Comment) => setCard(card => {
+    // Of course you can see your own comments
+    const comment_ = unsafeCanSee({ ...comment, replies: [], canEdit: true })
+    return {
+      ...card,
+      comments: card.comments.concat([comment_])
+    }
+  })
 
   const updateComment = (comment: Comment) => setCard(card => ({
     ...card,
@@ -164,13 +176,17 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
     comments: deleteById(card.comments, commentId)
   }))
 
-  const addReply = (commentId, reply: Reply_) => setCard(card => ({
-    ...card,
-    comments: updateById(card.comments, commentId, (comment => ({
-      ...comment,
-      replies: comment.replies.concat([reply])
-    })))
-  }))
+  const addReply = (commentId, reply: Reply_) => setCard(card => {
+    // Of course you can see your own replies
+    const reply_ = unsafeCanSee(reply)
+    return {
+      ...card,
+      comments: updateById(card.comments, commentId, (comment => ({
+        ...comment,
+        replies: comment.replies.concat([reply_])
+      })))
+    }
+  })
 
   const updateReply = (commentId, reply: Reply) => setCard(card => ({
     ...card,

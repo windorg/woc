@@ -1,17 +1,19 @@
 import { Reply, User, Comment } from '@prisma/client'
 import { prisma } from 'lib/db'
-import { canSeeReply } from 'lib/access'
+import { CanSee, canSeeReply, PComment, pCommentSelect, pReplySelect } from 'lib/access'
 import _ from 'lodash'
-import { filterAsync } from 'lib/array'
+import { filterAsync, filterSync } from 'lib/array'
+
+type Reply_ = Reply & {
+  author: Pick<User, 'id' | 'email' | 'displayName'> | null
+  comment: Pick<Comment, 'cardId'> & PComment
+}
 
 // Might be more options later
 export type InboxItem =
-  { tag: "reply" } & Reply & {
-    author: Pick<User, 'id' | 'email' | 'displayName'> | null
-    comment: Pick<Comment, 'cardId'>
-  }
+  | { tag: "reply" } & Reply_
 
-async function getUnreadReplies(userId: User['id']): Promise<InboxItem[]> {
+async function getUnreadReplies(userId: User['id']): Promise<(CanSee & InboxItem)[]> {
   return prisma.subscriptionUpdate.findMany({
     where: {
       subscriberId: userId,
@@ -22,12 +24,12 @@ async function getUnreadReplies(userId: User['id']): Promise<InboxItem[]> {
       reply: {
         include: {
           author: { select: { id: true, email: true, displayName: true } },
-          comment: { select: { cardId: true } },
+          comment: { select: { cardId: true, ...pCommentSelect } },
         }
       },
     },
   }).then(xs => _.compact(xs.map(x => x.reply)))
-    .then(async xs => filterAsync(xs, async x => canSeeReply(userId, x.id)))
+    .then(xs => filterSync(xs, (reply): reply is Reply_ & CanSee => canSeeReply(userId, reply)))
     .then(xs => xs.map(x => ({ ...x, tag: 'reply' })))
 }
 
@@ -39,11 +41,15 @@ async function getUnreadRepliesCount(userId: User['id']): Promise<number> {
       isRead: false,
     },
   }).then(xs => _.compact(xs.map(x => x.replyId)))
-    .then(async xs => filterAsync(xs, async x => canSeeReply(userId, x)))
+    .then(xs => prisma.reply.findMany({
+      where: { id: { in: xs } },
+      select: pReplySelect,
+    }))
+    .then(xs => filterSync(xs, reply => canSeeReply(userId, reply)))
     .then(xs => xs.length)
 }
 
-export async function getInboxItems(userId: User['id']): Promise<InboxItem[]> {
+export async function getInboxItems(userId: User['id']): Promise<(CanSee & InboxItem)[]> {
   return getUnreadReplies(userId)
 }
 
