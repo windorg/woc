@@ -17,7 +17,7 @@ export function BoardCard(props: { board: Board_, kind: Kind }) {
         <h3>
           {isPrivate && "🔒 "}
           <LinkPreload href={boardRoute(board.id)}>
-            <a className={(kind === 'other-board') ? "text-muted" : ""}>
+            <a className={(kind === 'other-board') ? "text-muted" : "stretched-link"}>
               {board.title}
             </a>
           </LinkPreload>
