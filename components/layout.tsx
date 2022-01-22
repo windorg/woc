@@ -5,6 +5,7 @@ import Link from "next/link"
 import useSWR from "swr"
 import { CountInbox } from "pages/api/inbox/count"
 import Badge from "react-bootstrap/Badge"
+import Head from "next/head"
 
 function ChangelogButton() {
   const headwayConfig = {
@@ -90,18 +91,30 @@ type Props = {
 
 function Layout(props: Props): JSX.Element {
   return (
-    <div id="layout">
-      <div className="container mt-4">
-        <NavHeader />
-        {props.children}
-      </div>
-      <footer className="container py-4">
-        <div className="text-center text-muted small">
-          made by <a href="https://twitter.com/availablegreen">Artyom Kazak</a>{" "}
-          • favicon by <a href="https://loading.io/">loading.io</a>
+    <>
+      <Head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <link rel="icon" href="favicon.png" />
+        <link rel="apple-touch-icon" href="favicon-large.png" />
+        <meta name="theme-color" content="#ffffff" />
+      </Head>
+      <div id="layout">
+        <div className="container mt-4">
+          <NavHeader />
+          {props.children}
         </div>
-      </footer>
-    </div>
+        <footer className="container py-4">
+          <div className="text-center text-muted small">
+            made by <a href="https://twitter.com/availablegreen">Artyom Kazak</a>{" "}
+            • favicon by <a href="https://loading.io/">loading.io</a>
+          </div>
+        </footer>
+      </div>
+    </>
   )
 }
 
