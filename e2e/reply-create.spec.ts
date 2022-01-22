@@ -22,6 +22,8 @@ test("When you reply to someone else's comment, it shows your name", async ({ pa
   await createCard(page, { navigate: true })
   const commentContent = await createComment(page)
   const cardUrl = page.url()
+  // TODO instead this should wait for the comment to end up in the database
+  await page.waitForTimeout(500)
   // Leave a reply as Bob
   {
     const bobContext = await browser.newContext({ storageState: 'test-tmp/bob.storageState.json' })
