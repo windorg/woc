@@ -2,6 +2,7 @@ import { signIn, signOut, useSession } from "next-auth/react"
 import { ReactNode, useEffect } from "react"
 import loadScript from 'load-script'
 import Link from "next/link"
+import Image from 'next/image'
 import useSWR from "swr"
 import { CountInbox } from "pages/api/inbox/count"
 import Badge from "react-bootstrap/Badge"
@@ -65,13 +66,16 @@ function NavHeader() {
       </>
   return (
     <div className="d-flex justify-content-end align-items-center align-self-center mb-3">
-      {/* TODO LOGO
-            <div style="position:relative">
-                <a href="/" class="stretched-link text-reset text-decoration-none">
-                    <img src="/favicon-large.png" width="50" class="me-2 woc-logo-icon">
-                    <span class="woc-logo-text">wind of change</span>
-                </a>
-            </div> */}
+      <div style={{ position: 'relative' }}>
+        <Link href="/">
+          <a className="stretched-link text-reset woc-logo-link">
+            {/* Using img instead of Image because for some reason with Image the logo text isn't centered */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/favicon-large.png" width="50" height="50" className="me-2 woc-logo-icon" alt="wind of change logo" />
+            <span className="woc-logo-text">wind of change</span>
+          </a>
+        </Link>
+      </div>
       <div className="d-flex" style={{ flex: "1" }}></div>
       <ChangelogButton />
       {session

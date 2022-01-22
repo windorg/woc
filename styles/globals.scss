@@ -128,11 +128,16 @@ footer {
   }
 }
 
-.woc-logo-text {
-  font-family: "Open Sans";
+.woc-logo-link {
+  &,
+  &:hover {
+    text-decoration: none !important;
+  }
 }
+
 @media (max-width: 550px) {
   .woc-logo-icon {
+    height: 32px;
     width: 32px;
   }
   .woc-logo-text {
