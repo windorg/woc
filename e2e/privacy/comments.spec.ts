@@ -11,6 +11,31 @@ test('Private comments should not be visible to others', async ({ page, browser 
   const publicComment = await createComment(page)
   const privateComment = await createComment(page, { private: true })
 
+  const xContext = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  const xPage = await xContext.newPage()
+  await createAndSaveUser(xPage, { logout: false })
+
+  const anonContext = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  const anonPage = await anonContext.newPage()
+
+  const { responses } = await interceptResponses([xPage, anonPage], async () => {
+    for (const somebodyPage of [xPage, anonPage]) {
+      // Others can see the public comment but not the private comment
+      await somebodyPage.goto(cardUrl)
+      await somebodyPage.locator('.woc-comment', { hasText: publicComment }).waitFor()
+      await expect(somebodyPage.locator('body')).not.toContainText(privateComment)
+    }
+  })
+  expectNoLeakage(responses, [privateComment])
+})
+
+test('Private comments should not appear in feeds', async ({ page, browser }) => {
+  await createBoard(page, { navigate: true })
+  await createCard(page, { navigate: true })
+
+  const publicComment = await createComment(page)
+  const privateComment = await createComment(page, { private: true })
+
   // Get Alice's profile URL
   await page.click('text=@alice')
   await page.waitForURL('**/ShowUser*')
@@ -18,29 +43,26 @@ test('Private comments should not be visible to others', async ({ page, browser 
 
   const xContext = await browser.newContext({ storageState: { cookies: [], origins: [] } })
   const xPage = await xContext.newPage()
+  await createAndSaveUser(xPage, { logout: false })
 
   const anonContext = await browser.newContext({ storageState: { cookies: [], origins: [] } })
   const anonPage = await anonContext.newPage()
 
   const { responses } = await interceptResponses([xPage, anonPage], async () => {
-    // Create a new user just. Then, check that they can't see Alice's private comment *and* can't see it in their feed
-    // if they follow Alice
-    await createAndSaveUser(xPage, { logout: false })
-    // They can see the public comment but not the private comment
-    await xPage.goto(cardUrl)
-    await xPage.locator('.woc-comment', { hasText: publicComment }).waitFor()
-    await expect(xPage.locator('body')).not.toContainText(privateComment)
-    // After following, they can see the public comment in the feed but not the private comment
+    // Follow Alice
     await xPage.goto(aliceUrl)
     await xPage.click('text="Follow"')
     await xPage.waitForSelector('text="Unfollow"')
+
+    // After following, the new user can see the public comment in the feed
     await xPage.goto('/ShowFeed')
     await xPage.locator('.woc-feed-item', { hasText: publicComment }).waitFor()
+    // But not the private comment
     await expect(xPage.locator('body')).not.toContainText(privateComment)
 
-    // Check that a logged-out user can't see the private comment either
-    await anonPage.goto(cardUrl)
-    await anonPage.locator('.woc-comment', { hasText: publicComment }).waitFor()
+    // Just in case: anon users can't see the private comment in the feed (the feed shouldn't work for them at all)
+    await anonPage.goto('/ShowFeed')
+    await expect(anonPage.locator('body')).not.toContainText(publicComment)
     await expect(anonPage.locator('body')).not.toContainText(privateComment)
   })
   expectNoLeakage(responses, [privateComment])

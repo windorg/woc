@@ -38,15 +38,15 @@ const findReply = (id) => prisma.reply.findUnique({
   rejectOnNotFound: true
 })
 
-// Note: it makes sense that these functions should only be callable server-side because there might simply be not
-// enough data client-side to decide if something is editable or not (e.g. "only X Y Z people can edit it" but the
-// backend won't tell you the exact list of those people)
-
 export type CanSee = Tag<'can-see'>
 
 export function unsafeCanSee<T>(x: T): T & CanSee {
   return (x as T & CanSee)
 }
+
+// Note: it makes sense that these functions should only be callable server-side because there might simply be not
+// enough data client-side to decide if something is editable or not (e.g. "only X Y Z people can edit it" but the
+// backend won't tell you the exact list of those people)
 
 export function canSeeBoard<T extends PBoard>(userId: User['id'] | null, board: T): board is T & CanSee {
   return board.ownerId === userId

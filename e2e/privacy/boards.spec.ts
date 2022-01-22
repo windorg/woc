@@ -21,16 +21,18 @@ test('Private boards should not be visible to others', async ({ page, browser })
   const aliceUrl = page.url()
 
   const { responses } = await interceptResponses([bobPage, anonPage], async () => {
-    // Expect that Bob can't access the page by the direct link
-    await bobPage.goto(boardUrl)
-    await expect(bobPage.locator('h1')).toHaveText(/404/)
-    await expect(bobPage.locator('body')).not.toContainText(boardName)
-    // Expect that Bob can't see the board in Alice's profile
-    await bobPage.goto(aliceUrl)
-    await expect(bobPage.locator('body')).not.toContainText(boardName)
-    // Expect that a logged-out user can't access the page by the direct link
-    await anonPage.goto('/Boards')
-    await expect(anonPage.locator('body')).not.toContainText(boardName)
+    for (const somebodyPage of [bobPage, anonPage]) {
+      // Check that others can't access the page by the direct link
+      await somebodyPage.goto(boardUrl)
+      await expect(somebodyPage.locator('h1')).toHaveText(/404/)
+      await expect(somebodyPage.locator('body')).not.toContainText(boardName)
+      // Check that others can't see the board in Alice's profile
+      await somebodyPage.goto(aliceUrl)
+      await expect(somebodyPage.locator('body')).not.toContainText(boardName)
+      // Check that others can't see the board on the /Boards page
+      await somebodyPage.goto('/Boards')
+      await expect(somebodyPage.locator('body')).not.toContainText(boardName)
+    }
   })
   expectNoLeakage(responses, [boardName])
 })
