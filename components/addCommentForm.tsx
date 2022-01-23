@@ -22,7 +22,7 @@ export class AddCommentForm extends React.Component<{
     return (
       <Formik
         initialValues={{ private: false }}
-        onSubmit={async (values) => {
+        onSubmit={async (values, formik) => {
           if (!this.#editorRef.current)
             throw Error("Editor is not initialized")
           const comment = await callCreateComment({
@@ -32,6 +32,7 @@ export class AddCommentForm extends React.Component<{
           })
           this.props.afterCommentCreated(comment)
           this.#editorRef.current.clearContent()
+          formik.resetForm()
         }}
       >
         {formik => (

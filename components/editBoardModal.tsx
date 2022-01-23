@@ -30,9 +30,10 @@ export class EditBoardModal extends React.Component<{
         <Modal.Body>
           <Formik
             initialValues={{ title: board.title }}
-            onSubmit={async (values) => {
+            onSubmit={async (values, formik) => {
               const diff = await callUpdateBoard({ boardId: board.id, ...values })
               this.props.afterBoardUpdated({ ...board, ...diff })
+              formik.resetForm()
             }}
           >
             {formik => (<>

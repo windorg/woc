@@ -32,9 +32,10 @@ export class EditCardModal extends React.Component<{
         <Modal.Body>
           <Formik
             initialValues={{ title: card.title, reverseOrder: cardSettings(card).reverseOrder }}
-            onSubmit={async (values) => {
+            onSubmit={async (values, formik) => {
               const diff = await callUpdateCard({ cardId: card.id, ...values })
               this.props.afterCardUpdated({ ...card, ...diff })
+              formik.resetForm()
             }}
           >
             {formik => (<>

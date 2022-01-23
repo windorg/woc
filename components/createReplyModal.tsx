@@ -31,7 +31,7 @@ export class CreateReplyModal extends React.Component<{
         <Modal.Body>
           <Formik
             initialValues={{}}
-            onSubmit={async (values) => {
+            onSubmit={async (values, formik) => {
               if (!this.#editorRef.current) throw Error("Editor is not initialized")
               const reply = await callCreateReply({
                 ...values,
@@ -39,6 +39,7 @@ export class CreateReplyModal extends React.Component<{
                 content: this.#editorRef.current.getMarkdown(),
               })
               this.props.afterReplyCreated(reply)
+              formik.resetForm()
             }}
           >
             {formik => (

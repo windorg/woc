@@ -25,9 +25,10 @@ export function CreateBoardModal(props: {
       <Modal.Body>
         <Formik
           initialValues={{ private: false, title: "" }}
-          onSubmit={async (values) => {
+          onSubmit={async (values, formik) => {
             const board = await callCreateBoard(values)
             props.afterBoardCreated(board)
+            formik.resetForm()
           }}
         >
           {formik => (
