@@ -215,15 +215,19 @@ footer {
   line-height: 1.54 !important;
 }
 
-.woc-comment-replies .reply {
-  margin-top: 0.9rem;
-}
-.woc-comment-replies .reply .woc-reply-info {
-  margin-bottom: 0.15rem;
-}
-.woc-comment-replies:not(:empty) {
-  margin-bottom: 1.75rem;
-  margin-top: 1.25rem;
+.woc-comment-replies {
+  &:not(:empty) {
+    margin-bottom: 1.75rem;
+    margin-top: 1.25rem;
+  }
+  // We want smaller left-margins on the phones
+  margin-left: calc(min(4vw, 2rem));
+  .reply {
+    margin-top: 0.9rem;
+    .woc-reply-info {
+      margin-bottom: 0.15rem;
+    }
+  }
 }
 
 .userpic {

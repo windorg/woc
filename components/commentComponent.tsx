@@ -128,7 +128,7 @@ function Replies(props: {
   const replies =
     _.orderBy(props.replies, ['createdAt'], ['asc'])
   return (
-    <div className="woc-comment-replies ms-5">
+    <div className="woc-comment-replies">
       {replies.map(reply => (
         <ReplyComponent key={reply.id} card={props.card} reply={reply}
           afterReplyUpdated={props.afterReplyUpdated}
