@@ -12,7 +12,7 @@ import { serialize, deserialize } from 'superjson'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { callCreateCard } from './api/cards/create'
 import { TransitionGroup, CSSTransition } from 'react-transition-group'
-import { useFormik } from 'formik'
+import { Formik } from 'formik'
 import { BiPencil } from 'react-icons/bi'
 import { EditBoardModal } from 'components/editBoardModal'
 import { BoardMenu } from 'components/boardMenu'
@@ -57,34 +57,37 @@ function AddCardForm(props: {
   boardId: Board['id']
   afterCardCreated: (card: Card) => void
 }) {
-  const formik = useFormik({
-    initialValues: {
-      title: '',
-      private: false,
-    },
-    onSubmit: async (values) => {
-      // TODO: what exactly will happen in prod if the backend fails with err500 for whatever reason?
-      const card = await callCreateCard({
-        boardId: props.boardId,
-        ...values
-      })
-      props.afterCardCreated(card)
-      formik.resetForm()
-    }
-  })
   return (
-    <Form onSubmit={formik.handleSubmit}>
-      <Form.Group className="mb-3">
-        <Form.Control
-          name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
-          type="text" placeholder="Card title"
-          style={{ maxWidth: "40rem", width: "100%" }} />
-      </Form.Group>
-      <Button variant="primary" type="submit">Add a card</Button>
-      <Form.Check
-        name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
-        type="checkbox" className="ms-4" inline label="🔒 Private card" />
-    </Form>
+    <Formik
+      initialValues={{
+        title: '',
+        private: false,
+      }}
+      onSubmit={async (values, formik) => {
+        // TODO: what exactly will happen in prod if the backend fails with err500 for whatever reason?
+        const card = await callCreateCard({
+          boardId: props.boardId,
+          ...values
+        })
+        props.afterCardCreated(card)
+        formik.resetForm()
+      }}
+    >
+      {formik => (
+        <Form onSubmit={formik.handleSubmit}>
+          <Form.Group className="mb-3">
+            <Form.Control
+              name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
+              type="text" placeholder="Card title"
+              style={{ maxWidth: "40rem", width: "100%" }} />
+          </Form.Group>
+          <Button variant="primary" type="submit">Add a card</Button>
+          <Form.Check
+            name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
+            type="checkbox" className="ms-4" inline label="🔒 Private card" />
+        </Form>
+      )}
+    </Formik>
   )
 }
 
