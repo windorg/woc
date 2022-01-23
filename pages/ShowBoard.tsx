@@ -5,6 +5,7 @@ import { boardSettings, cardSettings } from '../lib/model-settings'
 import { Accordion, Alert, Badge, Breadcrumb, Button, Card as BSCard, Form, Spinner } from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb } from '../components/breadcrumbs'
 import { CardCard } from '../components/cardCard'
+import * as B from 'react-bootstrap'
 import React, { useEffect, useState } from 'react'
 import _ from 'lodash'
 import { getSession } from 'next-auth/react'
@@ -81,7 +82,11 @@ function AddCardForm(props: {
               type="text" placeholder="Card title"
               style={{ maxWidth: "40rem", width: "100%" }} />
           </Form.Group>
-          <Button variant="primary" type="submit">Add a card</Button>
+          <Button variant="primary" type="submit" disabled={formik.isSubmitting}>
+            Add a card
+            {formik.isSubmitting &&
+              <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+          </Button>
           <Form.Check
             name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
             type="checkbox" className="ms-4" inline label="🔒 Private card" />

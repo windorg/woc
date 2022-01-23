@@ -1,5 +1,6 @@
 import { Card, Comment } from '@prisma/client'
 import { Button, Form } from 'react-bootstrap'
+import * as B from 'react-bootstrap'
 import React, { createRef, RefObject } from 'react'
 import { Tiptap, TiptapMethods } from '../components/tiptap'
 import { callCreateComment } from '../pages/api/comments/create'
@@ -44,7 +45,11 @@ export class AddCommentForm extends React.Component<{
                 autoFocus
                 ref={this.#editorRef} />
             </div>
-            <Button variant="primary" type="submit">Post</Button>
+            <Button variant="primary" type="submit" disabled={formik.isSubmitting}>
+              Post
+              {formik.isSubmitting &&
+                <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+            </Button>
             <Form.Check
               name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
               type="checkbox" className="ms-4" inline label="🔒 Private comment" />

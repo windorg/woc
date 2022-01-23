@@ -1,7 +1,6 @@
 import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
-import type { Board, User } from '@prisma/client'
-import { prisma } from '../lib/db'
+import * as B from 'react-bootstrap'
 import React, { useState } from 'react'
 import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import { BoardsCrumb } from '../components/breadcrumbs'
@@ -95,7 +94,11 @@ function SignupForm(props) {
 
           <div className="d-grid mt-4">
             <Button type="submit" disabled={formik.isSubmitting}>
-              {formik.isSubmitting ? "Creating an account..." : "Sign up"}
+              <Button variant="primary" type="submit" disabled={formik.isSubmitting}>
+                Sign up
+                {formik.isSubmitting &&
+                  <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+              </Button>
             </Button>
           </div>
         </Form>

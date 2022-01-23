@@ -1,5 +1,6 @@
 import { Comment } from '@prisma/client'
 import React from 'react'
+import * as B from 'react-bootstrap'
 import Modal from 'react-bootstrap/Modal'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
@@ -50,8 +51,11 @@ export class CreateReplyModal extends React.Component<{
                     onSubmit={formik.handleSubmit}
                     ref={this.#editorRef} />
                 </div>
-                {/* TODO why do we use "sm" here and in the other form? */}
-                <Button variant="primary" type="submit">Post a reply</Button>
+                <Button variant="primary" type="submit" disabled={formik.isSubmitting}>
+                  Post a reply
+                  {formik.isSubmitting &&
+                    <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+                </Button>
                 <Button variant="secondary" type="button" className="ms-2"
                   onClick={this.props.onHide}>
                   Cancel

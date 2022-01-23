@@ -1,6 +1,7 @@
 import { Board } from "@prisma/client"
 import { Formik } from "formik"
 import { boardSettings } from "lib/model-settings"
+import * as B from 'react-bootstrap'
 import { callUpdateBoard } from "pages/api/boards/update"
 import React from "react"
 import Button from "react-bootstrap/Button"
@@ -43,7 +44,11 @@ export class EditBoardModal extends React.Component<{
                     name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
                     type="text" placeholder="Board title" ref={this.#titleInputRef} />
                 </Form.Group>
-                <Button variant="primary" type="submit">Save</Button>
+                <Button variant="primary" type="submit" disabled={formik.isSubmitting}>
+                  Save
+                  {formik.isSubmitting &&
+                    <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+                </Button>
                 <Button className="ms-2" variant="secondary" type="button"
                   onClick={this.props.onHide}>
                   Cancel

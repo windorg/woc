@@ -3,6 +3,7 @@ import { Formik } from "formik"
 import { cardSettings } from "lib/model-settings"
 import { callUpdateCard } from "pages/api/cards/update"
 import React from "react"
+import * as B from 'react-bootstrap'
 import Button from "react-bootstrap/Button"
 import Modal from "react-bootstrap/Modal"
 import Form from "react-bootstrap/Form"
@@ -57,7 +58,11 @@ export class EditCardModal extends React.Component<{
                     </span>
                   </Form.Check.Label>
                 </Form.Check>
-                <Button variant="primary" type="submit">Save</Button>
+                <Button variant="primary" type="submit" disabled={formik.isSubmitting}>
+                  Save
+                  {formik.isSubmitting &&
+                    <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+                </Button>
                 <Button className="ms-2" variant="secondary" type="button"
                   onClick={this.props.onHide}>
                   Cancel
