@@ -3,18 +3,15 @@ import Head from 'next/head'
 import type { Board, User, Card, Comment, Reply } from '@prisma/client'
 import { prisma } from '../lib/db'
 import { cardSettings, commentSettings } from '../lib/model-settings'
-import { Badge, Breadcrumb, Button, Form } from 'react-bootstrap'
+import { Badge, Breadcrumb } from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb, CardCrumb } from '../components/breadcrumbs'
-import React, { createRef, RefObject, useEffect, useState } from 'react'
-import { Tiptap, TiptapMethods } from '../components/tiptap'
+import React, { useEffect, useState } from 'react'
 import _ from 'lodash'
 import * as R from 'ramda'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
 import { canDeleteReply, canEditCard, canEditReply, CanSee, canSeeBoard, canSeeCard, canSeeComment, canSeeReply, pCardSelect, unsafeCanSee } from 'lib/access'
 import { getSession } from 'next-auth/react'
-import { callCreateComment } from './api/comments/create'
-import { Formik } from 'formik'
 import { CommentComponent, Comment_ } from 'components/commentComponent'
 import { EditCardModal } from 'components/editCardModal'
 import { CardMenu } from 'components/cardMenu'
@@ -25,6 +22,7 @@ import { deleteById, filterSync, mapAsync, mergeById, updateById } from 'lib/arr
 import { LinkButton } from 'components/linkButton'
 import { boardRoute } from 'lib/routes'
 import assert from 'assert'
+import { AddCommentForm } from '../components/addCommentForm'
 
 type Card_ = CanSee & Card & {
   owner: Pick<User, 'id' | 'displayName' | 'handle'>
@@ -98,54 +96,6 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   }
   return {
     props: serialize(props)
-  }
-}
-
-// TODO don't allow posting with empty content
-class AddCommentForm extends React.Component<{
-  cardId: Card['id']
-  afterCommentCreated: (comment: Comment) => void
-}> {
-  // NB: We use a class because refs are set to null on rerenders when using functional components. Although now I'm not
-  // sure it's true anymore. Maybe re-check with useRef.
-  #editorRef: RefObject<TiptapMethods> = createRef()
-
-  focus() {
-    this.#editorRef.current?.focus()
-  }
-
-  render() {
-    return (
-      <Formik
-        initialValues={{ private: false }}
-        onSubmit={async (values) => {
-          if (!this.#editorRef.current) throw Error("Editor is not initialized")
-          const comment = await callCreateComment({
-            cardId: this.props.cardId,
-            content: this.#editorRef.current.getMarkdown(),
-            ...values
-          })
-          this.props.afterCommentCreated(comment)
-          this.#editorRef.current.clearContent()
-        }}
-      >
-        {formik => (
-          <Form onSubmit={formik.handleSubmit} className="woc-comment-form">
-            <div className="mb-3" style={{ maxWidth: "40rem", width: "100%" }}>
-              <Tiptap
-                content=""
-                onSubmit={formik.handleSubmit}
-                autoFocus
-                ref={this.#editorRef} />
-            </div>
-            <Button variant="primary" type="submit">Post</Button>
-            <Form.Check
-              name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
-              type="checkbox" className="ms-4" inline label="🔒 Private comment" />
-          </Form>
-        )}
-      </Formik>
-    )
   }
 }
 
