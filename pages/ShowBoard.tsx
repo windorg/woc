@@ -22,7 +22,7 @@ import { PreloadContext } from 'lib/link-preload'
 import { useQueryClient } from 'react-query'
 import NextError from 'next/error'
 import { boardsRoute } from 'lib/routes'
-import { useBoard } from 'lib/queries/board'
+import { prefetchBoard, useBoard } from 'lib/queries/board'
 
 type Props = {
   boardId: Board['id']
@@ -30,14 +30,9 @@ type Props = {
   board: GetBoardResponse | null
 }
 
-const getBoardKey = (boardId: string) => ['getBoard', { boardId }]
-
 async function preload(context: PreloadContext): Promise<void> {
   const boardId = context.query.boardId as string
-  await context.queryClient.prefetchQuery(
-    getBoardKey(boardId),
-    async () => callGetBoard({ boardId })
-  )
+  await prefetchBoard(context.queryClient, { boardId })
 }
 
 async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
@@ -57,16 +52,12 @@ const ShowBoard: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   const initialProps = deserialize<Props>(serializedInitialProps)
   const { boardId } = initialProps
 
-  const queryClient = useQueryClient()
-  // TODO properly this should be passed to useBoard
-  if (initialProps.board) queryClient.setQueryData(getBoardKey(boardId), initialProps.board)
-
   const router = useRouter()
   const [editing, setEditing] = useState(false)
 
   // We don't want to refetch the data in realtime — imagine reading the page and then new posts appear/disappear and the page jumps around. We show
   // existing data (without a spinner even if the data is stale). Under the hood 'useBoard' only ever updates once.
-  const boardQuery = useBoard({ boardId })
+  const boardQuery = useBoard({ boardId }, { initialData: initialProps.board ?? undefined })
 
   if (boardQuery.status === 'loading' || boardQuery.status === 'idle') return <Spinner animation="border" />
   if (boardQuery.status === 'error') return <Alert variant="danger">Could not load the board: {boardQuery.error}</Alert>
