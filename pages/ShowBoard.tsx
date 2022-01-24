@@ -59,7 +59,8 @@ const ShowBoard: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   // existing data (without a spinner even if the data is stale). Under the hood 'useBoard' only ever updates once.
   const boardQuery = useBoard({ boardId }, { initialData: initialProps.board ?? undefined })
 
-  if (boardQuery.status === 'loading' || boardQuery.status === 'idle') return <Spinner animation="border" />
+  if (boardQuery.status === 'loading' || boardQuery.status === 'idle')
+    return <div className="d-flex mt-5 justify-content-center"><Spinner animation="border" /></div>
   if (boardQuery.status === 'error') return <Alert variant="danger">Could not load the board: {boardQuery.error}</Alert>
   if (!boardQuery.data.success) return <NextError statusCode={404} />
 
