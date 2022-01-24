@@ -2,21 +2,19 @@ import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
 import type { Board, Card } from '@prisma/client'
 import { boardSettings, cardSettings } from '../lib/model-settings'
-import { Accordion, Alert, Badge, Breadcrumb, Button, Card as BSCard, Form, Spinner } from 'react-bootstrap'
+import { Accordion, Alert, Badge, Breadcrumb, Card as BSCard, Spinner } from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb } from '../components/breadcrumbs'
 import { CardCard } from '../components/cardCard'
-import * as B from 'react-bootstrap'
 import React, { useEffect, useState } from 'react'
 import _ from 'lodash'
 import { getSession } from 'next-auth/react'
 import { serialize, deserialize } from 'superjson'
 import { SuperJSONResult } from 'superjson/dist/types'
-import { callCreateCard } from './api/cards/create'
 import { TransitionGroup, CSSTransition } from 'react-transition-group'
-import { Formik } from 'formik'
 import { BiPencil } from 'react-icons/bi'
 import { EditBoardModal } from 'components/editBoardModal'
 import { BoardMenu } from 'components/boardMenu'
+import { AddCardForm } from 'components/addCardForm'
 import { useRouter } from 'next/router'
 import { LinkButton } from 'components/linkButton'
 import { callGetBoard, GetBoardResponse, serverGetBoard } from './api/boards/get'
@@ -54,48 +52,6 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   if (typeof window === 'undefined')
     props.board = await serverGetBoard(await getSession(context), { boardId })
   return serialize(props)
-}
-
-function AddCardForm(props: {
-  boardId: Board['id']
-  afterCardCreated: (card: Card) => void
-}) {
-  return (
-    <Formik
-      initialValues={{
-        title: '',
-        private: false,
-      }}
-      onSubmit={async (values, formik) => {
-        // TODO: what exactly will happen in prod if the backend fails with err500 for whatever reason?
-        const card = await callCreateCard({
-          boardId: props.boardId,
-          ...values
-        })
-        props.afterCardCreated(card)
-        formik.resetForm()
-      }}
-    >
-      {formik => (
-        <Form onSubmit={formik.handleSubmit}>
-          <Form.Group className="mb-3">
-            <Form.Control
-              name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
-              type="text" placeholder="Card title"
-              style={{ maxWidth: "40rem", width: "100%" }} />
-          </Form.Group>
-          <Button variant="primary" type="submit" disabled={formik.isSubmitting}>
-            Add a card
-            {formik.isSubmitting &&
-              <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
-          </Button>
-          <Form.Check
-            name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
-            type="checkbox" className="ms-4" inline label="🔒 Private card" />
-        </Form>
-      )}
-    </Formik>
-  )
 }
 
 function ShowBoardLoaded(props: { initialBoard: Extract<GetBoardResponse, { success: true }>['data'] }) {
