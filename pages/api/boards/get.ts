@@ -54,12 +54,12 @@ export async function serverGetBoard(session: Session | null, query: GetBoardQue
       ...board,
       // NB: unfortunately this pattern (lambda + type guard signature) isn't entirely typesafe because of
       // https://github.com/microsoft/TypeScript/issues/12798
-      cards: filterSync(board.cards, (card): card is typeof card & CanSee => canSeeCard(session?.userId, { ...card, board })),
-      canEdit: await canEditBoard(session?.userId, board)
+      cards: filterSync(board.cards, (card): card is typeof card & CanSee => canSeeCard(session?.userId ?? null, { ...card, board })),
+      canEdit: await canEditBoard(session?.userId ?? null, board)
     }
     : null
   )
-  if (!board || !canSeeBoard(session?.userId, board)) return {
+  if (!board || !canSeeBoard(session?.userId ?? null, board)) return {
     success: false,
     error: { notFound: true }
   }

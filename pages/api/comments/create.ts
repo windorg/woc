@@ -38,7 +38,7 @@ export default async function createComment(req: CreateCommentRequest, res: Next
       },
       rejectOnNotFound: true,
     })
-    if (!await canEditCard(session?.userId, card)) return res.status(403)
+    if (!await canEditCard(session?.userId ?? null, card)) return res.status(403)
     const settings: Partial<CommentSettings> = {
       visibility: body.private ? 'private' : 'public'
     }

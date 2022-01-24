@@ -3,12 +3,15 @@ import React from "react"
 import { Breadcrumb } from "react-bootstrap"
 import { boardSettings } from "../lib/model-settings"
 import Link from 'next/link'
-import { boardRoute, cardRoute, userRoute } from "lib/routes"
+import { boardRoute, boardsRoute, cardRoute, userRoute } from "lib/routes"
+import { LinkPreload } from "lib/link-preload"
 
-function LinkItem(props: React.ComponentProps<typeof Link> & { active?: boolean }) {
+function LinkItem(props: React.ComponentProps<typeof Link> & { active?: boolean, preload?: boolean }) {
   return props.active
     ? (<Breadcrumb.Item active>{props.children}</Breadcrumb.Item>)
-    : (<Link href={props.href} passHref><Breadcrumb.Item>{props.children}</Breadcrumb.Item></Link>)
+    : props.preload
+      ? (<LinkPreload href={props.href} passHref><Breadcrumb.Item>{props.children}</Breadcrumb.Item></LinkPreload>)
+      : (<Link href={props.href} passHref><Breadcrumb.Item>{props.children}</Breadcrumb.Item></Link>)
 }
 
 export function FeedCrumb(props: { active?: boolean }) {
@@ -29,7 +32,7 @@ export function InboxCrumb(props: { active?: boolean }) {
 
 export function BoardsCrumb(props: { active?: boolean }) {
   return (
-    <LinkItem active={props.active} href={`/Boards`}>
+    <LinkItem active={props.active} href={boardsRoute()} preload>
       Boards
     </LinkItem>
   )
@@ -46,7 +49,7 @@ export function UserCrumb(props: { active?: boolean, user: Pick<User, 'id' | 'ha
 export function BoardCrumb(props: { active?: boolean, board: Board }) {
   const isPrivate = boardSettings(props.board).visibility === 'private'
   return (
-    <LinkItem active={props.active} href={boardRoute(props.board.id)}>
+    <LinkItem active={props.active} href={boardRoute(props.board.id)} preload>
       {isPrivate ? "🔒 " : ""}
       {props.board.title}
     </LinkItem>

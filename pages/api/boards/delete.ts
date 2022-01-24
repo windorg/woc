@@ -27,7 +27,7 @@ export default async function deleteBoard(req: DeleteBoardRequest, res: NextApiR
       where: { id: body.boardId },
       rejectOnNotFound: true,
     })
-    if (!await canEditBoard(session?.userId, board)) return res.status(403)
+    if (!await canEditBoard(session?.userId ?? null, board)) return res.status(403)
 
     await prisma.board.delete({
       where: { id: body.boardId }

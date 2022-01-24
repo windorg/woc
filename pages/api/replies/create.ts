@@ -89,7 +89,7 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
       rejectOnNotFound: true,
     })
     if (!session) return res.status(403)
-    if (!await canReplyToComment(session?.userId, comment)) return res.status(403)
+    if (!await canReplyToComment(session?.userId ?? null, comment)) return res.status(403)
 
     // Create the reply
     const reply = await prisma.reply.create({

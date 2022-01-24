@@ -51,7 +51,7 @@ export default async function updateReply(req: UpdateReplyRequest, res: NextApiR
       },
       rejectOnNotFound: true,
     })
-    if (!await canEditReply(session?.userId, reply)) return res.status(403)
+    if (!await canEditReply(session?.userId ?? null, reply)) return res.status(403)
 
     let diff: Partial<Reply> & { settings: Partial<ReplySettings> } = {
       settings: reply.settings ?? {}

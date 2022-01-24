@@ -21,9 +21,11 @@ import { useRouter } from 'next/router'
 import { LinkButton } from 'components/linkButton'
 import { callGetBoard, GetBoardResponse, serverGetBoard } from './api/boards/get'
 import { PreloadContext } from 'lib/link-preload'
-import { QueryFunction, QueryKey, useQuery, useQueryClient } from 'react-query'
+import { useQueryClient } from 'react-query'
 import NextError from 'next/error'
 import { unsafeCanSee } from 'lib/access'
+import { useQueryOnce } from 'lib/react-query'
+import { boardsRoute } from 'lib/routes'
 
 type Props = {
   boardId: Board['id']
@@ -120,7 +122,7 @@ function ShowBoardLoaded(props: { initialBoard: Extract<GetBoardResponse, { succ
     <BoardMenu
       board={board}
       afterBoardUpdated={board => setBoard(prev => ({ ...prev, ...board }))}
-      afterBoardDeleted={async () => router.replace(`/Boards`)} />
+      afterBoardDeleted={async () => router.replace(boardsRoute())} />
   )
 
   return (
@@ -182,34 +184,6 @@ function ShowBoardLoaded(props: { initialBoard: Extract<GetBoardResponse, { succ
       }
     </>
   )
-}
-
-type QueryOnceResult<T> =
-  | { status: 'loading', data: undefined, error: undefined }
-  | { status: 'error', data: undefined, error: string }
-  | { status: 'success', data: T, error: undefined }
-
-// Like 'useQuery' but never refetches. Returns cached data if present.
-function useQueryOnce<T>(queryKey: QueryKey, queryFn: QueryFunction<T>): QueryOnceResult<T> {
-  const queryClient = useQueryClient()
-  const existingData = queryClient.getQueryData<T>(queryKey)
-  const [status, setStatus] = useState<'loading' | 'error' | 'success'>(!!existingData ? 'success' : 'loading')
-  const [data, setData] = useState<T | undefined>(existingData)
-  const [error, setError] = useState<string | undefined>(undefined)
-  useEffect(() => {
-    if (status === 'loading')
-      queryClient.fetchQuery(queryKey, queryFn)
-        .then(data => {
-          setData(data)
-          setStatus('success')
-        })
-        .catch(err => {
-          setStatus('error')
-          setError((err as Error).message)
-        })
-  }, [queryKey, queryFn, queryClient, status])
-  // @ts-expect-error
-  return { status, data, error }
 }
 
 const ShowBoard: NextPage<SuperJSONResult> = (serializedInitialProps) => {

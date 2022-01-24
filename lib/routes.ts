@@ -1,5 +1,9 @@
 import { Board, Card, User, Comment } from "@prisma/client"
 
+export function boardsRoute() {
+  return `/Boards`
+}
+
 export function userRoute(userId: User['id']) {
   return `/ShowUser?userId=${userId}`
 }

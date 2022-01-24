@@ -32,6 +32,8 @@ import { denormalizePagePath } from 'next/dist/server/denormalize-page-path'
 import { getRouteRegex, isDynamicRoute } from 'next/dist/shared/lib/router/utils'
 import { ParsedUrlQuery } from 'querystring'
 import { QueryClient, useQueryClient } from 'react-query'
+import { Session } from 'next-auth'
+import { useSession } from 'next-auth/react'
 
 type Url = string | UrlObject
 type RequiredKeys<T> = {
@@ -58,6 +60,7 @@ const prefetched: { [cacheKey: string]: boolean } = {}
 
 // WOC: this will be passed to page.preload()
 export type PreloadContext = {
+  session: Session | null
   queryClient: QueryClient
   query: ParsedUrlQuery
 }
@@ -168,7 +171,10 @@ function prefetch(
   href: string,
   as: string,
   // WOC: added this
-  queryClient: QueryClient,
+  extra: {
+    queryClient: QueryClient,
+    session: Session | null,
+  },
   options?: PrefetchOptions,
 ): void {
   if (typeof window === 'undefined' || !router) return
@@ -187,7 +193,8 @@ function prefetch(
         // @ts-expect-error: 'preload' not found
         if (loaded.page.preload && typeof loaded.page.preload === 'function') {
           const context: PreloadContext = {
-            queryClient,
+            session: extra.session,
+            queryClient: extra.queryClient,
             query,
           }
           // @ts-expect-error: 'preload' not found
@@ -411,8 +418,9 @@ export function LinkPreload(props: React.PropsWithChildren<LinkPreloadProps>) {
     },
     [childRef, setIntersectionRef]
   )
-  // WOC: added useQueryClient
+  // WOC
   const queryClient = useQueryClient()
+  const session = useSession().data
   React.useEffect(() => {
     const shouldPrefetch = isVisible && p && isLocalURL(href)
     const curLocale =
@@ -420,11 +428,11 @@ export function LinkPreload(props: React.PropsWithChildren<LinkPreloadProps>) {
     const isPrefetched =
       prefetched[href + '%' + as + (curLocale ? '%' + curLocale : '')]
     if (shouldPrefetch && !isPrefetched) {
-      prefetch(router, href, as, queryClient, {
+      prefetch(router, href, as, { queryClient, session }, {
         locale: curLocale,
       })
     }
-  }, [as, href, isVisible, locale, p, router, queryClient])
+  }, [as, href, isVisible, locale, p, router, queryClient, session])
 
   const childProps: {
     onMouseEnter?: React.MouseEventHandler
@@ -448,7 +456,7 @@ export function LinkPreload(props: React.PropsWithChildren<LinkPreloadProps>) {
       child.props.onMouseEnter(e)
     }
     if (isLocalURL(href)) {
-      prefetch(router, href, as, queryClient, { priority: true })
+      prefetch(router, href, as, { queryClient, session }, { priority: true })
     }
   }
 

@@ -45,7 +45,7 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
   const boards = await prisma.board.findMany({
     include: { owner: { select: { handle: true, displayName: true } } },
     where: { ownerId: context.query.userId as string }
-  }).then(xs => filterSync(xs, (board): board is Board_ => canSeeBoard(session?.userId, board)))
+  }).then(xs => filterSync(xs, (board): board is Board_ => canSeeBoard(session?.userId ?? null, board)))
   const props: Props = {
     user: { ...user, followed },
     boards
@@ -118,7 +118,7 @@ const ShowUser: NextPage<SuperJSONResult> = (props) => {
       </h1>
 
       <BoardsList
-        allowNewBoard={session?.userId === user.id}
+        allowNewBoard={(session?.userId ?? null) === user.id}
         afterBoardCreated={addBoard}
         heading="Boards"
         boards={boards}

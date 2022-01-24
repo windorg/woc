@@ -35,7 +35,7 @@ export default async function deleteComment(req: DeleteCommentRequest, res: Next
       },
       rejectOnNotFound: true,
     })
-    if (!await canEditComment(session?.userId, comment)) return res.status(403)
+    if (!await canEditComment(session?.userId ?? null, comment)) return res.status(403)
 
     await prisma.comment.delete({
       where: { id: body.commentId }

@@ -12,6 +12,7 @@ import _ from 'lodash'
 import { Formik } from 'formik'
 import { Button, Form, InputGroup } from 'react-bootstrap'
 import { callSignup } from './api/auth/signup'
+import { boardsRoute } from 'lib/routes'
 
 type Props = Record<string, never>
 
@@ -38,7 +39,7 @@ function SignupForm(props) {
         if (result.success) {
           await signIn("credentials", {
             email: values.email, password: values.password,
-            callbackUrl: '/Boards'
+            callbackUrl: boardsRoute()
           })
         } else {
           actions.setErrors(result.errors)

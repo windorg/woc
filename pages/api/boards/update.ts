@@ -38,7 +38,7 @@ export default async function updateBoard(req: UpdateBoardRequest, res: NextApiR
       where: { id: body.boardId },
       rejectOnNotFound: true,
     })
-    if (!await canEditBoard(session?.userId, board)) return res.status(403)
+    if (!await canEditBoard(session?.userId ?? null, board)) return res.status(403)
 
     let diff: Partial<Board> & { settings: Partial<BoardSettings> } = {
       settings: board.settings ?? {}

@@ -54,7 +54,7 @@ const cardFindSettings = {
 
 export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
   const session = await getSession(context)
-  const userId = session?.userId
+  const userId = session?.userId ?? null
   const card = await prisma.card.findUnique({
     where: {
       id: context.query.cardId as string
@@ -85,8 +85,8 @@ export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (co
           async reply => ({
             ...reply,
             // Augment replies with "canEdit" and "canDelete"
-            canEdit: await canEditReply(session?.userId, { ...reply, comment: { ...comment, card } }),
-            canDelete: await canDeleteReply(session?.userId, { ...reply, comment: { ...comment, card } })
+            canEdit: await canEditReply(session?.userId ?? null, { ...reply, comment: { ...comment, card } }),
+            canDelete: await canDeleteReply(session?.userId ?? null, { ...reply, comment: { ...comment, card } })
           }))
       }))
   }
