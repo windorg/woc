@@ -4,10 +4,11 @@ import { Dropdown } from 'react-bootstrap'
 import React from 'react'
 import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 'react-icons/bi'
 import copy from 'copy-to-clipboard'
-import { callUpdateBoard } from '../pages/api/boards/update'
 import styles from './actionMenu.module.scss'
 import { callDeleteBoard } from 'pages/api/boards/delete'
 import { boardRoute } from 'lib/routes'
+import { useUpdateBoard } from 'lib/queries/board'
+import { UpdateBoardBody } from '../pages/api/boards/update'
 
 function MenuCopyLink(props: { board: Board }) {
   // TODO should use a local link instead of hardcoding windofchange.me (and in other places too)
@@ -37,16 +38,16 @@ function MenuDelete(props: { deleteBoard }) {
 // "More" button with a dropdown
 export function BoardMenu(props: {
   board: Board & { canEdit: boolean }
-  afterBoardUpdated: (newBoard: Board) => void
   afterBoardDeleted: () => void
 }) {
   const { board } = props
   const settings = boardSettings(board)
   const isPrivate = settings.visibility === 'private'
 
-  const updateBoard = async (data) => {
-    const diff = await callUpdateBoard({ boardId: board.id, ...data })
-    props.afterBoardUpdated({ ...board, ...diff })
+  const updateBoardMutation = useUpdateBoard()
+
+  const updateBoard = async (data: Omit<UpdateBoardBody, 'boardId'>) => {
+    await updateBoardMutation.mutateAsync({ boardId: board.id, ...data })
   }
 
   const deleteBoard = async () => {

@@ -2,13 +2,13 @@ import { Board, Card } from '@prisma/client'
 import { Button, Form } from 'react-bootstrap'
 import * as B from 'react-bootstrap'
 import React from 'react'
-import { callCreateCard } from '../pages/api/cards/create'
 import { Formik } from 'formik'
+import { useCreateCard } from 'lib/queries/board'
 
 export function AddCardForm(props: {
   boardId: Board['id']
-  afterCardCreated: (card: Card) => void
 }) {
+  const createCardMutation = useCreateCard()
   return (
     <Formik
       initialValues={{
@@ -17,11 +17,7 @@ export function AddCardForm(props: {
       }}
       onSubmit={async (values, formik) => {
         // TODO: what exactly will happen in prod if the backend fails with err500 for whatever reason?
-        const card = await callCreateCard({
-          boardId: props.boardId,
-          ...values
-        })
-        props.afterCardCreated(card)
+        await createCardMutation.mutateAsync({ boardId: props.boardId, ...values })
         formik.resetForm()
       }}
     >

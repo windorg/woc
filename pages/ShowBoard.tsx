@@ -21,9 +21,8 @@ import { callGetBoard, GetBoardResponse, serverGetBoard } from './api/boards/get
 import { PreloadContext } from 'lib/link-preload'
 import { useQueryClient } from 'react-query'
 import NextError from 'next/error'
-import { unsafeCanSee } from 'lib/access'
-import { useQueryOnce } from 'lib/react-query'
 import { boardsRoute } from 'lib/routes'
+import { useBoard } from 'lib/queries/board'
 
 type Props = {
   boardId: Board['id']
@@ -54,30 +53,36 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   return serialize(props)
 }
 
-function ShowBoardLoaded(props: { initialBoard: Extract<GetBoardResponse, { success: true }>['data'] }) {
+const ShowBoard: NextPage<SuperJSONResult> = (serializedInitialProps) => {
+  const initialProps = deserialize<Props>(serializedInitialProps)
+  const { boardId } = initialProps
+
+  const queryClient = useQueryClient()
+  // TODO properly this should be passed to useBoard
+  if (initialProps.board) queryClient.setQueryData(getBoardKey(boardId), initialProps.board)
+
   const router = useRouter()
   const [editing, setEditing] = useState(false)
-  const { initialBoard } = props
 
-  const [cards, setCards] = useState(initialBoard.cards)
-  const addCard = (card: Card) => {
-    // You can see things that you already have
-    const card_ = unsafeCanSee({ ...card, _count: { comments: 0 } })
-    setCards(cards => (cards.concat([card_])))
-  }
+  // We don't want to refetch the data in realtime — imagine reading the page and then new posts appear/disappear and the page jumps around. We show
+  // existing data (without a spinner even if the data is stale). Under the hood 'useBoard' only ever updates once.
+  const boardQuery = useBoard({ boardId })
 
-  const [board, setBoard] = useState(_.omit(initialBoard, ['cards']))
+  if (boardQuery.status === 'loading' || boardQuery.status === 'idle') return <Spinner animation="border" />
+  if (boardQuery.status === 'error') return <Alert variant="danger">Could not load the board: {boardQuery.error}</Alert>
+  if (!boardQuery.data.success) return <NextError statusCode={404} />
+
+  const board = boardQuery.data.data
 
   const isPrivate = boardSettings(board).visibility === 'private'
   const [normalCards, archivedCards] =
     _.partition(
-      _.orderBy(cards, ['createdAt'], ['desc']),
+      _.orderBy(board.cards, ['createdAt'], ['desc']),
       card => (!cardSettings(card).archived))
 
   const moreButton = () => (
     <BoardMenu
       board={board}
-      afterBoardUpdated={board => setBoard(prev => ({ ...prev, ...board }))}
       afterBoardDeleted={async () => router.replace(boardsRoute())} />
   )
 
@@ -102,10 +107,7 @@ function ShowBoardLoaded(props: { initialBoard: Extract<GetBoardResponse, { succ
             board={board}
             show={editing}
             onHide={() => setEditing(false)}
-            afterBoardUpdated={board => {
-              setBoard(prev => ({ ...prev, ...board }))
-              setEditing(false)
-            }}
+            afterBoardUpdated={() => setEditing(false)}
           />
         }
         <span
@@ -120,7 +122,7 @@ function ShowBoardLoaded(props: { initialBoard: Extract<GetBoardResponse, { succ
         </span>
       </h1>
 
-      {board.canEdit && <AddCardForm boardId={board.id} afterCardCreated={addCard} />}
+      {board.canEdit && <AddCardForm boardId={board.id} />}
       <div style={{ marginTop: "30px" }}>
         <TransitionGroup>
           {normalCards.map(card => (
@@ -140,38 +142,10 @@ function ShowBoardLoaded(props: { initialBoard: Extract<GetBoardResponse, { succ
       }
     </>
   )
-}
 
-const ShowBoard: NextPage<SuperJSONResult> = (serializedInitialProps) => {
-  const initialProps = deserialize<Props>(serializedInitialProps)
-  const { boardId } = initialProps
 
-  // We don't want to refetch the data in realtime — imagine reading the page and then new posts appear/disappear and
-  // the page jumps around. We want the following:
-  //
-  //   * We show existing data (without a spinner even if the data is stale)
-  //   * When the page has been displayed properly, we clear the cache — to preserve the property that shown data can
-  //     *never* omit items that the user has already posted
 
-  const queryClient = useQueryClient()
-  if (initialProps.board) queryClient.setQueryData(getBoardKey(boardId), initialProps.board)
-  const query = useQueryOnce(
-    getBoardKey(boardId),
-    async () => callGetBoard({ boardId })
-  )
-  // Erase the query cache whenever it's successfully loaded
-  useEffect(() => {
-    if (query.status !== 'loading') queryClient.setQueryData(getBoardKey(boardId), undefined)
-  }, [query.status, boardId, queryClient])
-  const renderData = (response: GetBoardResponse) => {
-    if (response.success) return <ShowBoardLoaded initialBoard={response.data} />
-    if (response.error.notFound) return <NextError statusCode={404} />
-    return <NextError statusCode={500} />
-  }
-  if (query.status === 'loading') return <Spinner animation="border" />
-  if (query.status === 'error') return <Alert variant="danger">Could not load the board: {query.error}</Alert>
-  if (query.status === 'success') return renderData(query.data)
-  return <Alert variant="danger">Could not load the board: unknown error</Alert>
+
 }
 
 ShowBoard.getInitialProps = getInitialProps
