@@ -1,63 +1,56 @@
 import { Board } from "@prisma/client"
 import { Formik } from "formik"
-import { boardSettings } from "lib/model-settings"
 import * as B from 'react-bootstrap'
 import { callUpdateBoard } from "pages/api/boards/update"
 import React from "react"
-import Button from "react-bootstrap/Button"
-import Modal from "react-bootstrap/Modal"
-import Form from "react-bootstrap/Form"
 
-export class EditBoardModal extends React.Component<{
+export function EditBoardModal(props: {
   board: Board
   show: boolean
   onHide: () => void
   afterBoardUpdated: (newBoard: Board) => void
-}> {
-  #titleInputRef: React.RefObject<HTMLInputElement> = React.createRef()
-
-  render() {
-    const { board } = this.props
-    return (
-      <Modal
-        size="lg"
-        show={this.props.show}
-        onHide={this.props.onHide}
-        onEntered={() => this.#titleInputRef.current!.focus()}
-      >
-        <Modal.Header closeButton>
-          <Modal.Title>Edit board</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Formik
-            initialValues={{ title: board.title }}
-            onSubmit={async (values, formik) => {
-              const diff = await callUpdateBoard({ boardId: board.id, ...values })
-              this.props.afterBoardUpdated({ ...board, ...diff })
-              formik.resetForm()
-            }}
-          >
-            {formik => (<>
-              <Form onSubmit={formik.handleSubmit}>
-                <Form.Group className="mb-3">
-                  <Form.Control
-                    name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
-                    type="text" placeholder="Board title" ref={this.#titleInputRef} />
-                </Form.Group>
-                <Button variant="primary" type="submit" disabled={formik.isSubmitting}>
-                  Save
-                  {formik.isSubmitting &&
-                    <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
-                </Button>
-                <Button className="ms-2" variant="secondary" type="button"
-                  onClick={this.props.onHide}>
-                  Cancel
-                </Button>
-              </Form>
-            </>)}
-          </Formik>
-        </Modal.Body>
-      </Modal>
-    )
-  }
+}) {
+  const titleInputRef = React.useRef<HTMLInputElement>(null)
+  const { board } = props
+  return (
+    <B.Modal
+      size="lg"
+      show={props.show}
+      onHide={props.onHide}
+      onEntered={() => titleInputRef.current!.focus()}
+    >
+      <B.Modal.Header closeButton>
+        <B.Modal.Title>Edit board</B.Modal.Title>
+      </B.Modal.Header>
+      <B.Modal.Body>
+        <Formik
+          initialValues={{ title: board.title }}
+          onSubmit={async (values, formik) => {
+            const diff = await callUpdateBoard({ boardId: board.id, ...values })
+            props.afterBoardUpdated({ ...board, ...diff })
+            formik.resetForm()
+          }}
+        >
+          {formik => (<>
+            <B.Form onSubmit={formik.handleSubmit}>
+              <B.Form.Group className="mb-3">
+                <B.Form.Control
+                  name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
+                  type="text" placeholder="Board title" ref={titleInputRef} />
+              </B.Form.Group>
+              <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>
+                Save
+                {formik.isSubmitting &&
+                  <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+              </B.Button>
+              <B.Button className="ms-2" variant="secondary" type="button"
+                onClick={props.onHide}>
+                Cancel
+              </B.Button>
+            </B.Form>
+          </>)}
+        </Formik>
+      </B.Modal.Body>
+    </B.Modal>
+  )
 }
