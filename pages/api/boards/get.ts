@@ -4,7 +4,7 @@ import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
-import deepMap from 'deep-map'
+import { wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
 import { canEditBoard, CanSee, canSeeBoard, canSeeCard, PCard } from 'lib/access'
 import _ from 'lodash'
@@ -80,5 +80,5 @@ export default async function apiGetBoard(req: GetBoardRequest, res: NextApiResp
 
 export async function callGetBoard(query: GetBoardQuery): Promise<GetBoardResponse> {
   const { data } = await axios.get('/api/boards/get', { params: query })
-  return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
+  return wocResponse(data)
 }

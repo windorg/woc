@@ -4,7 +4,7 @@ import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
-import deepMap from 'deep-map'
+import { wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
 import _ from 'lodash'
 import { Session } from 'next-auth'
@@ -58,5 +58,5 @@ export default async function apiGetUser(req: GetUserRequest, res: NextApiRespon
 
 export async function callGetUser(query: GetUserQuery): Promise<GetUserResponse> {
   const { data } = await axios.get('/api/users/get', { params: query })
-  return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
+  return wocResponse(data)
 }

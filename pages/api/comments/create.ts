@@ -4,7 +4,7 @@ import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
-import deepMap from 'deep-map'
+import { wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
 import { canEditCard } from 'lib/access'
 import { CommentSettings } from 'lib/model-settings'
@@ -56,5 +56,5 @@ export default async function createComment(req: CreateCommentRequest, res: Next
 
 export async function callCreateComment(body: CreateCommentBody): Promise<Comment> {
   const { data } = await axios.post('/api/comments/create', body)
-  return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
+  return wocResponse(data)
 }

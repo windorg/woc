@@ -4,9 +4,9 @@ import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
-import deepMap from 'deep-map'
 import { getSession } from 'next-auth/react'
 import { BoardSettings } from 'lib/model-settings'
+import { wocResponse } from 'lib/http'
 
 interface CreateBoardRequest extends NextApiRequest {
   body: {
@@ -50,5 +50,5 @@ export default async function createBoard(req: CreateBoardRequest, res: NextApiR
 
 export async function callCreateBoard(body: CreateBoardBody): Promise<Board_> {
   const { data } = await axios.post('/api/boards/create', body)
-  return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
+  return wocResponse(data)
 }

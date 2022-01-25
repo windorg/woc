@@ -4,7 +4,7 @@ import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
-import deepMap from 'deep-map'
+import { wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
 import { canEditReply } from 'lib/access'
 import { ReplySettings } from 'lib/model-settings'
@@ -75,5 +75,5 @@ export default async function updateReply(req: UpdateReplyRequest, res: NextApiR
 
 export async function callUpdateReply(body: UpdateReplyBody): Promise<Partial<Reply>> {
   const { data } = await axios.put('/api/replies/update', body)
-  return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
+  return wocResponse(data)
 }

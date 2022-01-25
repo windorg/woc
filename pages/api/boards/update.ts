@@ -4,7 +4,7 @@ import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
-import deepMap from 'deep-map'
+import { wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
 import { canEditBoard } from 'lib/access'
 import { BoardSettings } from 'lib/model-settings'
@@ -62,5 +62,5 @@ export default async function updateBoard(req: UpdateBoardRequest, res: NextApiR
 
 export async function callUpdateBoard(body: UpdateBoardBody): Promise<Partial<Board>> {
   const { data } = await axios.put('/api/boards/update', body)
-  return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
+  return wocResponse(data)
 }

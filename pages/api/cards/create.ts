@@ -4,7 +4,7 @@ import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
-import deepMap from 'deep-map'
+import { wocResponse } from 'lib/http'
 import { canEditBoard } from 'lib/access'
 import { getSession } from 'next-auth/react'
 import { CardSettings } from 'lib/model-settings'
@@ -52,5 +52,5 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
 
 export async function callCreateCard(body: CreateCardBody): Promise<Card> {
   const { data } = await axios.post('/api/cards/create', body)
-  return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
+  return wocResponse(data)
 }

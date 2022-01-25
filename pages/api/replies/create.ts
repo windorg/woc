@@ -4,7 +4,7 @@ import { prisma } from 'lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
-import deepMap from 'deep-map'
+import { wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
 import { canDeleteReply, canEditReply, canReplyToComment } from 'lib/access'
 import { CommentSettings, commentSettings, ReplySettings } from 'lib/model-settings'
@@ -149,5 +149,5 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
 
 export async function callCreateReply(body: CreateReplyBody): Promise<ReplyResponse> {
   const { data } = await axios.post('/api/replies/create', body)
-  return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
+  return wocResponse(data)
 }

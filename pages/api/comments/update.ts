@@ -4,7 +4,7 @@ import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
-import deepMap from 'deep-map'
+import { wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
 import { canEditComment } from 'lib/access'
 import { CommentSettings } from 'lib/model-settings'
@@ -75,5 +75,5 @@ export default async function updateComment(req: UpdateCommentRequest, res: Next
 
 export async function callUpdateComment(body: UpdateCommentBody): Promise<Partial<Comment>> {
   const { data } = await axios.put('/api/comments/update', body)
-  return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
+  return wocResponse(data)
 }
