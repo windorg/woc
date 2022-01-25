@@ -1,12 +1,12 @@
 import { signIn, signOut, useSession } from "next-auth/react"
 import { ReactNode, useEffect } from "react"
-import loadScript from 'load-script'
 import Link from "next/link"
 import Image from 'next/image'
 import useSWR from "swr"
 import { CountInbox } from "pages/api/inbox/count"
 import Badge from "react-bootstrap/Badge"
 import Head from "next/head"
+import Script from "next/script"
 
 function ChangelogButton() {
   const headwayConfig = {
@@ -17,24 +17,23 @@ function ChangelogButton() {
       x: "left"
     },
   }
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !(window as any).Headway) {
-      // TODO switch to 'next/script'?
-      loadScript('https://cdn.headwayapp.co/widget.js', () => {
-        const Headway = (window as any).Headway
-        if (!document.querySelector('#HW_badge') && Headway) {
-          Headway.init(headwayConfig)
-        }
-      })
-    }
-  })
   return (
-    <div id="changelog-trigger"
-      className="d-flex align-items-center align-self-center me-2"
-      style={{ cursor: "pointer" }}>
-      <div className="text-primary">News</div>
-      <div id="changelog-badge" style={{ height: "32px", width: "32px", minHeight: "1px" }}></div>
-    </div>
+    <>
+      <Script src='https://cdn.headwayapp.co/widget.js' strategy='afterInteractive'
+        onLoad={() => {
+          const Headway = (window as any).Headway
+          if (!document.querySelector('#HW_badge') && Headway) {
+            Headway.init(headwayConfig)
+          }
+        }}
+      />
+      <div id="changelog-trigger"
+        className="d-flex align-items-center align-self-center me-2"
+        style={{ cursor: "pointer" }}>
+        <div className="text-primary">News</div>
+        <div id="changelog-badge" style={{ height: "32px", width: "32px", minHeight: "1px" }}></div>
+      </div>
+    </>
   )
 }
 
