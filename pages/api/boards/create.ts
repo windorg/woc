@@ -1,8 +1,8 @@
-import { Board } from '@prisma/client'
+import { Board, User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import axios from 'axios'
 import deepMap from 'deep-map'
 import { getSession } from 'next-auth/react'
@@ -17,12 +17,14 @@ interface CreateBoardRequest extends NextApiRequest {
 
 export type CreateBoardBody = CreateBoardRequest['body']
 
-const schema: SchemaOf<CreateBoardBody> = yup.object({
+const schema: Schema<CreateBoardBody> = yup.object({
   title: yup.string().required(),
   private: yup.boolean()
 })
 
-export default async function createBoard(req: CreateBoardRequest, res: NextApiResponse<Board>) {
+export type Board_ = Board & { owner: Pick<User, 'handle' | 'displayName'> }
+
+export default async function createBoard(req: CreateBoardRequest, res: NextApiResponse<Board_>) {
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
@@ -37,13 +39,16 @@ export default async function createBoard(req: CreateBoardRequest, res: NextApiR
         settings,
         // TODO will this fail loudly if the user doesn't exist (but the session is still alive)?
         ownerId: session.userId
+      },
+      include: {
+        owner: { select: { handle: true, displayName: true } }
       }
     })
     return res.status(201).json(board)
   }
 }
 
-export async function callCreateBoard(body: CreateBoardBody): Promise<Board> {
+export async function callCreateBoard(body: CreateBoardBody): Promise<Board_> {
   const { data } = await axios.post('/api/boards/create', body)
   return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
 }

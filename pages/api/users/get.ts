@@ -2,7 +2,7 @@ import { Board, Card, Prisma, User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import axios from 'axios'
 import deepMap from 'deep-map'
 import { getSession } from 'next-auth/react'
@@ -17,7 +17,7 @@ interface GetUserRequest extends NextApiRequest {
 
 export type GetUserQuery = GetUserRequest['query']
 
-const schema: SchemaOf<GetUserQuery> = yup.object({
+const schema: Schema<GetUserQuery> = yup.object({
   userId: yup.string().uuid().required(),
 })
 

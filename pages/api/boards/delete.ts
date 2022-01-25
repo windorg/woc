@@ -2,7 +2,7 @@ import { Board } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
 import { canEditBoard } from 'lib/access'
@@ -15,7 +15,7 @@ interface DeleteBoardRequest extends NextApiRequest {
 
 export type DeleteBoardBody = DeleteBoardRequest['body']
 
-const schema: SchemaOf<DeleteBoardBody> = yup.object({
+const schema: Schema<DeleteBoardBody> = yup.object({
   boardId: yup.string().uuid().required()
 })
 

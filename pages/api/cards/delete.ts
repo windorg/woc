@@ -2,7 +2,7 @@ import { Card } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
 import { canEditCard } from 'lib/access'
@@ -15,7 +15,7 @@ interface DeleteCardRequest extends NextApiRequest {
 
 export type DeleteCardBody = DeleteCardRequest['body']
 
-const schema: SchemaOf<DeleteCardBody> = yup.object({
+const schema: Schema<DeleteCardBody> = yup.object({
   cardId: yup.string().uuid().required()
 })
 

@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { User } from '@prisma/client'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import { getSession } from 'next-auth/react'
 import _ from 'lodash'
 import { hashPassword } from 'lib/password'
@@ -19,7 +19,7 @@ interface SignupRequest extends NextApiRequest {
 
 export type SignupBody = SignupRequest['body']
 
-const schema: SchemaOf<SignupBody> = yup.object({
+const schema: Schema<SignupBody> = yup.object({
   email: yup.string().email().label("Email").required(),
   handle: yup.string().matches(/^[a-zA-Z0-9_-]{1,64}/).label("Handle").required(),
   displayName: yup.string().label("Name").required(),

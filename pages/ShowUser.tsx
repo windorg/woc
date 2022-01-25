@@ -15,7 +15,6 @@ import { callUnfollowUser } from './api/users/unfollow'
 import Button from 'react-bootstrap/Button'
 import { callFollowUser } from './api/users/follow'
 import { filterSync } from 'lib/array'
-import assert from 'assert'
 
 // Strictly speaking the owner is not necessary here, but it's easier types-wise this way
 type Board_ = CanSee & Board & { owner: { handle: string, displayName: string } }
@@ -119,7 +118,6 @@ const ShowUser: NextPage<SuperJSONResult> = (props) => {
 
       <BoardsList
         allowNewBoard={(session?.userId ?? null) === user.id}
-        afterBoardCreated={addBoard}
         heading="Boards"
         boards={boards}
         showUserHandles={false}

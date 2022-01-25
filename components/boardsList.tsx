@@ -10,7 +10,6 @@ type Board_ = Board & { owner: { handle: string, displayName: string } }
 
 export function BoardsList(props: {
   allowNewBoard: boolean
-  afterBoardCreated?: (newBoard: Board) => void
   heading: string
   boards: Board_[]
   showUserHandles: boolean
@@ -23,10 +22,7 @@ export function BoardsList(props: {
       <CreateBoardModal
         show={createBoardShown}
         onHide={() => setCreateBoardShown(false)}
-        afterBoardCreated={board => {
-          props.afterBoardCreated!(board)
-          setCreateBoardShown(false)
-        }}
+        afterBoardCreated={() => setCreateBoardShown(false)}
       />
     }
     <h1 className="mt-5">

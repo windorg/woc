@@ -2,7 +2,7 @@ import { User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
 import _ from 'lodash'
@@ -15,7 +15,7 @@ interface UnfollowUserRequest extends NextApiRequest {
 
 export type UnfollowUserBody = UnfollowUserRequest['body']
 
-const schema: SchemaOf<UnfollowUserBody> = yup.object({
+const schema: Schema<UnfollowUserBody> = yup.object({
   userId: yup.string().uuid().required(),
 })
 

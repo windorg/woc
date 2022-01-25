@@ -2,7 +2,7 @@ import { Comment, Prisma } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import axios from 'axios'
 import deepMap from 'deep-map'
 import { getSession } from 'next-auth/react'
@@ -21,7 +21,7 @@ interface UpdateCommentRequest extends NextApiRequest {
 
 export type UpdateCommentBody = UpdateCommentRequest['body']
 
-const schema: SchemaOf<UpdateCommentBody> = yup.object({
+const schema: Schema<UpdateCommentBody> = yup.object({
   commentId: yup.string().uuid().required(),
   content: yup.string(),
   private: yup.boolean(),

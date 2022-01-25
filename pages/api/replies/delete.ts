@@ -2,7 +2,7 @@ import { Reply } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
 import { canDeleteReply } from 'lib/access'
@@ -15,7 +15,7 @@ interface DeleteReplyRequest extends NextApiRequest {
 
 export type DeleteReplyBody = DeleteReplyRequest['body']
 
-const schema: SchemaOf<DeleteReplyBody> = yup.object({
+const schema: Schema<DeleteReplyBody> = yup.object({
   replyId: yup.string().uuid().required()
 })
 

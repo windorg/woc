@@ -1,25 +1,25 @@
 import { Board, Card, Prisma, User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from '../../../lib/db'
+import { prisma } from 'lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import axios from 'axios'
-import deepMap from 'deep-map'
 import { getSession } from 'next-auth/react'
 import { canEditBoard, CanSee, canSeeBoard, canSeeCard, PCard } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
 import { filterSync } from 'lib/array'
+import { wocQuery, wocResponse } from 'lib/http'
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface ListBoardsRequest extends NextApiRequest {
+export type ListBoardsQuery = {
+  users?: User['id'][] // as a JSON array
 }
 
-// export type GetBoardQuery = GetKKBoardRequest['query']
+// TODO: get rid of interface extensions everywhere and use yup.cast instead of yup.validate
 
-// const schema: SchemaOf<GetBoardQuery> = yup.object({
-//   boardId: yup.string().uuid().required(),
-// })
+const schema: Schema<ListBoardsQuery> = yup.object({
+  users: yup.array().json().of(yup.string().uuid().required())
+})
 
 export type ListBoardsResponse =
   | {
@@ -33,10 +33,13 @@ export type ListBoardsResponse =
 //   error: { notFound: true }
 // }
 
-export async function serverListBoards(session: Session | null): Promise<ListBoardsResponse> {
+export async function serverListBoards(session: Session | null, query: ListBoardsQuery): Promise<ListBoardsResponse> {
   const include = { owner: { select: { handle: true, displayName: true } } }
+  const where: Prisma.BoardWhereInput = {}
+  if (query?.users !== undefined) where.ownerId = { in: query.users }
   const boards = await prisma.board.findMany({
-    include
+    include,
+    ...(_.isEmpty(where) ? {} : { where })
   }).then(xs => filterSync(xs, (board): board is typeof board & CanSee => canSeeBoard(session?.userId ?? null, board)))
   return {
     success: true,
@@ -44,16 +47,16 @@ export async function serverListBoards(session: Session | null): Promise<ListBoa
   }
 }
 
-export default async function apiListBoards(req: ListBoardsRequest, res: NextApiResponse<ListBoardsResponse>) {
+export default async function apiListBoards(req: NextApiRequest, res: NextApiResponse<ListBoardsResponse>) {
   if (req.method === 'GET') {
     const session = await getSession({ req })
-    // const query = await schema.validate(req.query)
-    const response = await serverListBoards(session)
+    const query = schema.cast(req.query)
+    const response = await serverListBoards(session, query)
     return res.status(200).json(response)
   }
 }
 
-export async function callListBoards(): Promise<ListBoardsResponse> {
-  const { data } = await axios.get('/api/boards/list')
-  return deepMap(data, (val, key) => ((key === 'createdAt') ? new Date(val) : val))
+export async function callListBoards(query: ListBoardsQuery): Promise<ListBoardsResponse> {
+  const { data } = await axios.get('/api/boards/list', { params: wocQuery(query) })
+  return wocResponse(data)
 }

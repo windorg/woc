@@ -2,7 +2,7 @@ import { Reply, Prisma } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import axios from 'axios'
 import deepMap from 'deep-map'
 import { getSession } from 'next-auth/react'
@@ -20,7 +20,7 @@ interface UpdateReplyRequest extends NextApiRequest {
 
 export type UpdateReplyBody = UpdateReplyRequest['body']
 
-const schema: SchemaOf<UpdateReplyBody> = yup.object({
+const schema: Schema<UpdateReplyBody> = yup.object({
   replyId: yup.string().uuid().required(),
   content: yup.string(),
   private: yup.boolean(),

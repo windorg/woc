@@ -2,7 +2,7 @@ import { Comment } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
 import { canEditComment } from 'lib/access'
@@ -15,7 +15,7 @@ interface DeleteCommentRequest extends NextApiRequest {
 
 export type DeleteCommentBody = DeleteCommentRequest['body']
 
-const schema: SchemaOf<DeleteCommentBody> = yup.object({
+const schema: Schema<DeleteCommentBody> = yup.object({
   commentId: yup.string().uuid().required()
 })
 

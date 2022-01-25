@@ -2,7 +2,7 @@ import { Board, Prisma } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import axios from 'axios'
 import deepMap from 'deep-map'
 import { getSession } from 'next-auth/react'
@@ -20,7 +20,7 @@ interface UpdateBoardRequest extends NextApiRequest {
 
 export type UpdateBoardBody = UpdateBoardRequest['body']
 
-const schema: SchemaOf<UpdateBoardBody> = yup.object({
+const schema: Schema<UpdateBoardBody> = yup.object({
   boardId: yup.string().uuid().required(),
   title: yup.string(),
   private: yup.boolean(),

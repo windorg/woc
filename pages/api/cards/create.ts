@@ -2,7 +2,7 @@ import { Card } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import { SchemaOf } from 'yup'
+import { Schema } from 'yup'
 import axios from 'axios'
 import deepMap from 'deep-map'
 import { canEditBoard } from 'lib/access'
@@ -19,7 +19,7 @@ interface CreateCardRequest extends NextApiRequest {
 
 export type CreateCardBody = CreateCardRequest['body']
 
-const schema: SchemaOf<CreateCardBody> = yup.object({
+const schema: Schema<CreateCardBody> = yup.object({
   boardId: yup.string().uuid().required(),
   title: yup.string().required(),
   private: yup.boolean()

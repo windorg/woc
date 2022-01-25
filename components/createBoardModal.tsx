@@ -4,15 +4,16 @@ import Modal from 'react-bootstrap/Modal'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import { Formik } from 'formik'
-import { callCreateBoard } from 'pages/api/boards/create'
 import { Board } from '@prisma/client'
+import { useCreateBoard } from 'lib/queries/boards'
 
 export function CreateBoardModal(props: {
   show: boolean
   onHide: () => void
-  afterBoardCreated: (newBoard: Board) => void
+  afterBoardCreated: () => void
 }) {
   const titleInputRef: React.RefObject<HTMLInputElement> = useRef(null)
+  const createBoardMutation = useCreateBoard()
   return (
     <Modal
       size="lg"
@@ -27,8 +28,8 @@ export function CreateBoardModal(props: {
         <Formik
           initialValues={{ private: false, title: "" }}
           onSubmit={async (values, formik) => {
-            const board = await callCreateBoard(values)
-            props.afterBoardCreated(board)
+            await createBoardMutation.mutateAsync(values)
+            props.afterBoardCreated()
             formik.resetForm()
           }}
         >
