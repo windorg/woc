@@ -5,8 +5,7 @@ import Link from 'next/link'
 import { RenderedMarkdown, markdownToHtml } from '../lib/markdown'
 import ReactTimeAgo from 'react-time-ago'
 import { BiLink, BiPencil, BiCommentDetail } from 'react-icons/bi'
-import Form from 'react-bootstrap/Form'
-import Button from 'react-bootstrap/Button'
+import * as B from 'react-bootstrap'
 import { callUpdateComment } from '../pages/api/comments/update'
 import styles from './commentComponent.module.scss'
 import { Tiptap, TiptapMethods } from './tiptap'
@@ -16,6 +15,7 @@ import { ReplyComponent, Reply_ } from './replyComponent'
 import { LinkButton } from './linkButton'
 import { CreateReplyModal } from './createReplyModal'
 import { commentRoute } from 'lib/routes'
+import { Formik } from 'formik'
 
 export type Comment_ = Comment & {
   canEdit: boolean
@@ -82,38 +82,45 @@ class EditCommentBody extends React.Component<{
 
   render() {
     const { comment } = this.props
-
-    const handleSubmit = async (e?: any) => {
-      if (e) e.preventDefault()
-      if (!this.#editorRef.current) throw Error("Editor is not initialized")
-      const diff = await callUpdateComment({
-        commentId: comment.id,
-        content: this.#editorRef.current.getMarkdown()
-      })
-      const newComment = { ...comment, ...diff }
-      this.props.stopEditing()
-      this.props.afterCommentUpdated(newComment)
-    }
-
     return (
       <>
         <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
           <InfoHeader {...this.props} />
         </div>
-        <Form onSubmit={handleSubmit} >
-          <div className="mb-2">
-            <Tiptap
-              content={markdownToHtml(this.props.comment.content)}
-              autoFocus
-              onSubmit={handleSubmit}
-              ref={this.#editorRef} />
-          </div>
-          <Button size="sm" variant="primary" type="submit">Save</Button>
-          <Button size="sm" variant="secondary" type="button" className="ms-2"
-            onClick={this.props.stopEditing}>
-            Cancel
-          </Button>
-        </Form>
+        <Formik
+          initialValues={{}}
+          onSubmit={async () => {
+            if (!this.#editorRef.current) throw Error("Editor is not initialized")
+            const diff = await callUpdateComment({
+              commentId: comment.id,
+              content: this.#editorRef.current.getMarkdown()
+            })
+            const newComment = { ...comment, ...diff }
+            this.props.stopEditing()
+            this.props.afterCommentUpdated(newComment)
+          }}
+        >
+          {formik => (
+            <B.Form onSubmit={formik.handleSubmit} >
+              <div className="mb-2">
+                <Tiptap
+                  content={markdownToHtml(this.props.comment.content)}
+                  autoFocus
+                  onSubmit={formik.handleSubmit}
+                  ref={this.#editorRef} />
+              </div>
+              <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
+                Save
+                {formik.isSubmitting &&
+                  <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+              </B.Button>
+              <B.Button size="sm" variant="secondary" type="button" className="ms-2"
+                onClick={this.props.stopEditing}>
+                Cancel
+              </B.Button>
+            </B.Form>
+          )}
+        </Formik>
       </>
     )
   }

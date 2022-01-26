@@ -5,14 +5,14 @@ import Link from 'next/link'
 import { RenderedMarkdown, markdownToHtml } from '../lib/markdown'
 import ReactTimeAgo from 'react-time-ago'
 import { BiLink, BiPencil } from 'react-icons/bi'
-import Form from 'react-bootstrap/Form'
-import Button from 'react-bootstrap/Button'
+import * as B from 'react-bootstrap'
 import { callUpdateReply } from '../pages/api/replies/update'
 import { Tiptap, TiptapMethods } from './tiptap'
 import { Gravatar } from './gravatar'
 import { LinkButton } from './linkButton'
 import { ReplyMenu } from './replyMenu'
 import { replyRoute, userRoute } from 'lib/routes'
+import { Formik } from 'formik'
 
 export type Reply_ = Reply & {
   // The author can be 'null' if it was deleted. We don't delete replies if the author's account is gone.
@@ -130,18 +130,6 @@ class EditReply extends React.Component<{
       ${isPrivate ? "reply-private" : ""}
       `
 
-    const handleSubmit = async (e?: any) => {
-      if (e) e.preventDefault()
-      if (!this.#editorRef.current) throw Error("Editor is not initialized")
-      const diff = await callUpdateReply({
-        replyId: reply.id,
-        content: this.#editorRef.current.getMarkdown()
-      })
-      const newReply = { ...reply, ...diff }
-      this.props.stopEditing()
-      this.props.afterReplyUpdated(newReply)
-    }
-
     return (
       <div id={`reply-${reply.id}`} className={classes}>
         <div className="flex-shrink-0">
@@ -151,21 +139,41 @@ class EditReply extends React.Component<{
           <div className="d-flex align-items-center" style={{ lineHeight: "100%", marginBottom: ".3em" }}>
             <InfoHeader {...this.props} />
           </div>
-          <Form onSubmit={handleSubmit} >
-            <div className="mb-2">
-              <Tiptap
-                className="small"
-                content={markdownToHtml(this.props.reply.content)}
-                autoFocus
-                onSubmit={handleSubmit}
-                ref={this.#editorRef} />
-            </div>
-            <Button size="sm" variant="primary" type="submit">Save</Button>
-            <Button size="sm" variant="secondary" type="button" className="ms-2"
-              onClick={this.props.stopEditing}>
-              Cancel
-            </Button>
-          </Form>
+          <Formik
+            initialValues={{}}
+            onSubmit={async () => {
+              if (!this.#editorRef.current) throw Error("Editor is not initialized")
+              const diff = await callUpdateReply({
+                replyId: reply.id,
+                content: this.#editorRef.current.getMarkdown()
+              })
+              const newReply = { ...reply, ...diff }
+              this.props.stopEditing()
+              this.props.afterReplyUpdated(newReply)
+            }}
+          >
+            {formik => (
+              <B.Form onSubmit={formik.handleSubmit} >
+                <div className="mb-2">
+                  <Tiptap
+                    className="small"
+                    content={markdownToHtml(this.props.reply.content)}
+                    autoFocus
+                    onSubmit={formik.handleSubmit}
+                    ref={this.#editorRef} />
+                </div>
+                <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
+                  Save
+                  {formik.isSubmitting &&
+                    <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+                </B.Button>
+                <B.Button size="sm" variant="secondary" type="button" className="ms-2"
+                  onClick={this.props.stopEditing}>
+                  Cancel
+                </B.Button>
+              </B.Form>
+            )}
+          </Formik>
         </div>
       </div>
     )

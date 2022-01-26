@@ -94,12 +94,10 @@ function SignupForm(props) {
           </Form.Group>
 
           <div className="d-grid mt-4">
-            <Button type="submit" disabled={formik.isSubmitting}>
-              <Button variant="primary" type="submit" disabled={formik.isSubmitting}>
-                Sign up
-                {formik.isSubmitting &&
-                  <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
-              </Button>
+            <Button variant="primary" type="submit" disabled={formik.isSubmitting}>
+              Sign up
+              {formik.isSubmitting &&
+                <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
             </Button>
           </div>
         </Form>
