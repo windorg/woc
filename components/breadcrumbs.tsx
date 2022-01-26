@@ -6,12 +6,10 @@ import Link from 'next/link'
 import { boardRoute, boardsRoute, cardRoute, userRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
 
-function LinkItem(props: React.ComponentProps<typeof Link> & { active?: boolean, preload?: boolean }) {
+function LinkItem(props: { href: string, children: React.ReactNode, active?: boolean, preload?: boolean }) {
   return props.active
     ? (<Breadcrumb.Item active>{props.children}</Breadcrumb.Item>)
-    : props.preload
-      ? (<LinkPreload href={props.href} passHref><Breadcrumb.Item>{props.children}</Breadcrumb.Item></LinkPreload>)
-      : (<Link href={props.href} passHref><Breadcrumb.Item>{props.children}</Breadcrumb.Item></Link>)
+    : <Breadcrumb.Item linkAs={props.preload ? LinkPreload : Link} href={props.href}><a>{props.children}</a></Breadcrumb.Item>
 }
 
 export function FeedCrumb(props: { active?: boolean }) {
