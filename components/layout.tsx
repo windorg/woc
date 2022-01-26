@@ -2,11 +2,10 @@ import { signIn, signOut, useSession } from "next-auth/react"
 import { ReactNode, useEffect } from "react"
 import Link from "next/link"
 import Image from 'next/image'
-import useSWR from "swr"
-import { CountInbox } from "pages/api/inbox/count"
 import Badge from "react-bootstrap/Badge"
 import Head from "next/head"
 import Script from "next/script"
+import { useInboxCount } from "lib/queries/inbox"
 
 function ChangelogButton() {
   const headwayConfig = {
@@ -38,7 +37,7 @@ function ChangelogButton() {
 }
 
 function InboxLink() {
-  const { data, error } = useSWR<CountInbox>('/api/inbox/count')
+  const { data } = useInboxCount({ refetchInterval: 5000 })
   return (
     <Link href='/ShowInbox'>
       <a>

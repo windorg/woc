@@ -7,7 +7,6 @@ import { getSession, SessionProvider } from "next-auth/react"
 import TimeAgo from 'javascript-time-ago'
 import en from 'javascript-time-ago/locale/en.json'
 import SSRProvider from 'react-bootstrap/SSRProvider'
-import { SWRConfig } from 'swr'
 import { Session } from 'next-auth'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { ReactQueryDevtools } from 'react-query/devtools'
@@ -27,17 +26,9 @@ function MyApp(props) {
           by the SessionProvider would be reused. */}
       <SessionProvider {...(props.session !== undefined) ? { session: props.session } : {}}>
         <QueryClientProvider client={queryClient}>
-          {/* TODO switch from SWR to react-query */}
-          <SWRConfig
-            value={{
-              refreshInterval: 3000,
-              fetcher: async (resource, init) => fetch(resource, init).then(async res => res.json())
-            }}
-          >
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
-          </SWRConfig>
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
           <ReactQueryDevtools />
         </QueryClientProvider>
       </SessionProvider>

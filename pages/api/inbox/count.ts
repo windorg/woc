@@ -4,11 +4,11 @@ import { getSession } from 'next-auth/react'
 import _ from 'lodash'
 import { getInboxItemsCount } from 'lib/inbox'
 
-export type CountInbox = {
+export type InboxCountResponse = {
   itemCount: number
 }
 
-export default async function countInbox(req: NextApiRequest, res: NextApiResponse<CountInbox>) {
+export default async function apiInboxCount(req: NextApiRequest, res: NextApiResponse<InboxCountResponse>) {
   if (req.method === 'GET') {
     const session = await getSession({ req })
     // TODO all 403s etc must end with send() otherwise they aren't sent
@@ -19,7 +19,7 @@ export default async function countInbox(req: NextApiRequest, res: NextApiRespon
   }
 }
 
-export async function callCountInbox(): Promise<CountInbox> {
+export async function callInboxCount(): Promise<InboxCountResponse> {
   const { data } = await axios.get('/api/inbox/count')
   return data
 }
