@@ -4,7 +4,6 @@ import Modal from 'react-bootstrap/Modal'
 import Form from 'react-bootstrap/Form'
 import Button from 'react-bootstrap/Button'
 import { Formik } from 'formik'
-import { Board } from '@prisma/client'
 import { useCreateBoard } from 'lib/queries/boards'
 
 export function CreateBoardModal(props: {

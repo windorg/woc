@@ -13,11 +13,11 @@ import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
 import * as B from 'react-bootstrap'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
-import { ListBoardsResponse, serverListBoards } from './api/boards/list'
+import { ListBoardsData, serverListBoards } from './api/boards/list'
 import { prefetchBoards, useBoards } from 'lib/queries/boards'
 
 type Props = {
-  boards: ListBoardsResponse | null
+  boards?: ListBoardsData
 }
 
 async function preload(context: PreloadContext): Promise<void> {
@@ -25,14 +25,13 @@ async function preload(context: PreloadContext): Promise<void> {
 }
 
 async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
-  const props: Props = {
-    boards: null
-  }
+  const props: Props = {}
   // Server-side, we want to fetch the data so that we can SSR the page. Client-side, we assume the data is either
   // already preloaded or will be loaded in the component itself, so we don't fetch anything.
   if (typeof window === 'undefined') {
     const session = await getSession(context)
-    props.boards = await serverListBoards(session, {})
+    await serverListBoards(session, {})
+      .then(result => { if (result.success) props.boards = result.data })
   }
   return serialize(props)
 }
@@ -42,14 +41,14 @@ const Boards: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) 
   const userId = session?.userId ?? null
   const initialProps = deserialize<Props>(serializedInitialProps)
 
-  const boardsQuery = useBoards({}, { initialData: initialProps.boards ?? undefined })
+  const boardsQuery = useBoards({}, { initialData: initialProps?.boards })
 
   if (boardsQuery.status === 'loading' || boardsQuery.status === 'idle')
     return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
   if (boardsQuery.status === 'error')
-    return <B.Alert variant="danger">Could not load boards: {boardsQuery.error}</B.Alert>
+    return <B.Alert variant="danger">{boardsQuery.error as Error}</B.Alert>
 
-  const boards = boardsQuery.data.data
+  const boards = boardsQuery.data
 
   const [userBoards, otherBoards] =
     userId

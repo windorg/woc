@@ -1,6 +1,6 @@
 import { unsafeCanSee } from "lib/access"
 import { callCreateBoard, CreateBoardBody } from "pages/api/boards/create"
-import { callListBoards, ListBoardsQuery, ListBoardsResponse } from "pages/api/boards/list"
+import { callListBoards, ListBoardsData, ListBoardsQuery } from "pages/api/boards/list"
 import { Query, QueryClient, useMutation, useQuery, useQueryClient } from "react-query"
 
 const listBoardsKeyPrefix = 'listBoards'
@@ -13,13 +13,9 @@ export async function prefetchBoards(queryClient: QueryClient, query: ListBoards
   )
 }
 
-// TODO: give a choice between autoupdating and not
-//
-// TODO: we'd also probably like to use the normal react-query mechanism for signalling errors,
-// instead of carrying around the error branch of GetBoardResponse
 export function useBoards(
   query: ListBoardsQuery,
-  options?: { initialData?: ListBoardsResponse }
+  options?: { initialData?: ListBoardsData }
 ) {
   return useQuery(
     listBoardsKey(query),
@@ -41,20 +37,15 @@ export function useCreateBoard() {
         const board_ = unsafeCanSee(board)
         // There might be several queries listing boards. We need to update all those queries.
         const predicate = (query: Query) => {
-          const key = query.queryKey
-          const prefix = key[0]
-          const args = key[1] as ListBoardsQuery
+          const [prefix, args] = query.queryKey as [string, ListBoardsQuery]
           return prefix === listBoardsKeyPrefix &&
             (args?.users === undefined || args.users.includes(board.ownerId))
         }
-        queryClient.setQueriesData<ListBoardsResponse | undefined>(
+        queryClient.setQueriesData<ListBoardsData | undefined>(
           { predicate },
-          listBoardsResponse => {
-            if (!listBoardsResponse || !listBoardsResponse.success) return listBoardsResponse
-            return {
-              ...listBoardsResponse,
-              data: [...listBoardsResponse.data, board_]
-            }
+          listBoardsData => {
+            if (listBoardsData === undefined) return listBoardsData
+            return [...listBoardsData, board_]
           })
       }
     })

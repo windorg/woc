@@ -9,7 +9,7 @@ import { canEditBoard, CanSee, canSeeBoard, canSeeCard, PCard } from 'lib/access
 import _ from 'lodash'
 import { Session } from 'next-auth'
 import { filterSync } from 'lib/array'
-import { wocQuery, wocResponse } from 'lib/http'
+import { Result, wocQuery, wocResponse } from 'lib/http'
 
 export type ListBoardsQuery = {
   users?: User['id'][] // as a JSON array
@@ -21,17 +21,12 @@ const schema: Schema<ListBoardsQuery> = yup.object({
   users: yup.array().json().of(yup.string().uuid().required())
 })
 
-export type ListBoardsResponse =
-  | {
-    success: true,
-    data: (CanSee & Board & {
-      owner: Pick<User, 'handle' | 'displayName'>
-    })[]
-  }
-// | {
-//   success: false,
-//   error: { notFound: true }
-// }
+export type ListBoardsData =
+  (CanSee & Board & {
+    owner: Pick<User, 'handle' | 'displayName'>
+  })[]
+
+export type ListBoardsResponse = Result<ListBoardsData, never>
 
 export async function serverListBoards(session: Session | null, query: ListBoardsQuery): Promise<ListBoardsResponse> {
   const include = { owner: { select: { handle: true, displayName: true } } }
@@ -56,7 +51,10 @@ export default async function apiListBoards(req: NextApiRequest, res: NextApiRes
   }
 }
 
-export async function callListBoards(query: ListBoardsQuery): Promise<ListBoardsResponse> {
-  const { data } = await axios.get('/api/boards/list', { params: wocQuery(query) })
-  return wocResponse(data)
+export async function callListBoards(query: ListBoardsQuery): Promise<ListBoardsData>
+export async function callListBoards(query: ListBoardsQuery, opts: { returnErrors: true }): Promise<ListBoardsResponse>
+export async function callListBoards(query, opts?) {
+  const { data: result } = await axios.get('/api/boards/list', { params: wocQuery(query) })
+  if (opts?.returnErrors) return wocResponse(result)
+  if (result.success) return wocResponse(result.data)
 }

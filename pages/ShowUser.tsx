@@ -11,14 +11,14 @@ import { BoardsList } from 'components/boardsList'
 import * as B from 'react-bootstrap'
 import { prefetchUser, useFollowUser, useUnfollowUser, useUser } from 'lib/queries/user'
 import { prefetchBoards, useBoards } from 'lib/queries/boards'
-import { GetUserResponse, GetUserData, serverGetUser } from './api/users/get'
-import { ListBoardsResponse, serverListBoards } from './api/boards/list'
+import { GetUserData, serverGetUser } from './api/users/get'
+import { ListBoardsData, serverListBoards } from './api/boards/list'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
 
 type Props = {
   userId: User['id']
   user?: GetUserData
-  boards?: ListBoardsResponse
+  boards?: ListBoardsData
 }
 
 async function preload(context: PreloadContext): Promise<void> {
@@ -33,11 +33,11 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   const userId = context.query.userId as string
   const props: Props = { userId }
   if (typeof window === 'undefined') {
-    await serverGetUser(await getSession(context), { userId })
+    const session = await getSession(context)
+    await serverGetUser(session, { userId })
       .then(result => { if (result.success) props.user = result.data })
-    // TODO apply the same transformation as for serverGetUser
-    await serverListBoards(await getSession(context), { users: [userId] })
-      .then(result => { props.boards = result })
+    await serverListBoards(session, { users: [userId] })
+      .then(result => { if (result.success) props.boards = result.data })
   }
   return serialize(props)
 }
@@ -85,7 +85,7 @@ const ShowUser: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
   if (boardsQuery.status === 'error') return <B.Alert variant="danger">{boardsQuery.error as Error}</B.Alert>
 
   const user = userQuery.data
-  const boards = boardsQuery.data.data
+  const boards = boardsQuery.data
 
   return (
     <>
