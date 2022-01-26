@@ -1,32 +1,69 @@
-import { User } from "@prisma/client"
-import { callGetUser, GetUserResponse } from "pages/api/users/get"
-import { QueryClient, useMutation, useQuery, useQueryClient } from "react-query"
+import { callFollowUser, FollowUserBody } from "pages/api/users/follow"
+import { callGetUser, GetUserData, GetUserQuery } from "pages/api/users/get"
+import { callUnfollowUser, UnfollowUserBody } from "pages/api/users/unfollow"
+import { Query, QueryClient, useMutation, useQuery, useQueryClient } from "react-query"
 
-const getUserKey = (props: { userId: User['id'] }) => ['getUser', props]
+const getUserKeyPrefix = 'getUser'
+const getUserKey = (query: GetUserQuery) => ['getUser', query]
 
-export async function prefetchUser(queryClient: QueryClient, props: { userId: User['id'] }) {
+export async function prefetchUser(queryClient: QueryClient, query: GetUserQuery) {
   await queryClient.prefetchQuery(
-    getUserKey(props),
-    async () => callGetUser(props)
+    getUserKey(query),
+    async () => callGetUser(query)
   )
 }
 
-// TODO: give a choice between autoupdating and not
-//
-// TODO: we'd also probably like to use the normal react-query mechanism for signalling errors,
-// instead of carrying around the error branch of GetBoardResponse
 export function useUser(
-  props: { userId: User['id'] },
-  options?: { initialData?: GetUserResponse }
+  query: GetUserQuery,
+  options?: { initialData?: GetUserData }
 ) {
-  const query = useQuery(
-    getUserKey(props),
-    async () => callGetUser(props),
+  return useQuery(
+    getUserKey(query),
+    async () => callGetUser(query),
     {
       cacheTime: Infinity,
       staleTime: Infinity,
       initialData: options?.initialData,
     }
   )
-  return query
+}
+
+export function useFollowUser() {
+  const queryClient = useQueryClient()
+  return useMutation(
+    async (data: FollowUserBody) => { return callFollowUser(data) },
+    {
+      onSuccess: (response, { userId }) => {
+        const predicate = (query: Query) => {
+          const [prefix, args] = query.queryKey as [string, GetUserQuery]
+          return prefix === getUserKeyPrefix && args.userId === userId
+        }
+        queryClient.setQueriesData<GetUserData | undefined>(
+          { predicate },
+          getUserData => {
+            if (!getUserData) return getUserData
+            return { ...getUserData, followed: true }
+          })
+      }
+    })
+}
+
+export function useUnfollowUser() {
+  const queryClient = useQueryClient()
+  return useMutation(
+    async (data: UnfollowUserBody) => { return callUnfollowUser(data) },
+    {
+      onSuccess: (response, { userId }) => {
+        const predicate = (query: Query) => {
+          const [prefix, args] = query.queryKey as [string, GetUserQuery]
+          return prefix === getUserKeyPrefix && args.userId === userId
+        }
+        queryClient.setQueriesData<GetUserData | undefined>(
+          { predicate },
+          getUserData => {
+            if (!getUserData) return getUserData
+            return { ...getUserData, followed: false }
+          })
+      }
+    })
 }

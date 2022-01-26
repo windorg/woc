@@ -31,3 +31,15 @@ type WocQuery<T> = {
 export function wocQuery<T extends Record<string, unknown>>(data: T): WocQuery<T> {
   return _.mapValues(data, (val) => _.isArray(val) || _.isObject(val) ? JSON.stringify(val) : val) as any
 }
+
+// A success|failure type for responses.
+export type Result<T, E> = { success: true, data: T } | { success: false, error: E }
+
+export class ResponseError<E = unknown> extends Error {
+  data: E
+  constructor(message, data: E) {
+    super(message)
+    this.data = data
+    this.name = 'ResponseError'
+  }
+}

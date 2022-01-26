@@ -1,93 +1,91 @@
-import type { GetServerSideProps, NextPage } from 'next'
+import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
 import type { Board, User } from '@prisma/client'
-import { prisma } from '../lib/db'
 import React, { useState } from 'react'
-import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import { BoardsCrumb, UserCrumb } from '../components/breadcrumbs'
 import { getSession, useSession } from 'next-auth/react'
-import { CanSee, canSeeBoard, unsafeCanSee } from '../lib/access'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
-import { callUnfollowUser } from './api/users/unfollow'
-import Button from 'react-bootstrap/Button'
-import { callFollowUser } from './api/users/follow'
-import { filterSync } from 'lib/array'
-
-// Strictly speaking the owner is not necessary here, but it's easier types-wise this way
-type Board_ = CanSee & Board & { owner: { handle: string, displayName: string } }
+import * as B from 'react-bootstrap'
+import { prefetchUser, useFollowUser, useUnfollowUser, useUser } from 'lib/queries/user'
+import { prefetchBoards, useBoards } from 'lib/queries/boards'
+import { GetUserResponse, GetUserData, serverGetUser } from './api/users/get'
+import { ListBoardsResponse, serverListBoards } from './api/boards/list'
+import { PreloadContext, WithPreload } from 'lib/link-preload'
 
 type Props = {
-  // The 'followed' field be null if there's no logged-in user
-  user: Pick<User, 'id' | 'handle' | 'displayName'> & { followed: boolean | null }
-  boards: Board_[]
+  userId: User['id']
+  user?: GetUserData
+  boards?: ListBoardsResponse
 }
 
-export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
-  const session = await getSession(context)
-  const user = await prisma.user.findUnique({
-    where: { id: context.query.userId as string },
-    select: { id: true, handle: true, displayName: true },
-    rejectOnNotFound: true,
-  })
-  const followed: boolean | null =
-    session
-      ? await prisma.followedUser.count({
-        where: {
-          subscriberId: session.userId,
-          followedUserId: user.id,
-        }
-      }).then(Boolean)
-      : null
-  const boards = await prisma.board.findMany({
-    include: { owner: { select: { handle: true, displayName: true } } },
-    where: { ownerId: context.query.userId as string }
-  }).then(xs => filterSync(xs, (board): board is Board_ => canSeeBoard(session?.userId ?? null, board)))
-  const props: Props = {
-    user: { ...user, followed },
-    boards
-  }
-  return {
-    props: serialize(props)
-  }
+async function preload(context: PreloadContext): Promise<void> {
+  const userId = context.query.userId as string
+  await Promise.all([
+    prefetchUser(context.queryClient, { userId }),
+    prefetchBoards(context.queryClient, { users: [userId] })
+  ])
 }
 
-function FollowButton(props: { user, afterFollowUser, afterUnfollowUser }) {
+async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
+  const userId = context.query.userId as string
+  const props: Props = { userId }
+  if (typeof window === 'undefined') {
+    await serverGetUser(await getSession(context), { userId })
+      .then(result => { if (result.success) props.user = result.data })
+    // TODO apply the same transformation as for serverGetUser
+    await serverListBoards(await getSession(context), { users: [userId] })
+      .then(result => { props.boards = result })
+  }
+  return serialize(props)
+}
+
+function FollowButton(props: { user }) {
+  const followUserMutation = useFollowUser()
+  const unfollowUserMutation = useUnfollowUser()
   return (
     props.user.followed
       ?
-      <Button size="sm" variant="outline-secondary"
+      <B.Button size="sm" variant="outline-secondary"
+        disabled={unfollowUserMutation.isLoading}
         onClick={async () => {
-          await callUnfollowUser({ userId: props.user.id })
-          props.afterUnfollowUser()
+          await unfollowUserMutation.mutateAsync({ userId: props.user.id })
         }}>
         Unfollow
-      </Button>
+        {unfollowUserMutation.isLoading && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+      </B.Button>
       :
-      <Button size="sm" variant="outline-primary"
+      <B.Button size="sm" variant="outline-primary"
+        disabled={followUserMutation.isLoading}
         onClick={async () => {
-          await callFollowUser({ userId: props.user.id })
-          props.afterFollowUser()
+          await followUserMutation.mutateAsync({ userId: props.user.id })
         }}>
         Follow
-      </Button>
+        {followUserMutation.isLoading && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+      </B.Button>
   )
 }
 
-const ShowUser: NextPage<SuperJSONResult> = (props) => {
+const ShowUser: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) => {
+  const initialProps = deserialize<Props>(serializedInitialProps)
+  const { userId } = initialProps
   const { data: session } = useSession()
-  const { user: initialUser, boards: initialBoards } = deserialize<Props>(props)
 
-  const [boards, setBoards] = useState(initialBoards)
-  const addBoard = (board: Board) => {
-    // You can see things that you already have
-    const board_ = unsafeCanSee({ ...board, owner: user! })
-    setBoards(boards => boards.concat([board_]))
-  }
+  const userQuery = useUser({ userId }, { initialData: initialProps?.user })
+  const boardsQuery = useBoards({ users: [userId] }, { initialData: initialProps?.boards })
 
-  const [user, setUser] = useState(initialUser)
+  if (userQuery.status === 'loading' || userQuery.status === 'idle')
+    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+  if (userQuery.status === 'error') return <B.Alert variant="danger">{userQuery.error as Error}</B.Alert>
+
+  if (boardsQuery.status === 'loading' || boardsQuery.status === 'idle')
+    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+  if (boardsQuery.status === 'error') return <B.Alert variant="danger">{boardsQuery.error as Error}</B.Alert>
+
+  const user = userQuery.data
+  const boards = boardsQuery.data.data
 
   return (
     <>
@@ -95,10 +93,10 @@ const ShowUser: NextPage<SuperJSONResult> = (props) => {
         <title>{user.displayName} @{user.handle} / WOC</title>
       </Head>
 
-      <Breadcrumb>
+      <B.Breadcrumb>
         <BoardsCrumb />
         <UserCrumb user={user} active />
-      </Breadcrumb>
+      </B.Breadcrumb>
 
       <h1>
         <span className="me-3">{user.displayName}</span>
@@ -107,11 +105,7 @@ const ShowUser: NextPage<SuperJSONResult> = (props) => {
         {(user.followed !== null) &&
           <>
             <span className="ms-4" />
-            <FollowButton
-              user={user}
-              afterFollowUser={() => setUser(prev => ({ ...prev, followed: true }))}
-              afterUnfollowUser={() => setUser(prev => ({ ...prev, followed: false }))}
-            />
+            <FollowButton user={user} />
           </>
         }
       </h1>
@@ -125,5 +119,8 @@ const ShowUser: NextPage<SuperJSONResult> = (props) => {
     </>
   )
 }
+
+ShowUser.getInitialProps = getInitialProps
+ShowUser.preload = preload
 
 export default ShowUser

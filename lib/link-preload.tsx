@@ -65,6 +65,11 @@ export type PreloadContext = {
   query: ParsedUrlQuery
 }
 
+// WOC
+export type WithPreload<Page> = Page & {
+  preload: (context: PreloadContext) => Promise<void>
+}
+
 // WOC: copied from next/router
 function resolveDynamicRoute(pathname: string, pages: string[]) {
   const cleanPathname = removePathTrailingSlash(denormalizePagePath(pathname!))

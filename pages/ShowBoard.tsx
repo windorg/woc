@@ -18,7 +18,7 @@ import { AddCardForm } from 'components/addCardForm'
 import { useRouter } from 'next/router'
 import { LinkButton } from 'components/linkButton'
 import { callGetBoard, GetBoardResponse, serverGetBoard } from './api/boards/get'
-import { PreloadContext } from 'lib/link-preload'
+import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { useQueryClient } from 'react-query'
 import NextError from 'next/error'
 import { boardsRoute } from 'lib/routes'
@@ -48,7 +48,7 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   return serialize(props)
 }
 
-const ShowBoard: NextPage<SuperJSONResult> = (serializedInitialProps) => {
+const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) => {
   const initialProps = deserialize<Props>(serializedInitialProps)
   const { boardId } = initialProps
 
@@ -134,14 +134,9 @@ const ShowBoard: NextPage<SuperJSONResult> = (serializedInitialProps) => {
       }
     </>
   )
-
-
-
-
 }
 
 ShowBoard.getInitialProps = getInitialProps
-// @ts-expect-error: preload not found
 ShowBoard.preload = preload
 
 export default ShowBoard

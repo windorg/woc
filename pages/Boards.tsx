@@ -12,11 +12,9 @@ import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
 import * as B from 'react-bootstrap'
-import { PreloadContext } from 'lib/link-preload'
+import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { ListBoardsResponse, serverListBoards } from './api/boards/list'
 import { prefetchBoards, useBoards } from 'lib/queries/boards'
-
-type Board_ = CanSee & Board & { owner: { handle: string, displayName: string } }
 
 type Props = {
   boards: ListBoardsResponse | null
@@ -39,7 +37,7 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   return serialize(props)
 }
 
-const Boards: NextPage<SuperJSONResult> = (serializedInitialProps) => {
+const Boards: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) => {
   const { data: session } = useSession()
   const userId = session?.userId ?? null
   const initialProps = deserialize<Props>(serializedInitialProps)
@@ -102,7 +100,6 @@ const Boards: NextPage<SuperJSONResult> = (serializedInitialProps) => {
 }
 
 Boards.getInitialProps = getInitialProps
-// @ts-expect-error: preload not found
 Boards.preload = preload
 
 export default Boards

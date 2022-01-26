@@ -1,7 +1,6 @@
 import { Board } from '@prisma/client'
 import _ from "lodash"
 import { useState } from "react"
-import { Button } from "react-bootstrap"
 import * as B from 'react-bootstrap'
 import { BoardCard } from "./boardCard"
 import { CreateBoardModal } from "./createBoardModal"
@@ -28,10 +27,10 @@ export function BoardsList(props: {
     <h1 className="mt-5">
       {props.heading}
       {props.allowNewBoard && <>
-        <Button className="ms-4" size="sm" variant="outline-primary"
+        <B.Button className="ms-4" size="sm" variant="outline-primary"
           onClick={() => setCreateBoardShown(true)}>
           + New
-        </Button>
+        </B.Button>
       </>
       }
     </h1>
