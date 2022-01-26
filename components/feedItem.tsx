@@ -1,4 +1,5 @@
 import type { Card, Comment, User } from '@prisma/client'
+import { LinkPreload } from 'lib/link-preload'
 import { RenderedMarkdown } from 'lib/markdown'
 import { commentRoute, userRoute } from 'lib/routes'
 import Link from 'next/link'
@@ -20,15 +21,15 @@ export function FeedItemComponent(props: { item: FeedItem }) {
   return (
     <div className="woc-feed-item woc-feed-item-comment d-flex">
       <div className="flex-shrink-0">
-        <Link href={userRoute(author.id)}>
+        <LinkPreload href={userRoute(author.id)}>
           <a><Gravatar email={author.email} size="small" /></a>
-        </Link>
+        </LinkPreload>
       </div>
       <div className="flex-grow-1 ms-2">
         <strong>
-          <Link href={userRoute(author.id)}>
+          <LinkPreload href={userRoute(author.id)}>
             <a>{author.displayName}</a>
-          </Link>
+          </LinkPreload>
           {" — "}{item.card.title}
         </strong>
         <div>

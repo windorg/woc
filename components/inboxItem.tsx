@@ -1,5 +1,6 @@
 import { Comment, Reply, User } from '@prisma/client'
 import { InboxItem } from 'lib/inbox'
+import { LinkPreload } from 'lib/link-preload'
 import { RenderedMarkdown } from 'lib/markdown'
 import { replyRoute, userRoute } from 'lib/routes'
 import Link from 'next/link'
@@ -11,9 +12,9 @@ function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
   return (
     props.author
       ?
-      <Link href={userRoute(props.author.id)}>
+      <LinkPreload href={userRoute(props.author.id)}>
         <a><Gravatar email={props.author.email} size="small" /></a>
-      </Link>
+      </LinkPreload>
       :
       <Gravatar email="" size="small" />
   )
@@ -31,9 +32,9 @@ export function InboxItemComponent(props: { item: InboxItem }) {
         <strong>
           {author
             ?
-            <Link href={userRoute(author.id)}>
+            <LinkPreload href={userRoute(author.id)}>
               <a>{author.displayName}</a>
-            </Link>
+            </LinkPreload>
             :
             "[deleted]"
           }

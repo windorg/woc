@@ -23,14 +23,14 @@ export function BoardCard(props: { board: Board_, kind: Kind }) {
           </LinkPreload>
         </h3>
         {(kind === 'other-board') &&
-          <Link href={userRoute(board.ownerId)}>
+          <LinkPreload href={userRoute(board.ownerId)}>
             <a>
               <span>
                 <span className="me-2">{board.owner.displayName}</span>
                 <em>@{board.owner.handle}</em>
               </span>
             </a>
-          </Link>
+          </LinkPreload>
         }
       </Card.Body>
     </Card>

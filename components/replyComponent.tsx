@@ -13,6 +13,7 @@ import { LinkButton } from './linkButton'
 import { ReplyMenu } from './replyMenu'
 import { replyRoute, userRoute } from 'lib/routes'
 import { Formik } from 'formik'
+import { LinkPreload } from 'lib/link-preload'
 
 export type Reply_ = Reply & {
   // The author can be 'null' if it was deleted. We don't delete replies if the author's account is gone.
@@ -27,9 +28,9 @@ function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
   return (
     props.author
       ?
-      <Link href={userRoute(props.author.id)}>
+      <LinkPreload href={userRoute(props.author.id)}>
         <a><Gravatar email={props.author.email} size="tiny" /></a>
-      </Link>
+      </LinkPreload>
       :
       <Gravatar email="" size="tiny" />
   )
@@ -46,9 +47,9 @@ function InfoHeader(props: { card: Card, reply: Reply_ }) {
       <strong>
         {reply.author
           ?
-          <Link href={userRoute(reply.author.id)}>
+          <LinkPreload href={userRoute(reply.author.id)}>
             <a>{reply.author.displayName}</a>
-          </Link>
+          </LinkPreload>
           :
           "[deleted]"
         }
