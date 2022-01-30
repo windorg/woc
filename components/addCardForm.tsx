@@ -3,7 +3,7 @@ import { Button, Form } from 'react-bootstrap'
 import * as B from 'react-bootstrap'
 import React from 'react'
 import { Formik } from 'formik'
-import { useCreateCard } from 'lib/queries/board'
+import { useCreateCard } from 'lib/queries/cards'
 
 export function AddCardForm(props: {
   boardId: Board['id']

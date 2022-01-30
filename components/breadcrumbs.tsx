@@ -44,7 +44,7 @@ export function UserCrumb(props: { active?: boolean, user: Pick<User, 'id' | 'ha
   )
 }
 
-export function BoardCrumb(props: { active?: boolean, board: Board }) {
+export function BoardCrumb(props: { active?: boolean, board: Pick<Board, 'id' | 'title' | 'settings'> }) {
   const isPrivate = boardSettings(props.board).visibility === 'private'
   return (
     <LinkItem active={props.active} href={boardRoute(props.board.id)} preload>
@@ -54,7 +54,7 @@ export function BoardCrumb(props: { active?: boolean, board: Board }) {
   )
 }
 
-export function CardCrumb(props: { active?: boolean, card: Card }) {
+export function CardCrumb(props: { active?: boolean, card: Pick<Card, 'id' | 'title' | 'settings'> }) {
   const isPrivate = boardSettings(props.card).visibility === 'private'
   return (
     <LinkItem active={props.active} href={cardRoute(props.card.id)}>

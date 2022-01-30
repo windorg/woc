@@ -5,9 +5,8 @@ import React from 'react'
 import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 'react-icons/bi'
 import copy from 'copy-to-clipboard'
 import styles from './actionMenu.module.scss'
-import { callDeleteBoard } from 'pages/api/boards/delete'
 import { boardRoute } from 'lib/routes'
-import { useUpdateBoard } from 'lib/queries/board'
+import { useDeleteBoard, useUpdateBoard } from 'lib/queries/boards'
 import { UpdateBoardBody } from '../pages/api/boards/update'
 
 function MenuCopyLink(props: { board: Board }) {
@@ -38,21 +37,22 @@ function MenuDelete(props: { deleteBoard }) {
 // "More" button with a dropdown
 export function BoardMenu(props: {
   board: Board & { canEdit: boolean }
-  afterBoardDeleted: () => void
+  afterDelete?: () => void
 }) {
   const { board } = props
   const settings = boardSettings(board)
   const isPrivate = settings.visibility === 'private'
 
   const updateBoardMutation = useUpdateBoard()
+  const deleteBoardMutation = useDeleteBoard()
 
   const updateBoard = async (data: Omit<UpdateBoardBody, 'boardId'>) => {
     await updateBoardMutation.mutateAsync({ boardId: board.id, ...data })
   }
 
   const deleteBoard = async () => {
-    await callDeleteBoard({ boardId: board.id })
-    props.afterBoardDeleted()
+    await deleteBoardMutation.mutateAsync({ boardId: board.id })
+    if (props.afterDelete) props.afterDelete()
   }
 
   return (

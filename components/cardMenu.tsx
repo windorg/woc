@@ -4,10 +4,9 @@ import { Dropdown } from 'react-bootstrap'
 import React from 'react'
 import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt, BiArchiveOut, BiArchiveIn } from 'react-icons/bi'
 import copy from 'copy-to-clipboard'
-import { callUpdateCard } from '../pages/api/cards/update'
 import styles from './actionMenu.module.scss'
-import { callDeleteCard } from 'pages/api/cards/delete'
 import { cardRoute } from 'lib/routes'
+import { useUpdateCard, useDeleteCard } from 'lib/queries/cards'
 
 function MenuCopyLink(props: { card: Card }) {
   return <Dropdown.Item
@@ -46,21 +45,22 @@ function MenuDelete(props: { deleteCard }) {
 // "More" button with a dropdown
 export function CardMenu(props: {
   card: Card & { canEdit: boolean }
-  afterCardUpdated: (newCard: Card) => void
-  afterCardDeleted: () => void
+  afterDelete?: () => void
 }) {
   const { card } = props
   const settings = cardSettings(card)
   const isPrivate = settings.visibility === 'private'
 
+  const updateCardMutation = useUpdateCard()
+  const deleteCardMutation = useDeleteCard()
+
   const updateCard = async (data) => {
-    const diff = await callUpdateCard({ cardId: card.id, ...data })
-    props.afterCardUpdated({ ...card, ...diff })
+    await updateCardMutation.mutateAsync({ cardId: card.id, ...data })
   }
 
   const deleteCard = async () => {
-    await callDeleteCard({ cardId: card.id })
-    props.afterCardDeleted()
+    await deleteCardMutation.mutateAsync({ cardId: card.id })
+    if (props.afterDelete) props.afterDelete()
   }
 
   return (

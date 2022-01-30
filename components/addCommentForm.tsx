@@ -2,27 +2,27 @@ import { Card, Comment } from '@prisma/client'
 import * as B from 'react-bootstrap'
 import React from 'react'
 import { Tiptap, TiptapMethods } from '../components/tiptap'
-import { callCreateComment } from '../pages/api/comments/create'
 import { Formik } from 'formik'
+import { useCreateComment } from 'lib/queries/comments'
 
 // TODO don't allow posting with empty content
 export function AddCommentForm(props: {
   cardId: Card['id']
-  afterCommentCreated: (comment: Comment) => void
+  afterCreate?: () => void
 }) {
   const editorRef = React.useRef<TiptapMethods>(null)
+  const createCommentMutation = useCreateComment()
   return (
     <Formik
       initialValues={{ private: false }}
       onSubmit={async (values, formik) => {
-        if (!editorRef.current)
-          throw Error("Editor is not initialized")
-        const comment = await callCreateComment({
+        if (!editorRef.current) throw Error("Editor is not initialized")
+        await createCommentMutation.mutateAsync({
           cardId: props.cardId,
           content: editorRef.current.getMarkdown(),
           ...values
         })
-        props.afterCommentCreated(comment)
+        if (props?.afterCreate) props.afterCreate()
         editorRef.current.clearContent()
         formik.resetForm()
       }}

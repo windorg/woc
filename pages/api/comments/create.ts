@@ -25,7 +25,9 @@ const schema: Schema<CreateCommentBody> = yup.object({
   private: yup.boolean()
 })
 
-export default async function createComment(req: CreateCommentRequest, res: NextApiResponse<Comment>) {
+export type Comment_ = Comment & { canEdit: boolean }
+
+export default async function createComment(req: CreateCommentRequest, res: NextApiResponse<Comment_>) {
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
@@ -50,11 +52,11 @@ export default async function createComment(req: CreateCommentRequest, res: Next
         ownerId: card.ownerId,
       }
     })
-    return res.status(201).json(comment)
+    return res.status(201).json({ ...comment, canEdit: true })
   }
 }
 
-export async function callCreateComment(body: CreateCommentBody): Promise<Comment> {
+export async function callCreateComment(body: CreateCommentBody): Promise<Comment_> {
   const { data } = await axios.post('/api/comments/create', body)
   return wocResponse(data)
 }

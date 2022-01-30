@@ -1,171 +1,97 @@
-import type { GetServerSideProps, NextPage } from 'next'
+import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
 import type { Board, User, Card, Comment, Reply } from '@prisma/client'
-import { prisma } from '../lib/db'
 import { cardSettings, commentSettings } from '../lib/model-settings'
-import { Badge, Breadcrumb } from 'react-bootstrap'
+import * as B from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb, CardCrumb } from '../components/breadcrumbs'
 import React, { useEffect, useState } from 'react'
 import _ from 'lodash'
 import * as R from 'ramda'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
-import { canDeleteReply, canEditCard, canEditReply, CanSee, canSeeBoard, canSeeCard, canSeeComment, canSeeReply, pCardSelect, unsafeCanSee } from 'lib/access'
 import { getSession } from 'next-auth/react'
 import { CommentComponent, Comment_ } from 'components/commentComponent'
 import { EditCardModal } from 'components/editCardModal'
 import { CardMenu } from 'components/cardMenu'
 import { BiPencil } from 'react-icons/bi'
 import { useRouter } from 'next/router'
-import { Reply_ } from 'components/replyComponent'
 import { deleteById, filterSync, mapAsync, mergeById, updateById } from 'lib/array'
 import { LinkButton } from 'components/linkButton'
 import { boardRoute } from 'lib/routes'
-import assert from 'assert'
 import { AddCommentForm } from '../components/addCommentForm'
-
-type Card_ = CanSee & Card & {
-  owner: Pick<User, 'id' | 'displayName' | 'handle'>
-  // TODO: honestly we only need the title from here.
-  board: CanSee & Board
-  comments: (CanSee & Comment_ & { replies: (CanSee & Reply_)[] })[]
-  canEdit: boolean
-}
+import { GetCardData, serverGetCard } from './api/cards/get'
+import { ListCommentsData, serverListComments } from './api/comments/list'
+import { ListRepliesData, serverListReplies } from './api/replies/list'
+import { PreloadContext, WithPreload } from 'lib/link-preload'
+import { prefetchCard, useCard } from 'lib/queries/cards'
+import { prefetchComments, useComments } from 'lib/queries/comments'
+import { prefetchReplies, useReplies } from 'lib/queries/replies'
 
 type Props = {
-  initialCard: Card_
+  cardId: Card['id']
+  card?: GetCardData
+  comments?: ListCommentsData
+  replies?: ListRepliesData
 }
 
-const cardFindSettings = {
-  include: {
-    owner: { select: { id: true, displayName: true, handle: true } },
-    board: true,
-    comments: {
-      include: {
-        replies: {
-          include: {
-            author: { select: { id: true, email: true, displayName: true } }
-          }
-        }
-      }
-    }
-  }
+async function preload(context: PreloadContext): Promise<void> {
+  const cardId = context.query.cardId as string
+  await Promise.all([
+    prefetchCard(context.queryClient, { cardId }),
+    prefetchComments(context.queryClient, { cards: [cardId] }),
+    prefetchReplies(context.queryClient, { cards: [cardId] })
+  ])
 }
 
-export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
-  const session = await getSession(context)
-  const userId = session?.userId ?? null
-  const card = await prisma.card.findUnique({
-    where: {
-      id: context.query.cardId as string
-    },
-    ...cardFindSettings
-  })
-  if (!card || !canSeeCard(userId, card)) { return { notFound: true } }
-  const canEditCard_ = await canEditCard(userId, card)
-
-  // We assume that if you can see the card, you can see the board. For now (Jan 2022) it is always true.
-  const board = card.board
-  // NB: we can't write canSeeBoard(userId, card.board) because it wouldn't refine the type of card.board, so we have to
-  // work around like this.
-  assert(canSeeBoard(userId, board))
-
-  const card_: Card_ = {
-    ...card,
-    board,
-    canEdit: canEditCard_,
-    comments: await mapAsync(
-      filterSync(card.comments, (comment): comment is (typeof comment & CanSee) => canSeeComment(userId, { ...comment, card })),
-      async comment => ({
-        ...comment,
-        // Augment comments with "canEdit". For speed we assume that if you can edit the card, you can edit the comments
-        canEdit: canEditCard_,
-        replies: await mapAsync(
-          filterSync(comment.replies, (reply): reply is (typeof reply & CanSee) => canSeeReply(userId, { ...reply, comment: { ...comment, card } })),
-          async reply => ({
-            ...reply,
-            // Augment replies with "canEdit" and "canDelete"
-            canEdit: await canEditReply(session?.userId ?? null, { ...reply, comment: { ...comment, card } }),
-            canDelete: await canDeleteReply(session?.userId ?? null, { ...reply, comment: { ...comment, card } })
-          }))
-      }))
+async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
+  const cardId = context.query.cardId as string
+  const props: Props = { cardId }
+  if (typeof window === 'undefined') {
+    const session = await getSession(context)
+    await serverGetCard(session, { cardId })
+      .then(result => { if (result.success) props.card = result.data })
+    await serverListComments(session, { cards: [cardId] })
+      .then(result => { if (result.success) props.comments = result.data })
+    await serverListReplies(session, { cards: [cardId] })
+      .then(result => { if (result.success) props.replies = result.data })
   }
-
-  const props: Props = {
-    initialCard: card_
-  }
-  return {
-    props: serialize(props)
-  }
+  return serialize(props)
 }
 
-const ShowCard: NextPage<SuperJSONResult> = (props) => {
-  const { initialCard } = deserialize<Props>(props)
+const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) => {
+  const initialProps = deserialize<Props>(serializedInitialProps)
+  const { cardId } = initialProps
 
-  // Card state & card-modifying methods
-  const [card, setCard] = useState(initialCard)
-
-  // Assuming that this is only called for own comments (and therefore they can be edited). Shouldn't be called for
-  // e.g. comments coming from a websocket
-  const addComment = (comment: Comment) => setCard(card => {
-    // Of course you can see your own comments
-    const comment_ = unsafeCanSee({ ...comment, replies: [], canEdit: true })
-    return {
-      ...card,
-      comments: card.comments.concat([comment_])
-    }
-  })
-
-  const updateComment = (comment: Comment) => setCard(card => ({
-    ...card,
-    comments: mergeById(card.comments, comment)
-  }))
-
-  const deleteComment = (commentId) => setCard(card => ({
-    ...card,
-    comments: deleteById(card.comments, commentId)
-  }))
-
-  const addReply = (commentId, reply: Reply_) => setCard(card => {
-    // Of course you can see your own replies
-    const reply_ = unsafeCanSee(reply)
-    return {
-      ...card,
-      comments: updateById(card.comments, commentId, (comment => ({
-        ...comment,
-        replies: comment.replies.concat([reply_])
-      })))
-    }
-  })
-
-  const updateReply = (commentId, reply: Reply) => setCard(card => ({
-    ...card,
-    comments: updateById(card.comments, commentId, (comment => ({
-      ...comment,
-      replies: mergeById(comment.replies, reply)
-    })))
-  }))
-
-  const deleteReply = (commentId, replyId) => setCard(card => ({
-    ...card,
-    comments: updateById(card.comments, commentId, (comment => ({
-      ...comment,
-      replies: deleteById(comment.replies, replyId)
-    })))
-  }))
-
+  const router = useRouter()
   const [editCardShown, setEditCardShown] = useState(false)
+
+  const cardQuery = useCard({ cardId }, { initialData: initialProps.card })
+  const commentsQuery = useComments({ cards: [cardId] }, { initialData: initialProps.comments })
+  const repliesQuery = useReplies({ cards: [cardId] }, { initialData: initialProps.replies })
+
+  // TODO all of this is boilerplate
+  if (cardQuery.status === 'loading' || cardQuery.status === 'idle')
+    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+  if (cardQuery.status === 'error') return <B.Alert variant="danger">{(cardQuery.error as Error).message}</B.Alert>
+
+  if (commentsQuery.status === 'loading' || commentsQuery.status === 'idle')
+    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+  if (commentsQuery.status === 'error') return <B.Alert variant="danger">{(commentsQuery.error as Error).message}</B.Alert>
+
+  // TODO we can show the comments before loading the replies
+  if (repliesQuery.status === 'loading' || repliesQuery.status === 'idle')
+    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+  if (repliesQuery.status === 'error') return <B.Alert variant="danger">{(repliesQuery.error as Error).message}</B.Alert>
+
+  const card = cardQuery.data
+  const comments = commentsQuery.data
+  const replies = repliesQuery.data
 
   const renderCommentList = (comments) => comments.map(comment => (
     <CommentComponent key={comment.id}
       card={card}
       comment={{ ...comment, canEdit: card.canEdit }}
-      replies={comment.replies}
-      afterCommentUpdated={updateComment}
-      afterCommentDeleted={() => deleteComment(comment.id)}
-      afterReplyCreated={reply => addReply(comment.id, reply)}
-      afterReplyUpdated={reply => updateReply(comment.id, reply)}
-      afterReplyDeleted={replyId => deleteReply(comment.id, replyId)}
+      replies={filterSync(replies, reply => reply.commentId === comment.id)}
     />
   ))
 
@@ -174,7 +100,7 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
 
   const [pinnedComments, otherComments] =
     _.partition(
-      _.orderBy(card.comments, ['createdAt'], ['desc']),
+      _.orderBy(comments, ['createdAt'], ['desc']),
       comment => commentSettings(comment).pinned)
 
   const reverseOrderComments = () => (<>
@@ -182,22 +108,19 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
     <div className="mb-3">
       {renderCommentList(_.concat(R.reverse(pinnedComments), R.reverse(otherComments)))}
     </div>
-    {card.canEdit && <AddCommentForm afterCommentCreated={addComment} cardId={card.id} />}
+    {card.canEdit && <AddCommentForm cardId={card.id} />}
   </>)
   const normalOrderComments = () => (<>
-    {card.canEdit && <AddCommentForm afterCommentCreated={addComment} cardId={card.id} />}
+    {card.canEdit && <AddCommentForm cardId={card.id} />}
     <div className="mt-4">
       {renderCommentList(_.concat(pinnedComments, otherComments))}
     </div>
   </>)
 
-  const router = useRouter()
-
   const moreButton = () => (
     <CardMenu
       card={card}
-      afterCardUpdated={card => setCard(prev => ({ ...prev, ...card }))}
-      afterCardDeleted={async () => router.replace(boardRoute(card.boardId))} />
+      afterDelete={async () => router.replace(boardRoute(card.boardId))} />
   )
 
   return (
@@ -207,15 +130,15 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
         <title>{card.title} / WOC</title>
       </Head>
 
-      <Breadcrumb>
+      <B.Breadcrumb>
         <BoardsCrumb />
         <UserCrumb user={card.owner} />
         <BoardCrumb board={card.board} />
         <CardCrumb card={card} active />
-      </Breadcrumb>
+      </B.Breadcrumb>
 
       <h1 className="mb-4">
-        {cardSettings(card).archived && <Badge bg="secondary" className="me-2">Archived</Badge>}
+        {cardSettings(card).archived && <B.Badge bg="secondary" className="me-2">Archived</B.Badge>}
         {isPrivate && "🔒 "}
         {card.title}
         {card.canEdit &&
@@ -223,10 +146,7 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
             card={card}
             show={editCardShown}
             onHide={() => setEditCardShown(false)}
-            afterCardUpdated={card => {
-              setCard(prev => ({ ...prev, ...card }))
-              setEditCardShown(false)
-            }}
+            afterSave={() => setEditCardShown(false)}
           />
         }
         <span
@@ -244,5 +164,8 @@ const ShowCard: NextPage<SuperJSONResult> = (props) => {
     </>
   )
 }
+
+ShowCard.getInitialProps = getInitialProps
+ShowCard.preload = preload
 
 export default ShowCard

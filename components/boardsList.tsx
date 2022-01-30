@@ -21,7 +21,7 @@ export function BoardsList(props: {
       <CreateBoardModal
         show={createBoardShown}
         onHide={() => setCreateBoardShown(false)}
-        afterBoardCreated={() => setCreateBoardShown(false)}
+        afterCreate={() => setCreateBoardShown(false)}
       />
     }
     <h1 className="mt-5">

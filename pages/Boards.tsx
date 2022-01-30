@@ -46,7 +46,7 @@ const Boards: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) 
   if (boardsQuery.status === 'loading' || boardsQuery.status === 'idle')
     return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
   if (boardsQuery.status === 'error')
-    return <B.Alert variant="danger">{boardsQuery.error as Error}</B.Alert>
+    return <B.Alert variant="danger">{(boardsQuery.error as Error).message}</B.Alert>
 
   const boards = boardsQuery.data
 

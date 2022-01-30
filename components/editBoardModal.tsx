@@ -2,13 +2,13 @@ import { Board } from "@prisma/client"
 import { Formik } from "formik"
 import * as B from 'react-bootstrap'
 import React from "react"
-import { useUpdateBoard } from "lib/queries/board"
+import { useUpdateBoard } from "lib/queries/boards"
 
 export function EditBoardModal(props: {
   board: Board
   show: boolean
   onHide: () => void
-  afterBoardUpdated: () => void
+  afterSave?: () => void
 }) {
   const titleInputRef = React.useRef<HTMLInputElement>(null)
   const { board } = props
@@ -28,7 +28,7 @@ export function EditBoardModal(props: {
           initialValues={{ title: board.title }}
           onSubmit={async (values, formik) => {
             await updateBoardMutation.mutateAsync({ boardId: board.id, ...values })
-            props.afterBoardUpdated()
+            if (props.afterSave) props.afterSave()
             formik.resetForm()
           }}
         >

@@ -22,7 +22,7 @@ test('Private cards should not be visible to others', async ({ page, browser }) 
     for (const somebodyPage of [bobPage, anonPage]) {
       // Expect that others can't access the card by the direct link
       await somebodyPage.goto(cardUrl)
-      await expect(somebodyPage.locator('h1')).toHaveText(/404/)
+      await somebodyPage.waitForSelector('text=Card not found')
       await expect(somebodyPage.locator('body')).not.toContainText(cardName)
       // Expect that others can't see the card in the board
       await somebodyPage.goto(boardUrl)
@@ -51,7 +51,7 @@ test('Cards in private boards should not be visible to others', async ({ page, b
     for (const somebodyPage of [bobPage, anonPage]) {
       // Expect that others can't access the card by the direct link
       await somebodyPage.goto(cardUrl)
-      await expect(somebodyPage.locator('h1')).toHaveText(/404/)
+      await somebodyPage.waitForSelector('text=Card not found')
       await expect(somebodyPage.locator('body')).not.toContainText(cardName)
     }
   })

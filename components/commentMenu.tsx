@@ -5,10 +5,9 @@ import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 're
 import { AiOutlinePushpin } from 'react-icons/ai'
 import actionMenuStyles from './actionMenu.module.scss'
 import copy from 'copy-to-clipboard'
-import { callUpdateComment } from 'pages/api/comments/update'
-import { callDeleteComment } from 'pages/api/comments/delete'
 import { commentSettings } from '../lib/model-settings'
 import { commentRoute } from 'lib/routes'
+import { useDeleteComment, useUpdateComment } from 'lib/queries/comments'
 
 function MenuCopyLink(props: { card: Card, comment: Comment }) {
   const link = `https://windofchange.me${commentRoute({ cardId: props.card.id, commentId: props.comment.id })}`
@@ -48,21 +47,22 @@ function MenuDelete(props: { deleteComment }) {
 export function CommentMenu(props: {
   card: Card
   comment: Comment & { canEdit: boolean }
-  afterCommentUpdated: (newComment: Comment) => void
-  afterCommentDeleted: () => void
+  afterDelete?: () => void
 }) {
   const { card, comment } = props
   const settings = commentSettings(comment)
   const isPrivate = settings.visibility === 'private'
 
+  const updateCommentMutation = useUpdateComment()
+  const deleteCommentMutation = useDeleteComment()
+
   const updateComment = async (data) => {
-    const diff = await callUpdateComment({ commentId: comment.id, ...data })
-    props.afterCommentUpdated({ ...comment, ...diff })
+    await updateCommentMutation.mutateAsync({ commentId: comment.id, ...data })
   }
 
   const deleteComment = async () => {
-    await callDeleteComment({ commentId: comment.id })
-    props.afterCommentDeleted()
+    await deleteCommentMutation.mutateAsync({ commentId: comment.id })
+    if (props.afterDelete) props.afterDelete()
   }
 
   // TODO confirmation dialog for deletion

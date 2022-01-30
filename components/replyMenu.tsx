@@ -4,9 +4,9 @@ import React from 'react'
 import { BiDotsHorizontal, BiTrashAlt, BiShareAlt } from 'react-icons/bi'
 import actionMenuStyles from './actionMenu.module.scss'
 import copy from 'copy-to-clipboard'
-import { callDeleteReply } from 'pages/api/replies/delete'
 import { replySettings } from '../lib/model-settings'
 import { replyRoute } from 'lib/routes'
+import { useDeleteReply } from 'lib/queries/replies'
 
 function MenuCopyLink(props: { card: Card, reply: Reply }) {
   const link = `https://windofchange.me${replyRoute({ cardId: props.card.id, replyId: props.reply.id })}`
@@ -38,15 +38,15 @@ function MenuDelete(props: { deleteReply }) {
 export function ReplyMenu(props: {
   card: Card
   reply: Reply & { canEdit: boolean, canDelete: boolean }
-  afterReplyUpdated: (newReply: Reply) => void
-  afterReplyDeleted: () => void
+  afterDelete?: () => void
 }) {
   const { card, reply } = props
   const settings = replySettings(reply)
+  const deleteReplyMutation = useDeleteReply()
 
   const deleteReply = async () => {
-    await callDeleteReply({ replyId: reply.id })
-    props.afterReplyDeleted()
+    await deleteReplyMutation.mutateAsync({ replyId: reply.id })
+    if (props.afterDelete) props.afterDelete()
   }
 
   // TODO confirmation dialog for deletion

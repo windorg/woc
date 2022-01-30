@@ -78,11 +78,11 @@ const ShowUser: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
 
   if (userQuery.status === 'loading' || userQuery.status === 'idle')
     return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
-  if (userQuery.status === 'error') return <B.Alert variant="danger">{userQuery.error as Error}</B.Alert>
+  if (userQuery.status === 'error') return <B.Alert variant="danger">{(userQuery.error as Error).message}</B.Alert>
 
   if (boardsQuery.status === 'loading' || boardsQuery.status === 'idle')
     return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
-  if (boardsQuery.status === 'error') return <B.Alert variant="danger">{boardsQuery.error as Error}</B.Alert>
+  if (boardsQuery.status === 'error') return <B.Alert variant="danger">{(boardsQuery.error as Error).message}</B.Alert>
 
   const user = userQuery.data
   const boards = boardsQuery.data

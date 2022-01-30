@@ -17,12 +17,10 @@ import { BoardMenu } from 'components/boardMenu'
 import { AddCardForm } from 'components/addCardForm'
 import { useRouter } from 'next/router'
 import { LinkButton } from 'components/linkButton'
-import { callGetBoard, GetBoardResponse, serverGetBoard } from './api/boards/get'
+import { GetBoardResponse, serverGetBoard } from './api/boards/get'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
-import { useQueryClient } from 'react-query'
-import NextError from 'next/error'
 import { boardsRoute } from 'lib/routes'
-import { prefetchBoard, useBoard } from 'lib/queries/board'
+import { prefetchBoard, useBoard } from 'lib/queries/boards'
 
 type Props = {
   boardId: Board['id']
@@ -61,8 +59,8 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
 
   if (boardQuery.status === 'loading' || boardQuery.status === 'idle')
     return <div className="d-flex mt-5 justify-content-center"><Spinner animation="border" /></div>
-  if (boardQuery.status === 'error') return <Alert variant="danger">Could not load the board: {boardQuery.error}</Alert>
-  if (!boardQuery.data.success) return <NextError statusCode={404} />
+  if (boardQuery.status === 'error') return <Alert variant="danger">{(boardQuery.error as Error).message}</Alert>
+  if (!boardQuery.data.success) return <Alert variant="danger">Board not found</Alert>
 
   const board = boardQuery.data.data
 
@@ -75,7 +73,7 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
   const moreButton = () => (
     <BoardMenu
       board={board}
-      afterBoardDeleted={async () => router.replace(boardsRoute())} />
+      afterDelete={async () => router.replace(boardsRoute())} />
   )
 
   return (
@@ -99,7 +97,7 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
             board={board}
             show={editing}
             onHide={() => setEditing(false)}
-            afterBoardUpdated={() => setEditing(false)}
+            afterSave={() => setEditing(false)}
           />
         }
         <span

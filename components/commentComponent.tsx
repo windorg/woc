@@ -6,7 +6,6 @@ import { RenderedMarkdown, markdownToHtml } from '../lib/markdown'
 import ReactTimeAgo from 'react-time-ago'
 import { BiLink, BiPencil, BiCommentDetail } from 'react-icons/bi'
 import * as B from 'react-bootstrap'
-import { callUpdateComment } from '../pages/api/comments/update'
 import styles from './commentComponent.module.scss'
 import { Tiptap, TiptapMethods } from './tiptap'
 import { CommentMenu } from './commentMenu'
@@ -16,6 +15,7 @@ import { LinkButton } from './linkButton'
 import { CreateReplyModal } from './createReplyModal'
 import { commentRoute } from 'lib/routes'
 import { Formik } from 'formik'
+import { useUpdateComment } from 'lib/queries/comments'
 
 export type Comment_ = Comment & {
   canEdit: boolean
@@ -42,8 +42,7 @@ function InfoHeader(props: { card: Card, comment: Comment_ }) {
 function ShowCommentBody(props: {
   card: Card
   comment: Comment_
-  afterCommentUpdated: (newComment: Comment) => void
-  afterCommentDeleted: () => void
+  afterDelete?: () => void
   startEditing: () => void
   openReplyModal: () => void
 }) {
@@ -71,66 +70,59 @@ function ShowCommentBody(props: {
 }
 
 // Comment in "edit" mode
-class EditCommentBody extends React.Component<{
+function EditCommentBody(props: {
   card: Card
   comment: Comment_
-  afterCommentUpdated: (newComment: Comment) => void
-  afterCommentDeleted: () => void
   stopEditing: () => void
-}> {
-  #editorRef: RefObject<TiptapMethods> = createRef()
-
-  render() {
-    const { comment } = this.props
-    return (
-      <>
-        <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
-          <InfoHeader {...this.props} />
-        </div>
-        <Formik
-          initialValues={{}}
-          onSubmit={async () => {
-            if (!this.#editorRef.current) throw Error("Editor is not initialized")
-            const diff = await callUpdateComment({
-              commentId: comment.id,
-              content: this.#editorRef.current.getMarkdown()
-            })
-            const newComment = { ...comment, ...diff }
-            this.props.stopEditing()
-            this.props.afterCommentUpdated(newComment)
-          }}
-        >
-          {formik => (
-            <B.Form onSubmit={formik.handleSubmit} >
-              <div className="mb-2">
-                <Tiptap
-                  content={markdownToHtml(this.props.comment.content)}
-                  autoFocus
-                  onSubmit={formik.handleSubmit}
-                  ref={this.#editorRef} />
-              </div>
-              <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
-                Save
-                {formik.isSubmitting &&
-                  <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
-              </B.Button>
-              <B.Button size="sm" variant="secondary" type="button" className="ms-2"
-                onClick={this.props.stopEditing}>
-                Cancel
-              </B.Button>
-            </B.Form>
-          )}
-        </Formik>
-      </>
-    )
-  }
+}) {
+  const { comment } = props
+  const editorRef: RefObject<TiptapMethods> = React.useRef(null)
+  const updateCommentMutation = useUpdateComment()
+  return (
+    <>
+      <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
+        <InfoHeader {...props} />
+      </div>
+      <Formik
+        initialValues={{}}
+        onSubmit={async () => {
+          if (!editorRef.current) throw Error("Editor is not initialized")
+          await updateCommentMutation.mutateAsync({
+            commentId: comment.id,
+            content: editorRef.current.getMarkdown()
+          })
+          props.stopEditing()
+        }}
+      >
+        {formik => (
+          <B.Form onSubmit={formik.handleSubmit} >
+            <div className="mb-2">
+              <Tiptap
+                content={markdownToHtml(props.comment.content)}
+                autoFocus
+                onSubmit={formik.handleSubmit}
+                ref={editorRef} />
+            </div>
+            <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
+              Save
+              {formik.isSubmitting &&
+                <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+            </B.Button>
+            <B.Button size="sm" variant="secondary" type="button" className="ms-2"
+              onClick={props.stopEditing}>
+              Cancel
+            </B.Button>
+          </B.Form>
+        )}
+      </Formik>
+    </>
+  )
 }
 
 function Replies(props: {
   card
   replies
-  afterReplyUpdated: (newReply: Reply) => void
-  afterReplyDeleted: (id: Reply['id']) => void
+  afterDelete?: (id: Reply['id']) => void
 }) {
   const replies =
     _.orderBy(props.replies, ['createdAt'], ['asc'])
@@ -138,8 +130,7 @@ function Replies(props: {
     <div className="woc-comment-replies">
       {replies.map(reply => (
         <ReplyComponent key={reply.id} card={props.card} reply={reply}
-          afterReplyUpdated={props.afterReplyUpdated}
-          afterReplyDeleted={() => props.afterReplyDeleted(reply.id)}
+          afterDelete={() => { if (props.afterDelete) props.afterDelete(reply.id) }}
         />
       ))}
     </div>
@@ -150,11 +141,6 @@ export function CommentComponent(props: {
   card: Card
   comment: Comment_
   replies: Reply_[]
-  afterCommentUpdated: (newComment: Comment) => void
-  afterCommentDeleted: () => void
-  afterReplyCreated: (newReply: Reply_) => void
-  afterReplyUpdated: (newReply: Reply) => void
-  afterReplyDeleted: (id: Reply['id']) => void
 }) {
   const { comment } = props
 
@@ -179,10 +165,7 @@ export function CommentComponent(props: {
         show={replyModalShown}
         comment={props.comment}
         onHide={() => setReplyModalShown(false)}
-        afterReplyCreated={(newReply) => {
-          setReplyModalShown(false)
-          props.afterReplyCreated(newReply)
-        }}
+        afterCreate={() => { setReplyModalShown(false) }}
       />
       {editing
         ?

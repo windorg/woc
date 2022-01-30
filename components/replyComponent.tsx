@@ -6,7 +6,6 @@ import { RenderedMarkdown, markdownToHtml } from '../lib/markdown'
 import ReactTimeAgo from 'react-time-ago'
 import { BiLink, BiPencil } from 'react-icons/bi'
 import * as B from 'react-bootstrap'
-import { callUpdateReply } from '../pages/api/replies/update'
 import { Tiptap, TiptapMethods } from './tiptap'
 import { Gravatar } from './gravatar'
 import { LinkButton } from './linkButton'
@@ -14,6 +13,7 @@ import { ReplyMenu } from './replyMenu'
 import { replyRoute, userRoute } from 'lib/routes'
 import { Formik } from 'formik'
 import { LinkPreload } from 'lib/link-preload'
+import { useUpdateReply } from 'lib/queries/replies'
 
 export type Reply_ = Reply & {
   // The author can be 'null' if it was deleted. We don't delete replies if the author's account is gone.
@@ -70,8 +70,7 @@ function InfoHeader(props: { card: Card, reply: Reply_ }) {
 function ShowReply(props: {
   card: Card
   reply: Reply_
-  afterReplyUpdated: (newReply: Reply) => void
-  afterReplyDeleted: () => void
+  afterDelete?: () => void
   startEditing: () => void
 }) {
   const { card, reply } = props
@@ -111,81 +110,75 @@ function ShowReply(props: {
 }
 
 // Component in "edit" mode
-class EditReply extends React.Component<{
+function EditReply(props: {
   card: Card
   reply: Reply_
-  afterReplyUpdated: (newReply: Reply) => void
-  afterReplyDeleted: () => void
   stopEditing: () => void
-}> {
-  #editorRef: RefObject<TiptapMethods> = createRef()
+}) {
+  const editorRef: RefObject<TiptapMethods> = React.useRef(null)
+  const updateReplyMutation = useUpdateReply()
 
-  render() {
-    const { card, reply } = this.props
-    const settings = replySettings(reply)
-    const isPrivate = settings.visibility === 'private'
-    const classes = `
+  const { card, reply } = props
+  const settings = replySettings(reply)
+  const isPrivate = settings.visibility === 'private'
+  const classes = `
       woc-reply
       d-flex
       reply
       ${isPrivate ? "reply-private" : ""}
       `
 
-    return (
-      <div id={`reply-${reply.id}`} className={classes}>
-        <div className="flex-shrink-0">
-          <AuthorPic author={reply.author} />
-        </div>
-        <div className="flex-grow-1 ms-1" style={{ marginTop: "3px" }}>
-          <div className="d-flex align-items-center" style={{ lineHeight: "100%", marginBottom: ".3em" }}>
-            <InfoHeader {...this.props} />
-          </div>
-          <Formik
-            initialValues={{}}
-            onSubmit={async () => {
-              if (!this.#editorRef.current) throw Error("Editor is not initialized")
-              const diff = await callUpdateReply({
-                replyId: reply.id,
-                content: this.#editorRef.current.getMarkdown()
-              })
-              const newReply = { ...reply, ...diff }
-              this.props.stopEditing()
-              this.props.afterReplyUpdated(newReply)
-            }}
-          >
-            {formik => (
-              <B.Form onSubmit={formik.handleSubmit} >
-                <div className="mb-2">
-                  <Tiptap
-                    className="small"
-                    content={markdownToHtml(this.props.reply.content)}
-                    autoFocus
-                    onSubmit={formik.handleSubmit}
-                    ref={this.#editorRef} />
-                </div>
-                <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
-                  Save
-                  {formik.isSubmitting &&
-                    <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
-                </B.Button>
-                <B.Button size="sm" variant="secondary" type="button" className="ms-2"
-                  onClick={this.props.stopEditing}>
-                  Cancel
-                </B.Button>
-              </B.Form>
-            )}
-          </Formik>
-        </div>
+  return (
+    <div id={`reply-${reply.id}`} className={classes}>
+      <div className="flex-shrink-0">
+        <AuthorPic author={reply.author} />
       </div>
-    )
-  }
+      <div className="flex-grow-1 ms-1" style={{ marginTop: "3px" }}>
+        <div className="d-flex align-items-center" style={{ lineHeight: "100%", marginBottom: ".3em" }}>
+          <InfoHeader {...props} />
+        </div>
+        <Formik
+          initialValues={{}}
+          onSubmit={async () => {
+            if (!editorRef.current) throw Error("Editor is not initialized")
+            await updateReplyMutation.mutateAsync({
+              replyId: reply.id,
+              content: editorRef.current.getMarkdown()
+            })
+            props.stopEditing()
+          }}
+        >
+          {formik => (
+            <B.Form onSubmit={formik.handleSubmit} >
+              <div className="mb-2">
+                <Tiptap
+                  className="small"
+                  content={markdownToHtml(props.reply.content)}
+                  autoFocus
+                  onSubmit={formik.handleSubmit}
+                  ref={editorRef} />
+              </div>
+              <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
+                Save
+                {formik.isSubmitting &&
+                  <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+              </B.Button>
+              <B.Button size="sm" variant="secondary" type="button" className="ms-2"
+                onClick={props.stopEditing}>
+                Cancel
+              </B.Button>
+            </B.Form>
+          )}
+        </Formik>
+      </div>
+    </div>
+  )
 }
 
 export function ReplyComponent(props: {
   card: Card
   reply: Reply_
-  afterReplyUpdated: (newReply: Reply) => void
-  afterReplyDeleted: () => void
+  afterDelete?: () => void
 }) {
   const [editing, setEditing] = useState(false)
   return (

@@ -1,7 +1,11 @@
 import { callInboxCount } from "pages/api/inbox/count"
 import { QueryClient, useMutation, useQuery, useQueryClient } from "react-query"
 
-const getInboxCountKey = (query: Record<string, never>) => ['getInboxCount', query]
+// Keys
+
+export const getInboxCountKey = (query: Record<string, never>) => ['getInboxCount', query]
+
+// Queries
 
 export function useInboxCount(
   options?: { refetchInterval?: number }

@@ -29,7 +29,8 @@ const schema: Schema<CreateReplyBody> = yup.object({
 
 // An augmented reply type that we return from the API
 export type ReplyResponse = Reply & {
-  author: Pick<User, 'id' | 'email' | 'displayName'>
+  author: Pick<User, 'id' | 'handle' | 'email' | 'displayName'>
+  comment: Pick<Comment, 'cardId'>
   canEdit: boolean
   canDelete: boolean
 }
@@ -89,7 +90,7 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
       rejectOnNotFound: true,
     })
     if (!session) return res.status(403)
-    if (!await canReplyToComment(session?.userId ?? null, comment)) return res.status(403)
+    if (!await canReplyToComment(session.userId, comment)) return res.status(403)
 
     // Create the reply
     const reply = await prisma.reply.create({
@@ -105,7 +106,12 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
       ...reply,
       author: await prisma.user.findUnique({
         where: { id: session.userId },
-        select: { id: true, displayName: true, email: true },
+        select: { id: true, handle: true, displayName: true, email: true },
+        rejectOnNotFound: true
+      }),
+      comment: await prisma.comment.findUnique({
+        where: { id: reply.commentId },
+        select: { cardId: true },
         rejectOnNotFound: true
       }),
       canEdit: await canEditReply(session.userId, { ...reply, comment }),

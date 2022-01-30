@@ -24,7 +24,7 @@ test('Private boards should not be visible to others', async ({ page, browser })
     for (const somebodyPage of [bobPage, anonPage]) {
       // Check that others can't access the page by the direct link
       await somebodyPage.goto(boardUrl)
-      await expect(somebodyPage.locator('h1')).toHaveText(/404/)
+      await somebodyPage.waitForSelector('text=Board not found')
       await expect(somebodyPage.locator('body')).not.toContainText(boardName)
       // Check that others can't see the board in Alice's profile
       await somebodyPage.goto(aliceUrl)

@@ -9,7 +9,7 @@ import { useCreateBoard } from 'lib/queries/boards'
 export function CreateBoardModal(props: {
   show: boolean
   onHide: () => void
-  afterBoardCreated: () => void
+  afterCreate?: () => void
 }) {
   const titleInputRef: React.RefObject<HTMLInputElement> = useRef(null)
   const createBoardMutation = useCreateBoard()
@@ -28,7 +28,7 @@ export function CreateBoardModal(props: {
           initialValues={{ private: false, title: "" }}
           onSubmit={async (values, formik) => {
             await createBoardMutation.mutateAsync(values)
-            props.afterBoardCreated()
+            if (props.afterCreate) props.afterCreate()
             formik.resetForm()
           }}
         >
