@@ -1,11 +1,11 @@
 import { Card } from "@prisma/client"
 import { unsafeCanSee } from "lib/access"
-import { callGetCard, GetCardData, GetCardQuery, GetCardResponse } from "pages/api/cards/get"
+import { callGetCard, GetCardData, GetCardQuery } from "pages/api/cards/get"
 import { callUpdateCard, UpdateCardBody } from "pages/api/cards/update"
 import { callCreateCard, CreateCardBody } from "pages/api/cards/create"
 import { QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
-import { GetBoardResponse } from "pages/api/boards/get"
-import { fromGetBoardKey, fromListBoardsKey, getBoardKey } from "./boards"
+import { GetBoardData } from "pages/api/boards/get"
+import { fromGetBoardKey, getBoardKey } from "./boards"
 import { callDeleteCard, DeleteCardBody } from "pages/api/cards/delete"
 import { keyPredicate, updateQueriesData, updateQueryData } from "./util"
 import { deleteById } from "lib/array"
@@ -68,19 +68,14 @@ export function useCreateCard() {
       onSuccess: (card, variables) => {
         // TODO: go through ListCards as well when we have it
         const card_ = unsafeCanSee({ ...card, _count: { comments: 0 } })
-        updateQueryData<GetBoardResponse>(
+        updateQueryData<GetBoardData>(
           queryClient,
           getBoardKey({ boardId: variables.boardId }),
-          getBoardResponse => {
-            if (!getBoardResponse.success) return getBoardResponse
-            return {
-              ...getBoardResponse,
-              data: {
-                ...getBoardResponse.data,
-                cards: [...getBoardResponse.data.cards, card_]
-              }
-            }
+          getBoardData => ({
+            ...getBoardData,
+            cards: [...getBoardData.cards, card_]
           })
+        )
       }
     })
 }
@@ -94,19 +89,14 @@ export function useDeleteCard() {
         // Update the GetCard query
         queryClient.removeQueries(getCardKey({ cardId: variables.cardId }), { exact: true })
         // TODO: go through ListCards as well when we have it
-        updateQueriesData<GetBoardResponse>(
+        updateQueriesData<GetBoardData>(
           queryClient,
           { predicate: keyPredicate(fromGetBoardKey, query => true) },
-          getBoardResponse => {
-            if (!getBoardResponse.success) return getBoardResponse
-            return {
-              ...getBoardResponse,
-              data: {
-                ...getBoardResponse.data,
-                cards: deleteById(getBoardResponse.data.cards, variables.cardId)
-              }
-            }
+          getBoardData => ({
+            ...getBoardData,
+            cards: deleteById(getBoardData.cards, variables.cardId)
           })
+        )
       }
     })
 }

@@ -2,7 +2,7 @@ import { unsafeCanSee } from "lib/access"
 import { deleteById, mergeById } from "lib/array"
 import { callCreateBoard, CreateBoardBody } from "pages/api/boards/create"
 import { callDeleteBoard, DeleteBoardBody } from "pages/api/boards/delete"
-import { callGetBoard, GetBoardQuery, GetBoardResponse } from "pages/api/boards/get"
+import { callGetBoard, GetBoardData, GetBoardQuery } from "pages/api/boards/get"
 import { callListBoards, ListBoardsData, ListBoardsQuery } from "pages/api/boards/list"
 import { UpdateBoardBody, callUpdateBoard } from "pages/api/boards/update"
 import { Query, QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
@@ -36,7 +36,7 @@ export async function prefetchBoards(queryClient: QueryClient, query: ListBoards
 
 export function useBoard(
   query: GetBoardQuery,
-  options?: { initialData?: GetBoardResponse }
+  options?: { initialData?: GetBoardData }
 ) {
   return useQuery(
     getBoardKey({ boardId: query.boardId }),
@@ -88,16 +88,11 @@ export function useUpdateBoard() {
     {
       onSuccess: (updates, variables) => {
         // Update the GetBoard query
-        updateQueryData<GetBoardResponse>(
+        updateQueryData<GetBoardData>(
           queryClient,
           getBoardKey({ boardId: variables.boardId }),
-          getBoardResponse => {
-            if (!getBoardResponse.success) return getBoardResponse
-            return {
-              ...getBoardResponse,
-              data: { ...getBoardResponse.data, ...updates }
-            }
-          })
+          getBoardData => ({ ...getBoardData, ...updates })
+        )
         // Update the ListBoards queries
         updateQueriesData<ListBoardsData>(
           queryClient,
@@ -115,11 +110,7 @@ export function useDeleteBoard() {
     {
       onSuccess: (_void, variables) => {
         // Update the GetBoard query
-        updateQueryData<GetBoardResponse>(
-          queryClient,
-          getBoardKey({ boardId: variables.boardId }),
-          _ => ({ success: false, error: { notFound: true } })
-        )
+        queryClient.removeQueries(getBoardKey({ boardId: variables.boardId }), { exact: true })
         // Update the ListBoards queries
         updateQueriesData<ListBoardsData>(
           queryClient,

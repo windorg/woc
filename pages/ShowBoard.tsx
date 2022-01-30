@@ -17,15 +17,14 @@ import { BoardMenu } from 'components/boardMenu'
 import { AddCardForm } from 'components/addCardForm'
 import { useRouter } from 'next/router'
 import { LinkButton } from 'components/linkButton'
-import { GetBoardResponse, serverGetBoard } from './api/boards/get'
+import { GetBoardData, serverGetBoard } from './api/boards/get'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { boardsRoute } from 'lib/routes'
 import { prefetchBoard, useBoard } from 'lib/queries/boards'
 
 type Props = {
   boardId: Board['id']
-  // The following are only available when the page is rendered server-side
-  board: GetBoardResponse | null
+  board?: GetBoardData
 }
 
 async function preload(context: PreloadContext): Promise<void> {
@@ -37,12 +36,15 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   const boardId = context.query.boardId as string
   const props: Props = {
     boardId,
-    board: null
   }
   // Server-side, we want to fetch the data so that we can SSR the page. Client-side, we assume the data is either
   // already preloaded or will be loaded in the component itself, so we don't fetch the board.
-  if (typeof window === 'undefined')
-    props.board = await serverGetBoard(await getSession(context), { boardId })
+  if (typeof window === 'undefined') {
+    const session = await getSession(context)
+    await serverGetBoard(session, { boardId })
+      .then(result => { if (result.success) props.board = result.data })
+
+  }
   return serialize(props)
 }
 
@@ -55,14 +57,13 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
 
   // We don't want to refetch the data in realtime — imagine reading the page and then new posts appear/disappear and the page jumps around. We show
   // existing data (without a spinner even if the data is stale). Under the hood 'useBoard' only ever updates once.
-  const boardQuery = useBoard({ boardId }, { initialData: initialProps.board ?? undefined })
+  const boardQuery = useBoard({ boardId }, { initialData: initialProps?.board })
 
   if (boardQuery.status === 'loading' || boardQuery.status === 'idle')
     return <div className="d-flex mt-5 justify-content-center"><Spinner animation="border" /></div>
   if (boardQuery.status === 'error') return <Alert variant="danger">{(boardQuery.error as Error).message}</Alert>
-  if (!boardQuery.data.success) return <Alert variant="danger">Board not found</Alert>
 
-  const board = boardQuery.data.data
+  const board = boardQuery.data
 
   const isPrivate = boardSettings(board).visibility === 'private'
   const [normalCards, archivedCards] =

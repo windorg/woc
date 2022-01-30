@@ -4,40 +4,29 @@ import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
-import { wocResponse } from 'lib/http'
+import { ResponseError, Result, wocQuery, wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
 import { canEditBoard, CanSee, canSeeBoard, canSeeCard, PCard } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
 import { filterSync } from 'lib/array'
 
-interface GetBoardRequest extends NextApiRequest {
-  query: {
-    boardId: Board['id']
-  }
+export type GetBoardQuery = {
+  boardId: Board['id']
 }
-
-export type GetBoardQuery = GetBoardRequest['query']
 
 const schema: Schema<GetBoardQuery> = yup.object({
   boardId: yup.string().uuid().required(),
 })
 
-export type GetBoardResponse =
-  | {
-    success: true,
-    data: CanSee & Board & {
-      owner: Pick<User, 'id' | 'handle'>
-      cards: (CanSee & Card & { _count: { comments: number } })[]
-      canEdit: boolean
-    }
-  }
-  | {
-    success: false,
-    error: { notFound: true }
-  }
+export type GetBoardData = CanSee & Board & {
+  owner: Pick<User, 'id' | 'handle'>
+  cards: (CanSee & Card & { _count: { comments: number } })[]
+  canEdit: boolean
+}
 
-// NB: Assumes that the query is already validated
+export type GetBoardResponse = Result<GetBoardData, { notFound: true }>
+
 export async function serverGetBoard(session: Session | null, query: GetBoardQuery): Promise<GetBoardResponse> {
   const board = await prisma.board.findUnique({
     where: { id: query.boardId },
@@ -69,16 +58,20 @@ export async function serverGetBoard(session: Session | null, query: GetBoardQue
   }
 }
 
-export default async function apiGetBoard(req: GetBoardRequest, res: NextApiResponse<GetBoardResponse>) {
+export default async function apiGetBoard(req: NextApiRequest, res: NextApiResponse<GetBoardResponse>) {
   if (req.method === 'GET') {
     const session = await getSession({ req })
-    const query = await schema.validate(req.query)
+    const query = schema.cast(req.query)
     const response = await serverGetBoard(session, query)
     return res.status(200).json(response)
   }
 }
 
-export async function callGetBoard(query: GetBoardQuery): Promise<GetBoardResponse> {
-  const { data } = await axios.get('/api/boards/get', { params: query })
-  return wocResponse(data)
+export async function callGetBoard(query: GetBoardQuery): Promise<GetBoardData>
+export async function callGetBoard(query: GetBoardQuery, opts: { returnErrors: true }): Promise<GetBoardResponse>
+export async function callGetBoard(query: GetBoardQuery, opts?) {
+  const { data: result } = await axios.get('/api/boards/get', { params: wocQuery(query) })
+  if (opts?.returnErrors) return wocResponse(result)
+  if (result.success) return wocResponse(result.data)
+  if (result.error.notFound) throw new ResponseError('Board not found', result.error)
 }
