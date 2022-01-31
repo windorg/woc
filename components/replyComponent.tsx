@@ -55,12 +55,12 @@ function InfoHeader(props: { card: Card, reply: Reply_ }) {
         }
       </strong>
       <span className="ms-2" />
-      <Link href={replyRoute({ cardId: props.card.id, replyId: reply.id })}>
+      <LinkPreload href={replyRoute({ cardId: props.card.id, replyId: reply.id })}>
         <a className="d-flex align-items-center">
           <BiLink className="me-1" />
           <ReactTimeAgo timeStyle="twitter-minute-now" date={reply.createdAt} />
         </a>
-      </Link>
+      </LinkPreload>
       {isPrivate && <span className="ms-2">🔒</span>}
     </span>
   )

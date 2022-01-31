@@ -42,12 +42,12 @@ export function InboxItemComponent(props: { item: InboxItem }) {
         </strong>
         <div>
           <span className="text-muted small">
-            <Link href={replyRoute({ cardId: item.comment.cardId, replyId: item.id })}>
+            <LinkPreload href={replyRoute({ cardId: item.comment.cardId, replyId: item.id })}>
               <a className="d-flex align-items-center">
                 <BiLink className="me-1" />
                 <ReactTimeAgo timeStyle="twitter-minute-now" date={item.createdAt} />
               </a>
-            </Link>
+            </LinkPreload>
           </span>
           {/* TODO when private lockIcon */}
         </div>
