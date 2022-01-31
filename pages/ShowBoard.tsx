@@ -2,7 +2,7 @@ import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
 import type { Board, Card } from '@prisma/client'
 import { boardSettings, cardSettings } from '../lib/model-settings'
-import { Accordion, Alert, Badge, Breadcrumb, Card as BSCard, Spinner } from 'react-bootstrap'
+import * as B from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb } from '../components/breadcrumbs'
 import { CardCard } from '../components/cardCard'
 import React, { useEffect, useState } from 'react'
@@ -60,8 +60,8 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
   const boardQuery = useBoard({ boardId }, { initialData: initialProps?.board })
 
   if (boardQuery.status === 'loading' || boardQuery.status === 'idle')
-    return <div className="d-flex mt-5 justify-content-center"><Spinner animation="border" /></div>
-  if (boardQuery.status === 'error') return <Alert variant="danger">{(boardQuery.error as Error).message}</Alert>
+    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+  if (boardQuery.status === 'error') return <B.Alert variant="danger">{(boardQuery.error as Error).message}</B.Alert>
 
   const board = boardQuery.data
 
@@ -84,11 +84,11 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
         <title>{board.title} / WOC</title>
       </Head>
 
-      <Breadcrumb>
+      <B.Breadcrumb>
         <BoardsCrumb />
         <UserCrumb user={board.owner} />
         <BoardCrumb board={board} active />
-      </Breadcrumb>
+      </B.Breadcrumb>
 
       <h1 style={{ marginBottom: "1em" }}>
         {isPrivate ? "🔒 " : ""}
@@ -124,12 +124,12 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
         </TransitionGroup>
       </div>
       {(archivedCards.length > 0) &&
-        <Accordion className="mt-5">
-          <Accordion.Item eventKey="0">
-            <Accordion.Header><Badge bg="secondary">Archived cards</Badge></Accordion.Header>
-            <Accordion.Body>{archivedCards.map(card => (<CardCard key={card.id} card={card} />))}</Accordion.Body>
-          </Accordion.Item>
-        </Accordion>
+        <B.Accordion className="mt-5">
+          <B.Accordion.Item eventKey="0">
+            <B.Accordion.Header><B.Badge bg="secondary">Archived cards</B.Badge></B.Accordion.Header>
+            <B.Accordion.Body>{archivedCards.map(card => (<CardCard key={card.id} card={card} />))}</B.Accordion.Body>
+          </B.Accordion.Item>
+        </B.Accordion>
       }
     </>
   )

@@ -2,7 +2,7 @@ import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
 import { prisma } from '../lib/db'
 import React from 'react'
-import Breadcrumb from 'react-bootstrap/Breadcrumb'
+import * as B from 'react-bootstrap'
 import { BoardsCrumb, FeedCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
 import { getSession, useSession } from 'next-auth/react'
@@ -67,10 +67,10 @@ const ShowFeed: NextPage<SuperJSONResult> = (props) => {
         <title>Feed / WOC</title>
       </Head>
 
-      <Breadcrumb>
+      <B.Breadcrumb>
         <BoardsCrumb />
         <FeedCrumb active />
-      </Breadcrumb>
+      </B.Breadcrumb>
 
       <h1>Feed</h1>
 

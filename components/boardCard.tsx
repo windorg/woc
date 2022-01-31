@@ -1,9 +1,9 @@
 import { boardSettings } from "../lib/model-settings"
-import Card from 'react-bootstrap/Card'
 import Link from 'next/link'
 import { Board, User } from "@prisma/client"
 import { boardRoute, userRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
+import * as B from 'react-bootstrap'
 
 type Kind = 'own-board' | 'other-board'
 type Board_ = Board & { owner: Pick<User, 'handle' | 'displayName'> }
@@ -12,8 +12,8 @@ export function BoardCard(props: { board: Board_, kind: Kind }) {
   const { board, kind } = props
   const isPrivate = boardSettings(board).visibility === 'private'
   return (
-    <Card className={`woc-board mt-3 mb-3 ${isPrivate ? "woc-board-private" : ""}`}>
-      <Card.Body>
+    <B.Card className={`woc-board mt-3 mb-3 ${isPrivate ? "woc-board-private" : ""}`}>
+      <B.Card.Body>
         <h3>
           {isPrivate && "🔒 "}
           <LinkPreload href={boardRoute(board.id)}>
@@ -32,7 +32,7 @@ export function BoardCard(props: { board: Board_, kind: Kind }) {
             </a>
           </LinkPreload>
         }
-      </Card.Body>
-    </Card>
+      </B.Card.Body>
+    </B.Card>
   )
 }

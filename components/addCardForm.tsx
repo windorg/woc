@@ -1,5 +1,4 @@
 import { Board, Card } from '@prisma/client'
-import { Button, Form } from 'react-bootstrap'
 import * as B from 'react-bootstrap'
 import React from 'react'
 import { Formik } from 'formik'
@@ -22,22 +21,22 @@ export function AddCardForm(props: {
       }}
     >
       {formik => (
-        <Form onSubmit={formik.handleSubmit}>
-          <Form.Group className="mb-3">
-            <Form.Control
+        <B.Form onSubmit={formik.handleSubmit}>
+          <B.Form.Group className="mb-3">
+            <B.Form.Control
               name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
               type="text" placeholder="Card title"
               style={{ maxWidth: "40rem", width: "100%" }} />
-          </Form.Group>
-          <Button variant="primary" type="submit" disabled={formik.isSubmitting}>
+          </B.Form.Group>
+          <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>
             Add a card
             {formik.isSubmitting &&
               <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
-          </Button>
-          <Form.Check
+          </B.Button>
+          <B.Form.Check
             name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
             type="checkbox" className="ms-4" inline label="🔒 Private card" />
-        </Form>
+        </B.Form>
       )}
     </Formik>
   )

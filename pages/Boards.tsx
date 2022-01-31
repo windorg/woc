@@ -2,7 +2,6 @@ import type { GetServerSideProps, NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
 import type { Board, User } from '@prisma/client'
 import React from 'react'
-import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import { BoardsCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
 import { getSession, signIn, useSession } from 'next-auth/react'
@@ -61,9 +60,9 @@ const Boards: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) 
         <title>Boards / WOC</title>
       </Head>
 
-      <Breadcrumb>
+      <B.Breadcrumb>
         <BoardsCrumb active />
-      </Breadcrumb>
+      </B.Breadcrumb>
 
       {userId
         ?

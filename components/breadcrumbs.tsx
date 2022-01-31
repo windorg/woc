@@ -1,6 +1,6 @@
 import { Board, Card, User } from "@prisma/client"
 import React from "react"
-import { Breadcrumb } from "react-bootstrap"
+import * as B from 'react-bootstrap'
 import { boardSettings } from "../lib/model-settings"
 import Link from 'next/link'
 import { boardRoute, boardsRoute, cardRoute, userRoute } from "lib/routes"
@@ -8,8 +8,8 @@ import { LinkPreload } from "lib/link-preload"
 
 function LinkItem(props: { href: string, children: React.ReactNode, active?: boolean, preload?: boolean }) {
   return props.active
-    ? (<Breadcrumb.Item active>{props.children}</Breadcrumb.Item>)
-    : <Breadcrumb.Item linkAs={props.preload ? LinkPreload : Link} href={props.href}><a>{props.children}</a></Breadcrumb.Item>
+    ? (<B.Breadcrumb.Item active>{props.children}</B.Breadcrumb.Item>)
+    : <B.Breadcrumb.Item linkAs={props.preload ? LinkPreload : Link} href={props.href}><a>{props.children}</a></B.Breadcrumb.Item>
 }
 
 export function FeedCrumb(props: { active?: boolean }) {

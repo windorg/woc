@@ -2,7 +2,7 @@ import { signIn, signOut, useSession } from "next-auth/react"
 import { ReactNode, useEffect } from "react"
 import Link from "next/link"
 import Image from 'next/image'
-import Badge from "react-bootstrap/Badge"
+import * as B from 'react-bootstrap'
 import Head from "next/head"
 import Script from "next/script"
 import { useInboxCount } from "lib/queries/inbox"
@@ -43,10 +43,10 @@ function InboxLink() {
       <a>
         Inbox
         {(data !== undefined) &&
-          <Badge className="ms-2" id="inbox-badge"
+          <B.Badge className="ms-2" id="inbox-badge"
             bg={data.itemCount === 0 ? 'secondary' : 'danger'}>
             {data.itemCount}
-          </Badge>
+          </B.Badge>
         }
       </a>
     </Link>

@@ -2,7 +2,6 @@ import type { GetServerSideProps, NextPage } from 'next'
 import Head from 'next/head'
 import * as B from 'react-bootstrap'
 import React, { useState } from 'react'
-import Breadcrumb from 'react-bootstrap/Breadcrumb'
 import { BoardsCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
 import { getSession, signIn, signOut, useSession } from 'next-auth/react'
@@ -10,7 +9,6 @@ import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
 import { Formik } from 'formik'
-import { Button, Form, InputGroup } from 'react-bootstrap'
 import { callSignup } from './api/auth/signup'
 import { boardsRoute } from 'lib/routes'
 
@@ -47,60 +45,60 @@ function SignupForm(props) {
       }}
     >
       {formik => (
-        <Form onSubmit={formik.handleSubmit} className="mt-5" id="signup_panel">
-          <Form.Group className="mb-3">
-            <Form.Label>Email</Form.Label>
-            <InputGroup hasValidation>
-              <Form.Control
+        <B.Form onSubmit={formik.handleSubmit} className="mt-5" id="signup_panel">
+          <B.Form.Group className="mb-3">
+            <B.Form.Label>Email</B.Form.Label>
+            <B.InputGroup hasValidation>
+              <B.Form.Control
                 name="email" id="email" value={formik.values.email} onChange={formik.handleChange}
                 type="email" placeholder="alice@example.com"
                 isInvalid={!!formik.errors.email} />
-              <Form.Control.Feedback type="invalid">{formik.errors.email}</Form.Control.Feedback>
-            </InputGroup>
-          </Form.Group>
+              <B.Form.Control.Feedback type="invalid">{formik.errors.email}</B.Form.Control.Feedback>
+            </B.InputGroup>
+          </B.Form.Group>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Handle (like a Twitter username)</Form.Label>
-            <InputGroup hasValidation>
-              <InputGroup.Text>@</InputGroup.Text>
-              <Form.Control
+          <B.Form.Group className="mb-3">
+            <B.Form.Label>Handle (like a Twitter username)</B.Form.Label>
+            <B.InputGroup hasValidation>
+              <B.InputGroup.Text>@</B.InputGroup.Text>
+              <B.Form.Control
                 name="handle" id="handle" value={formik.values.handle} onChange={formik.handleChange}
                 type="text" placeholder="alice"
                 isInvalid={!!formik.errors.handle} />
-              <Form.Control.Feedback type="invalid">{formik.errors.handle}</Form.Control.Feedback>
-            </InputGroup>
-          </Form.Group>
+              <B.Form.Control.Feedback type="invalid">{formik.errors.handle}</B.Form.Control.Feedback>
+            </B.InputGroup>
+          </B.Form.Group>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Name (can be anything)</Form.Label>
-            <InputGroup hasValidation>
-              <Form.Control
+          <B.Form.Group className="mb-3">
+            <B.Form.Label>Name (can be anything)</B.Form.Label>
+            <B.InputGroup hasValidation>
+              <B.Form.Control
                 name="displayName" id="displayName" value={formik.values.displayName} onChange={formik.handleChange}
                 type="text" placeholder="Alice"
                 isInvalid={!!formik.errors.displayName} />
-              <Form.Control.Feedback type="invalid">{formik.errors.displayName}</Form.Control.Feedback>
-            </InputGroup>
-          </Form.Group>
+              <B.Form.Control.Feedback type="invalid">{formik.errors.displayName}</B.Form.Control.Feedback>
+            </B.InputGroup>
+          </B.Form.Group>
 
-          <Form.Group className="mb-3">
-            <Form.Label>Password</Form.Label>
-            <InputGroup hasValidation>
-              <Form.Control
+          <B.Form.Group className="mb-3">
+            <B.Form.Label>Password</B.Form.Label>
+            <B.InputGroup hasValidation>
+              <B.Form.Control
                 name="password" id="password" value={formik.values.password} onChange={formik.handleChange}
                 type="password"
                 isInvalid={!!formik.errors.password} />
-              <Form.Control.Feedback type="invalid">{formik.errors.password}</Form.Control.Feedback>
-            </InputGroup>
-          </Form.Group>
+              <B.Form.Control.Feedback type="invalid">{formik.errors.password}</B.Form.Control.Feedback>
+            </B.InputGroup>
+          </B.Form.Group>
 
           <div className="d-grid mt-4">
-            <Button variant="primary" type="submit" disabled={formik.isSubmitting}>
+            <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>
               Sign up
               {formik.isSubmitting &&
                 <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
-            </Button>
+            </B.Button>
           </div>
-        </Form>
+        </B.Form>
       )}
     </Formik>
   )
@@ -115,10 +113,10 @@ const Signup: NextPage<SuperJSONResult> = (props) => {
         <title>Sign up / WOC</title>
       </Head>
 
-      <Breadcrumb>
+      <B.Breadcrumb>
         <BoardsCrumb />
-        <Breadcrumb.Item active>Sign up</Breadcrumb.Item>
-      </Breadcrumb>
+        <B.Breadcrumb.Item active>Sign up</B.Breadcrumb.Item>
+      </B.Breadcrumb>
 
       <h1>Sign up</h1>
 

@@ -1,6 +1,5 @@
 import { Board } from '@prisma/client'
 import { boardSettings } from '../lib/model-settings'
-import { Dropdown } from 'react-bootstrap'
 import React from 'react'
 import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 'react-icons/bi'
 import copy from 'copy-to-clipboard'
@@ -8,30 +7,31 @@ import styles from './actionMenu.module.scss'
 import { boardRoute } from 'lib/routes'
 import { useDeleteBoard, useUpdateBoard } from 'lib/queries/boards'
 import { UpdateBoardBody } from '../pages/api/boards/update'
+import * as B from 'react-bootstrap'
 
 function MenuCopyLink(props: { board: Board }) {
   // TODO should use a local link instead of hardcoding windofchange.me (and in other places too)
-  return <Dropdown.Item
+  return <B.Dropdown.Item
     onClick={() => { copy(`https://windofchange.me${boardRoute(props.board.id)}`) }}>
     <BiShareAlt className="icon" /><span>Copy link</span>
-  </Dropdown.Item>
+  </B.Dropdown.Item>
 }
 
 function MenuMakePrivate(props: { private, updateBoard }) {
   return (
-    <Dropdown.Item onClick={() => props.updateBoard({ private: !props.private })}>
+    <B.Dropdown.Item onClick={() => props.updateBoard({ private: !props.private })}>
       {props.private
         ? <><BiLockOpen className="icon" /><span>Make public</span></>
         : <><BiLock className="icon" /><span>Make private</span></>}
-    </Dropdown.Item>
+    </B.Dropdown.Item>
   )
 }
 
 function MenuDelete(props: { deleteBoard }) {
-  return <Dropdown.Item className="text-danger"
+  return <B.Dropdown.Item className="text-danger"
     onClick={() => props.deleteBoard()}>
     <BiTrashAlt className="icon" /><span>Delete</span>
-  </Dropdown.Item>
+  </B.Dropdown.Item>
 }
 
 // "More" button with a dropdown
@@ -56,19 +56,19 @@ export function BoardMenu(props: {
   }
 
   return (
-    <Dropdown className="link-button text-muted d-inline-flex align-items-center">
-      <Dropdown.Toggle as="span" className="d-flex align-items-center">
+    <B.Dropdown className="link-button text-muted d-inline-flex align-items-center">
+      <B.Dropdown.Toggle as="span" className="d-flex align-items-center">
         <BiDotsHorizontal className="me-1" /><span>More</span>
-      </Dropdown.Toggle>
-      <Dropdown.Menu className={styles.actionMenu}>
+      </B.Dropdown.Toggle>
+      <B.Dropdown.Menu className={styles.actionMenu}>
         <MenuCopyLink board={board} />
         {props.board.canEdit && <>
           <MenuMakePrivate private={isPrivate} updateBoard={updateBoard} />
-          <Dropdown.Divider />
+          <B.Dropdown.Divider />
           <MenuDelete deleteBoard={deleteBoard} />
         </>
         }
-      </Dropdown.Menu>
-    </Dropdown>
+      </B.Dropdown.Menu>
+    </B.Dropdown>
   )
 }
