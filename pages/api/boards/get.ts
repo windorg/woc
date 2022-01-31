@@ -6,7 +6,7 @@ import { Schema } from 'yup'
 import axios from 'axios'
 import { ResponseError, Result, wocQuery, wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
-import { canEditBoard, CanSee, canSeeBoard, canSeeCard, PCard } from 'lib/access'
+import { canEditBoard, CanSee, canSeeBoard } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
 import { filterSync } from 'lib/array'
@@ -21,7 +21,6 @@ const schema: Schema<GetBoardQuery> = yup.object({
 
 export type GetBoardData = CanSee & Board & {
   owner: Pick<User, 'id' | 'handle'>
-  cards: (CanSee & Card & { _count: { comments: number } })[]
   canEdit: boolean
 }
 
@@ -32,18 +31,10 @@ export async function serverGetBoard(session: Session | null, query: GetBoardQue
     where: { id: query.boardId },
     include: {
       owner: { select: { id: true, handle: true } },
-      cards: {
-        include: {
-          _count: { select: { comments: true } }
-        }
-      }
     }
   }).then(async board => board
     ? {
       ...board,
-      // NB: unfortunately this pattern (lambda + type guard signature) isn't entirely typesafe because of
-      // https://github.com/microsoft/TypeScript/issues/12798
-      cards: filterSync(board.cards, (card): card is typeof card & CanSee => canSeeCard(session?.userId ?? null, { ...card, board })),
       canEdit: await canEditBoard(session?.userId ?? null, board)
     }
     : null

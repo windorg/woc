@@ -4,16 +4,18 @@ import { callGetCard, GetCardData, GetCardQuery } from "pages/api/cards/get"
 import { callUpdateCard, UpdateCardBody } from "pages/api/cards/update"
 import { callCreateCard, CreateCardBody } from "pages/api/cards/create"
 import { QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
-import { GetBoardData } from "pages/api/boards/get"
-import { fromGetBoardKey, getBoardKey } from "./boards"
 import { callDeleteCard, DeleteCardBody } from "pages/api/cards/delete"
 import { keyPredicate, updateQueriesData, updateQueryData } from "./util"
-import { deleteById } from "lib/array"
+import { deleteById, mergeById } from "lib/array"
+import { callListCards, ListCardsData, ListCardsQuery } from "pages/api/cards/list"
 
 // Keys
 
 export const getCardKey = (query: GetCardQuery) => ['getCard', query]
 export const fromGetCardKey = (key: QueryKey) => key[0] === 'getCard' ? key[1] as GetCardQuery : null
+
+export const listCardsKey = (query: ListCardsQuery) => ['listCards', query]
+export const fromListCardsKey = (key: QueryKey) => key[0] === 'listCards' ? key[1] as ListCardsQuery : null
 
 // Prefetches
 
@@ -21,6 +23,13 @@ export async function prefetchCard(queryClient: QueryClient, query: GetCardQuery
   await queryClient.prefetchQuery(
     getCardKey(query),
     async () => callGetCard(query)
+  )
+}
+
+export async function prefetchCards(queryClient: QueryClient, query: ListCardsQuery) {
+  await queryClient.prefetchQuery(
+    listCardsKey(query),
+    async () => callListCards(query)
   )
 }
 
@@ -33,6 +42,21 @@ export function useCard(
   return useQuery(
     getCardKey(query),
     async () => callGetCard(query),
+    {
+      cacheTime: Infinity,
+      staleTime: Infinity,
+      initialData: options?.initialData,
+    }
+  )
+}
+
+export function useCards(
+  query: ListCardsQuery,
+  options?: { initialData?: ListCardsData }
+) {
+  return useQuery(
+    listCardsKey(query),
+    async () => callListCards(query),
     {
       cacheTime: Infinity,
       staleTime: Infinity,
@@ -55,7 +79,12 @@ export function useUpdateCard() {
           getCardKey({ cardId: variables.cardId }),
           getCardData => ({ ...getCardData, ...updates })
         )
-        // TODO: when we have ListCards, update here as well
+        // Update the ListCards queries
+        updateQueriesData<ListCardsData>(
+          queryClient,
+          { predicate: keyPredicate(fromListCardsKey, query => true) },
+          listCardsData => mergeById(listCardsData, unsafeCanSee({ ...updates, id: variables.cardId }))
+        )
       }
     })
 }
@@ -66,15 +95,12 @@ export function useCreateCard() {
     async (data: CreateCardBody) => { return callCreateCard(data) },
     {
       onSuccess: (card, variables) => {
-        // TODO: go through ListCards as well when we have it
+        // Update the ListCards queries
         const card_ = unsafeCanSee({ ...card, _count: { comments: 0 } })
-        updateQueryData<GetBoardData>(
+        updateQueriesData<ListCardsData>(
           queryClient,
-          getBoardKey({ boardId: variables.boardId }),
-          getBoardData => ({
-            ...getBoardData,
-            cards: [...getBoardData.cards, card_]
-          })
+          { predicate: keyPredicate(fromListCardsKey, query => query.boards.includes(card.boardId)) },
+          listCardsData => [...listCardsData, card_]
         )
       }
     })
@@ -88,14 +114,11 @@ export function useDeleteCard() {
       onSuccess: (_void, variables) => {
         // Update the GetCard query
         queryClient.removeQueries(getCardKey({ cardId: variables.cardId }), { exact: true })
-        // TODO: go through ListCards as well when we have it
-        updateQueriesData<GetBoardData>(
+        // Update the ListCards queries
+        updateQueriesData<ListCardsData>(
           queryClient,
-          { predicate: keyPredicate(fromGetBoardKey, query => true) },
-          getBoardData => ({
-            ...getBoardData,
-            cards: deleteById(getBoardData.cards, variables.cardId)
-          })
+          { predicate: keyPredicate(fromListCardsKey, query => true) },
+          listCardsData => deleteById(listCardsData, variables.cardId)
         )
       }
     })

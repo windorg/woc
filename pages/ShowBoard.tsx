@@ -21,15 +21,21 @@ import { GetBoardData, serverGetBoard } from './api/boards/get'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { boardsRoute } from 'lib/routes'
 import { prefetchBoard, useBoard } from 'lib/queries/boards'
+import { ListCardsData, serverListCards } from './api/cards/list'
+import { prefetchCards, useCards } from 'lib/queries/cards'
 
 type Props = {
   boardId: Board['id']
   board?: GetBoardData
+  cards?: ListCardsData
 }
 
 async function preload(context: PreloadContext): Promise<void> {
   const boardId = context.query.boardId as string
-  await prefetchBoard(context.queryClient, { boardId })
+  await Promise.all([
+    prefetchBoard(context.queryClient, { boardId }),
+    prefetchCards(context.queryClient, { boards: [boardId] }),
+  ])
 }
 
 async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
@@ -43,7 +49,8 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
     const session = await getSession(context)
     await serverGetBoard(session, { boardId })
       .then(result => { if (result.success) props.board = result.data })
-
+    await serverListCards(session, { boards: [boardId] })
+      .then(result => { if (result.success) props.cards = result.data })
   }
   return serialize(props)
 }
@@ -58,17 +65,23 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
   // We don't want to refetch the data in realtime — imagine reading the page and then new posts appear/disappear and the page jumps around. We show
   // existing data (without a spinner even if the data is stale). Under the hood 'useBoard' only ever updates once.
   const boardQuery = useBoard({ boardId }, { initialData: initialProps?.board })
+  const cardsQuery = useCards({ boards: [boardId] }, { initialData: initialProps?.cards })
 
   if (boardQuery.status === 'loading' || boardQuery.status === 'idle')
     return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
   if (boardQuery.status === 'error') return <B.Alert variant="danger">{(boardQuery.error as Error).message}</B.Alert>
 
+  if (cardsQuery.status === 'loading' || cardsQuery.status === 'idle')
+    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+  if (cardsQuery.status === 'error') return <B.Alert variant="danger">{(cardsQuery.error as Error).message}</B.Alert>
+
   const board = boardQuery.data
+  const cards = cardsQuery.data
 
   const isPrivate = boardSettings(board).visibility === 'private'
   const [normalCards, archivedCards] =
     _.partition(
-      _.orderBy(board.cards, ['createdAt'], ['desc']),
+      _.orderBy(cards, ['createdAt'], ['desc']),
       card => (!cardSettings(card).archived))
 
   const moreButton = () => (
