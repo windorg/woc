@@ -40,7 +40,7 @@ export default async function deleteReply(req: DeleteReplyRequest, res: NextApiR
       },
       rejectOnNotFound: true,
     })
-    if (!await canDeleteReply(session?.userId ?? null, reply)) return res.status(403)
+    if (!canDeleteReply(session?.userId ?? null, reply)) return res.status(403)
 
     await prisma.reply.delete({
       where: { id: body.replyId }

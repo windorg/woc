@@ -1,6 +1,5 @@
 import { Board, Card, User, Comment, Reply } from "@prisma/client"
 import { Tag } from "taghiro"
-import { prisma } from "./db"
 import { boardSettings, cardSettings, commentSettings, replySettings } from "./model-settings"
 
 // Types that are just enough to decide if something can be seen
@@ -13,30 +12,6 @@ export const pBoardSelect = { ownerId: true, settings: true }
 export const pCardSelect = { ownerId: true, settings: true, board: { select: pBoardSelect } }
 export const pCommentSelect = { ownerId: true, settings: true, card: { select: pCardSelect } }
 export const pReplySelect = { authorId: true, settings: true, comment: { select: pCommentSelect } }
-
-const findBoard = (id) => prisma.board.findUnique({
-  where: { id },
-  select: pBoardSelect,
-  rejectOnNotFound: true
-})
-
-const findCard = (id) => prisma.card.findUnique({
-  where: { id },
-  select: pCardSelect,
-  rejectOnNotFound: true
-})
-
-const findComment = (id) => prisma.comment.findUnique({
-  where: { id },
-  select: pCommentSelect,
-  rejectOnNotFound: true
-})
-
-const findReply = (id) => prisma.reply.findUnique({
-  where: { id },
-  select: pReplySelect,
-  rejectOnNotFound: true
-})
 
 export type CanSee = Tag<'can-see'>
 
@@ -52,37 +27,33 @@ export function canSeeBoard<T extends PBoard>(userId: User['id'] | null, board: 
   return board.ownerId === userId
     || boardSettings(board).visibility === 'public'
 }
-export async function canEditBoard(userId: User['id'] | null, board: Board['id'] | PBoard) {
+export function canEditBoard<T extends PBoard>(userId: User['id'] | null, board: T) {
   if (!userId) return false // logged-out users cannot edit anything
-  const board_ = typeof board === 'object' ? board : await findBoard(board)
-  return board_.ownerId === userId
+  return board.ownerId === userId
 }
 
 export function canSeeCard<T extends PCard>(userId: User['id'] | null, card: T): card is T & CanSee {
   return card.ownerId === userId
     || (cardSettings(card).visibility === 'public' && canSeeBoard(userId, card.board))
 }
-export async function canEditCard(userId: User['id'] | null, card: Card['id'] | PCard) {
+export function canEditCard<T extends PCard>(userId: User['id'] | null, card: T) {
   if (!userId) return false // logged-out users cannot edit anything
-  const card_ = typeof card === 'object' ? card : await findCard(card)
-  return card_.ownerId === userId
+  return card.ownerId === userId
 }
 
 export function canSeeComment<T extends PComment>(userId: User['id'] | null, comment: T): comment is T & CanSee {
   return comment.ownerId === userId
     || (commentSettings(comment).visibility === 'public' && canSeeCard(userId, comment.card))
 }
-export async function canEditComment(userId: User['id'] | null, comment: Comment['id'] | PComment) {
+export function canEditComment<T extends PComment>(userId: User['id'] | null, comment: T) {
   if (!userId) return false // logged-out users cannot edit anything
-  const comment_ = typeof comment === 'object' ? comment : await findComment(comment)
-  return comment_.ownerId === userId
+  return comment.ownerId === userId
   // If this logic changes, you should also change the logic in ShowCard.tsx
 }
-export async function canReplyToComment(userId: User['id'] | null, comment: Comment['id'] | PComment) {
+export function canReplyToComment<T extends PComment>(userId: User['id'] | null, comment: T) {
   if (!userId) return false // logged-out users cannot reply to anything
-  const comment_ = typeof comment === 'object' ? comment : await findComment(comment)
   // You can reply iff you can see the comment.
-  return (await canSeeComment(userId, comment_))
+  return (canSeeComment(userId, comment))
 }
 
 export function canSeeReply<T extends PReply>(userId: User['id'] | null, reply: T): reply is T & CanSee {
@@ -93,18 +64,16 @@ export function canSeeReply<T extends PReply>(userId: User['id'] | null, reply: 
     || (replySettings(reply).visibility === 'public' && canSeeComment(userId, reply.comment))
   )
 }
-export async function canEditReply(userId: User['id'] | null, reply: Reply['id'] | PReply) {
+export function canEditReply<T extends PReply>(userId: User['id'] | null, reply: T) {
   if (!userId) return false // logged-out users cannot edit anything
-  const reply_ = typeof reply === 'object' ? reply : await findReply(reply)
-  return reply_.authorId === userId
+  return reply.authorId === userId
 }
-export async function canDeleteReply(userId: User['id'] | null, reply: Reply['id'] | PReply) {
+export function canDeleteReply<T extends PReply>(userId: User['id'] | null, reply: T) {
   if (!userId) return false // logged-out users cannot delete anything
-  const reply_ = typeof reply === 'object' ? reply : await findReply(reply)
   return (
     // The reply's author can always delete their own reply
-    reply_.authorId === userId
+    reply.authorId === userId
     // The comment's owner can always delete replies to their comments
-    || (userId !== null && reply_.comment.ownerId === userId)
+    || (userId !== null && reply.comment.ownerId === userId)
   )
 }

@@ -48,7 +48,7 @@ export default async function updateComment(req: UpdateCommentRequest, res: Next
       },
       rejectOnNotFound: true,
     })
-    if (!await canEditComment(session?.userId ?? null, comment)) return res.status(403)
+    if (!canEditComment(session?.userId ?? null, comment)) return res.status(403)
 
     let diff: Partial<Comment> & { settings: Partial<CommentSettings> } = {
       settings: comment.settings ?? {}

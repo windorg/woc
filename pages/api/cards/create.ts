@@ -34,7 +34,7 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
       select: { ownerId: true, settings: true },
       rejectOnNotFound: true,
     })
-    if (!await canEditBoard(session?.userId ?? null, board)) return res.status(403)
+    if (!canEditBoard(session?.userId ?? null, board)) return res.status(403)
     const settings: Partial<CardSettings> = {
       visibility: body.private ? 'private' : 'public'
     }

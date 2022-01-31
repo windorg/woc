@@ -30,7 +30,7 @@ export default async function deleteCard(req: DeleteCardRequest, res: NextApiRes
       },
       rejectOnNotFound: true,
     })
-    if (!await canEditCard(session?.userId ?? null, card)) return res.status(403)
+    if (!canEditCard(session?.userId ?? null, card)) return res.status(403)
 
     await prisma.card.delete({
       where: { id: body.cardId }

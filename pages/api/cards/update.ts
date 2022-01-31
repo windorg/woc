@@ -43,7 +43,7 @@ export default async function updateCard(req: UpdateCardRequest, res: NextApiRes
       include: { board: { select: { ownerId: true, settings: true } } },
       rejectOnNotFound: true,
     })
-    if (!await canEditCard(session?.userId ?? null, card)) return res.status(403)
+    if (!canEditCard(session?.userId ?? null, card)) return res.status(403)
 
     let diff: Partial<Card> & { settings: Partial<CardSettings> } = {
       settings: card.settings ?? {}

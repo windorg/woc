@@ -35,7 +35,7 @@ export async function serverGetBoard(session: Session | null, query: GetBoardQue
   }).then(async board => board
     ? {
       ...board,
-      canEdit: await canEditBoard(session?.userId ?? null, board)
+      canEdit: canEditBoard(session?.userId ?? null, board)
     }
     : null
   )

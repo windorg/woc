@@ -31,9 +31,9 @@ export async function serverListComments(session: Session | null, query: ListCom
   where.cardId = { in: query.cards }
   const comments = await prisma.comment.findMany({ where, include: { card: { select: pCardSelect } } })
     .then(xs => filterSync(xs, (comment): comment is typeof comment & CanSee => canSeeComment(session?.userId ?? null, comment)))
-    .then(async xs => mapAsync(xs, async comment => ({
+    .then(xs => xs.map(comment => ({
       ..._.omit(comment, 'card'),
-      canEdit: await canEditComment(session?.userId ?? null, comment)
+      canEdit: canEditComment(session?.userId ?? null, comment)
     })))
   return {
     success: true,

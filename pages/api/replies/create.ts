@@ -90,7 +90,7 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
       rejectOnNotFound: true,
     })
     if (!session) return res.status(403)
-    if (!await canReplyToComment(session.userId, comment)) return res.status(403)
+    if (!canReplyToComment(session.userId, comment)) return res.status(403)
 
     // Create the reply
     const reply = await prisma.reply.create({
@@ -114,8 +114,8 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
         select: { cardId: true },
         rejectOnNotFound: true
       }),
-      canEdit: await canEditReply(session.userId, { ...reply, comment }),
-      canDelete: await canDeleteReply(session.userId, { ...reply, comment })
+      canEdit: canEditReply(session.userId, { ...reply, comment }),
+      canDelete: canDeleteReply(session.userId, { ...reply, comment })
     }
 
     // Subscribe the replier to the thread

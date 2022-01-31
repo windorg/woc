@@ -37,7 +37,7 @@ export async function serverGetCard(session: Session | null, query: GetCardQuery
   }).then(async card => card
     ? {
       ...card,
-      canEdit: await canEditCard(session?.userId ?? null, card)
+      canEdit: canEditCard(session?.userId ?? null, card)
     }
     : null
   )

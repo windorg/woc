@@ -42,11 +42,11 @@ export async function serverListReplies(session: Session | null, query: ListRepl
     }
   })
     .then(xs => filterSync(xs, (reply): reply is typeof reply & CanSee => canSeeReply(session?.userId ?? null, reply)))
-    .then(async xs => mapAsync(xs, async reply => ({
+    .then(xs => xs.map(reply => ({
       ...(_.omit(reply, 'comment')),
       comment: { cardId: reply.comment.cardId },
-      canEdit: await canEditReply(session?.userId ?? null, reply),
-      canDelete: await canDeleteReply(session?.userId ?? null, reply)
+      canEdit: canEditReply(session?.userId ?? null, reply),
+      canDelete: canDeleteReply(session?.userId ?? null, reply)
     })))
   return {
     success: true,
