@@ -7,6 +7,7 @@ import { getSession } from 'next-auth/react'
 import _ from 'lodash'
 import { hashPassword } from 'lib/password'
 import axios from 'axios'
+import { ResponseError, Result, wocResponse } from 'lib/http'
 
 interface SignupRequest extends NextApiRequest {
   body: {
@@ -26,29 +27,29 @@ const schema: Schema<SignupBody> = yup.object({
   password: yup.string().min(1).max(64).label("Password").required()
 })
 
-export type SignupResponse
-  = { success: true }
-  | { success: false, errors: Record<string, string> }
+export type SignupData = Record<string, never>
+
+export type SignupResponse = Result<SignupData, { fields: Record<string, string> }>
 
 export default async function signup(req: SignupRequest, res: NextApiResponse<SignupResponse>) {
   if (req.method === 'POST') {
     const session = await getSession({ req })
     if (session) return res.status(403)
 
-    const errors = {} as any
+    const fieldErrors: Record<string, string> = {}
     const body = await schema.validate(req.body, { abortEarly: false })
       .catch((err: yup.ValidationError) => {
-        err.inner.forEach(e => { errors[e.path!] = e.message })
-        res.status(400).json({ success: false, errors })
+        err.inner.forEach(e => { fieldErrors[e.path!] = e.message })
+        res.status(200).json({ success: false, error: { fields: fieldErrors } })
         return null
       })
     if (!body) return
 
     const handleExists = (await prisma.user.count({ where: { handle: body.handle } })) > 0
-    if (handleExists) errors.handle = 'This handle is already taken'
+    if (handleExists) fieldErrors.handle = 'This handle is already taken'
     const emailExists = (await prisma.user.count({ where: { email: body.email } })) > 0
-    if (emailExists) errors.email = 'A user already exists with this email'
-    if (!_.isEmpty(errors)) return res.status(400).json({ success: false, errors })
+    if (emailExists) fieldErrors.email = 'A user already exists with this email'
+    if (!_.isEmpty(fieldErrors)) return res.status(200).json({ success: false, error: { fields: fieldErrors } })
 
     await prisma.user.create({
       data: {
@@ -58,15 +59,15 @@ export default async function signup(req: SignupRequest, res: NextApiResponse<Si
         passwordHash: hashPassword(body.password),
       }
     })
-    return res.status(201).send({ success: true })
+    return res.status(201).send({ success: true, data: {} })
   }
 }
 
-export async function callSignup(body: SignupBody): Promise<SignupResponse> {
-  const { data } = await axios.post<SignupResponse>(
-    '/api/auth/signup',
-    body,
-    { validateStatus: status => (status < 400 || status === 400 || status === 409) }
-  )
-  return data
+export async function callSignup(body: SignupBody): Promise<SignupData>
+export async function callSignup(body: SignupBody, opts: { returnErrors: true }): Promise<SignupResponse>
+export async function callSignup(body: SignupBody, opts?) {
+  const { data: result } = await axios.post<SignupResponse>('/api/auth/signup', body)
+  if (opts?.returnErrors) return wocResponse(result)
+  if (result.success) return wocResponse(result.data)
+  if (result.error) throw new ResponseError('Signup error', result.error)
 }

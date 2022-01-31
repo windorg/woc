@@ -35,14 +35,14 @@ function SignupForm(props) {
         return errors
       }}
       onSubmit={async (values, actions) => {
-        const result = await callSignup(values)
+        const result = await callSignup(values, { returnErrors: true })
         if (result.success) {
           await signIn("credentials", {
             email: values.email, password: values.password,
             callbackUrl: boardsRoute()
           })
         } else {
-          actions.setErrors(result.errors)
+          actions.setErrors(result.error.fields)
         }
       }}
     >
