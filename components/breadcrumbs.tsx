@@ -22,7 +22,7 @@ export function FeedCrumb(props: { active?: boolean }) {
 
 export function InboxCrumb(props: { active?: boolean }) {
   return (
-    <LinkItem active={props.active} href={inboxRoute()}>
+    <LinkItem active={props.active} href={inboxRoute()} preload>
       Inbox
     </LinkItem>
   )

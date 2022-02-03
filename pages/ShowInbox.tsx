@@ -1,6 +1,5 @@
-import type { GetServerSideProps, NextPage } from 'next'
+import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
-import { prisma } from '../lib/db'
 import { signIn } from "next-auth/react"
 import React from 'react'
 import * as B from 'react-bootstrap'
@@ -12,37 +11,43 @@ import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
 import styles from './ShowInbox.module.scss'
 import { InboxItemComponent } from 'components/inboxItem'
-import { getInboxItems, InboxItem } from 'lib/inbox'
+import { InboxItem } from 'lib/inbox'
 import { CanSee } from 'lib/access'
+import { PreloadContext, WithPreload } from 'lib/link-preload'
+import { prefetchInbox, useInbox } from 'lib/queries/inbox'
+import { serverGetInbox } from './api/inbox/get'
 
 type Props = {
-  inboxItems: (CanSee & InboxItem)[]
+  inboxItems?: (CanSee & InboxItem)[]
 }
 
-export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
-  const session = await getSession(context)
-  if (session) {
-    // Logged in
-    const props: Props = {
-      inboxItems: await getInboxItems(session.userId)
-    }
-    return {
-      props: serialize(props)
-    }
-  } else {
-    // Not logged in
-    const props: Props = {
-      inboxItems: []
-    }
-    return {
-      props: serialize(props)
-    }
+async function preload(context: PreloadContext): Promise<void> {
+  await Promise.all([
+    prefetchInbox(context.queryClient, {}),
+  ])
+}
+
+async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
+  const props: Props = {}
+  if (typeof window === 'undefined') {
+    const session = await getSession(context)
+    await serverGetInbox(session, {})
+      .then(result => { if (result.success) props.inboxItems = result.data })
   }
+  return serialize(props)
 }
 
-const ShowInbox: NextPage<SuperJSONResult> = (props) => {
+const ShowInbox: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) => {
+  const initialProps = deserialize<Props>(serializedInitialProps)
   const { data: session } = useSession()
-  const { inboxItems } = deserialize<Props>(props)
+
+  const inboxQuery = useInbox({}, { initialData: initialProps?.inboxItems })
+
+  if (inboxQuery.status === 'loading' || inboxQuery.status === 'idle')
+    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+  if (inboxQuery.status === 'error') return <B.Alert variant="danger">{(inboxQuery.error as Error).message}</B.Alert>
+
+  const inboxItems = inboxQuery.data
 
   return (
     <>
@@ -74,5 +79,8 @@ const ShowInbox: NextPage<SuperJSONResult> = (props) => {
     </>
   )
 }
+
+ShowInbox.getInitialProps = getInitialProps
+ShowInbox.preload = preload
 
 export default ShowInbox

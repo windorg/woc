@@ -41,7 +41,7 @@ function ChangelogButton() {
 function InboxLink() {
   const { data } = useInboxCount({ refetchInterval: 5000 })
   return (
-    <Link href={inboxRoute()}>
+    <LinkPreload href={inboxRoute()}>
       <a>
         Inbox
         {(data !== undefined) &&
@@ -51,7 +51,7 @@ function InboxLink() {
           </B.Badge>
         }
       </a>
-    </Link>
+    </LinkPreload>
   )
 }
 
