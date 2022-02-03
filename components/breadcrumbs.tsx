@@ -3,7 +3,7 @@ import React from "react"
 import * as B from 'react-bootstrap'
 import { boardSettings } from "../lib/model-settings"
 import Link from 'next/link'
-import { boardRoute, boardsRoute, cardRoute, userRoute } from "lib/routes"
+import { boardRoute, boardsRoute, cardRoute, feedRoute, inboxRoute, userRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
 
 function LinkItem(props: { href: string, children: React.ReactNode, active?: boolean, preload?: boolean }) {
@@ -14,7 +14,7 @@ function LinkItem(props: { href: string, children: React.ReactNode, active?: boo
 
 export function FeedCrumb(props: { active?: boolean }) {
   return (
-    <LinkItem active={props.active} href={`/ShowFeed`}>
+    <LinkItem active={props.active} href={feedRoute()} preload>
       Feed
     </LinkItem>
   )
@@ -22,7 +22,7 @@ export function FeedCrumb(props: { active?: boolean }) {
 
 export function InboxCrumb(props: { active?: boolean }) {
   return (
-    <LinkItem active={props.active} href={`/ShowInbox`}>
+    <LinkItem active={props.active} href={inboxRoute()}>
       Inbox
     </LinkItem>
   )

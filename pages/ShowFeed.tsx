@@ -1,65 +1,52 @@
-import type { GetServerSideProps, NextPage } from 'next'
+import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
-import { prisma } from '../lib/db'
 import React from 'react'
 import * as B from 'react-bootstrap'
 import { BoardsCrumb, FeedCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
 import { getSession, useSession } from 'next-auth/react'
-import { CanSee, canSeeComment, PCard, pCardSelect, PComment } from '../lib/access'
+import { CanSee } from '../lib/access'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
-import { filterAsync, filterSync } from 'lib/array'
 import _ from 'lodash'
-import moment from 'moment'
-import { FeedItem, FeedItemComment, FeedItemComponent } from 'components/feedItem'
+import { FeedItemComponent } from 'components/feedItem'
 import styles from './ShowFeed.module.scss'
 import { signIn } from "next-auth/react"
+import { FeedItem, serverGetFeed } from './api/feed/get'
+import { PreloadContext, WithPreload } from 'lib/link-preload'
+import { prefetchFeed, useFeed } from 'lib/queries/feed'
 
 type Props = {
-  feedItems: (CanSee & FeedItem)[]
+  feedItems?: (CanSee & FeedItem)[]
 }
 
-// TODO allow switching between 3 and 14 days
-export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
-  const session = await getSession(context)
-  if (session) {
-    // Logged in
-    const followedUserIds = await prisma.followedUser.findMany({
-      where: { subscriberId: session.userId },
-      select: { followedUserId: true }
-    }).then(xs => xs.map(x => x.followedUserId))
-    const feedItems: (CanSee & FeedItem)[] = await prisma.comment.findMany({
-      where: {
-        ownerId: { in: followedUserIds },
-        createdAt: { gte: moment().subtract(3, 'days').toDate() }
-      },
-      include: {
-        owner: { select: { id: true, email: true, displayName: true } },
-        card: { select: { title: true, ...pCardSelect } }
-      }
-    }).then(xs => filterSync(xs, <T extends PComment,>(comment: T): comment is T & CanSee => canSeeComment(session.userId, comment)))
-      .then(xs => xs.map(x => ({ ...x, tag: 'comment' })))
-    const props: Props = {
-      feedItems
-    }
-    return {
-      props: serialize(props)
-    }
-  } else {
-    // Not logged in
-    const props: Props = {
-      feedItems: []
-    }
-    return {
-      props: serialize(props)
-    }
+async function preload(context: PreloadContext): Promise<void> {
+  await Promise.all([
+    prefetchFeed(context.queryClient, { days: 3 }),
+  ])
+}
+
+async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
+  const props: Props = {}
+  if (typeof window === 'undefined') {
+    const session = await getSession(context)
+    await serverGetFeed(session, { days: 3 })
+      .then(result => { if (result.success) props.feedItems = result.data })
   }
+  return serialize(props)
 }
 
-const ShowFeed: NextPage<SuperJSONResult> = (props) => {
+const ShowFeed: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) => {
+  const initialProps = deserialize<Props>(serializedInitialProps)
   const { data: session } = useSession()
-  const { feedItems } = deserialize<Props>(props)
+
+  const feedQuery = useFeed({ days: 3 }, { initialData: initialProps?.feedItems })
+
+  if (feedQuery.status === 'loading' || feedQuery.status === 'idle')
+    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+  if (feedQuery.status === 'error') return <B.Alert variant="danger">{(feedQuery.error as Error).message}</B.Alert>
+
+  const feedItems = feedQuery.data
 
   return (
     <>
@@ -91,5 +78,8 @@ const ShowFeed: NextPage<SuperJSONResult> = (props) => {
     </>
   )
 }
+
+ShowFeed.getInitialProps = getInitialProps
+ShowFeed.preload = preload
 
 export default ShowFeed

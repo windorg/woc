@@ -23,3 +23,11 @@ export function commentRoute(args: { cardId: Card['id'], commentId: Comment['id'
 export function replyRoute(args: { cardId: Card['id'], replyId: Comment['id'] }) {
   return `/ShowCard?cardId=${args.cardId}#reply-${args.replyId}`
 }
+
+export function feedRoute() {
+  return `/ShowFeed`
+}
+
+export function inboxRoute() {
+  return `/ShowInbox`
+}

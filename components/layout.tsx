@@ -6,6 +6,8 @@ import * as B from 'react-bootstrap'
 import Head from "next/head"
 import Script from "next/script"
 import { useInboxCount } from "lib/queries/inbox"
+import { feedRoute, inboxRoute } from "lib/routes"
+import { LinkPreload } from "lib/link-preload"
 
 function ChangelogButton() {
   const headwayConfig = {
@@ -39,7 +41,7 @@ function ChangelogButton() {
 function InboxLink() {
   const { data } = useInboxCount({ refetchInterval: 5000 })
   return (
-    <Link href='/ShowInbox'>
+    <Link href={inboxRoute()}>
       <a>
         Inbox
         {(data !== undefined) &&
@@ -77,7 +79,7 @@ function NavHeader() {
       <div className="d-flex" style={{ flex: "1" }}></div>
       <ChangelogButton />
       {session
-        ? <div className="me-4"><Link href='/ShowFeed'><a>Feed</a></Link></div>
+        ? <div className="me-4"><LinkPreload href={feedRoute()}><a>Feed</a></LinkPreload></div>
         : null}
       {session
         ? <div className="me-4"><InboxLink /></div>

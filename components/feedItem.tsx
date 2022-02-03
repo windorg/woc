@@ -3,17 +3,10 @@ import { LinkPreload } from 'lib/link-preload'
 import { RenderedMarkdown } from 'lib/markdown'
 import { commentRoute, userRoute } from 'lib/routes'
 import Link from 'next/link'
+import { FeedItem } from 'pages/api/feed/get'
 import { BiLink } from 'react-icons/bi'
 import ReactTimeAgo from 'react-time-ago'
 import { Gravatar } from './gravatar'
-
-export type FeedItemComment = Comment & {
-  owner: Pick<User, 'id' | 'email' | 'displayName'>
-  card: Pick<Card, 'title'>
-}
-
-export type FeedItem =
-  | { tag: "comment" } & FeedItemComment
 
 export function FeedItemComponent(props: { item: FeedItem }) {
   const { item } = props
