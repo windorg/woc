@@ -14,6 +14,7 @@ import { prefetchBoards, useBoards } from 'lib/queries/boards'
 import { GetUserData, serverGetUser } from './api/users/get'
 import { ListBoardsData, serverListBoards } from './api/boards/list'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
+import { SocialTags } from 'components/socialTags'
 
 type Props = {
   userId: User['id']
@@ -92,6 +93,7 @@ const ShowUser: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
       <Head>
         <title>{user.displayName} @{user.handle} / WOC</title>
       </Head>
+      <SocialTags title={`${user.displayName} @${user.handle}`} />
 
       <B.Breadcrumb>
         <BoardsCrumb />

@@ -25,6 +25,7 @@ import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { prefetchCard, useCard } from 'lib/queries/cards'
 import { prefetchComments, useComments } from 'lib/queries/comments'
 import { prefetchReplies, useReplies } from 'lib/queries/replies'
+import { SocialTags } from 'components/socialTags'
 
 type Props = {
   cardId: Card['id']
@@ -121,9 +122,12 @@ const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
   return (
     <>
       <Head>
-        {/* TODO OG/Twitter tags */}
         <title>{card.title} / WOC</title>
       </Head>
+      <SocialTags
+        title={card.title}
+        description={`by @${card.owner.handle}`}
+      />
 
       <B.Breadcrumb>
         <BoardsCrumb />

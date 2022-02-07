@@ -21,6 +21,7 @@ import { boardsRoute } from 'lib/routes'
 import { prefetchBoard, useBoard } from 'lib/queries/boards'
 import { ListCardsData, serverListCards } from './api/cards/list'
 import { prefetchCards, useCards } from 'lib/queries/cards'
+import { SocialTags } from 'components/socialTags'
 
 type Props = {
   boardId: Board['id']
@@ -85,9 +86,12 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
   return (
     <>
       <Head>
-        {/* TODO OG/Twitter tags */}
         <title>{board.title} / WOC</title>
       </Head>
+      <SocialTags
+        title={board.title}
+        description={`by @${board.owner.handle}`}
+      />
 
       <B.Breadcrumb>
         <BoardsCrumb />

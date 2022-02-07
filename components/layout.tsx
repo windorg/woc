@@ -105,7 +105,12 @@ function Layout(props: Props): JSX.Element {
         <link rel="icon" href="favicon.png" />
         <link rel="apple-touch-icon" href="favicon-large.png" />
         <meta name="theme-color" content="#ffffff" />
+
+        <meta property="og:site_name" content="wind of change" />
+        <meta property="og:image" content="https://windofchange.me/favicon-square.png" />
+        <meta property="twitter:image" content="https://windofchange.me/favicon-square.png" />
       </Head>
+
       <div id="layout">
         <div className="container mt-4">
           <NavHeader />
