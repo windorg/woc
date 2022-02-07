@@ -1,13 +1,29 @@
 import { Board } from '@prisma/client'
 import { boardSettings } from '../lib/model-settings'
 import React from 'react'
-import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 'react-icons/bi'
+import { BiPencil, BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 'react-icons/bi'
 import copy from 'copy-to-clipboard'
 import styles from './actionMenu.module.scss'
 import { boardRoute } from 'lib/routes'
 import { useDeleteBoard, useUpdateBoard } from 'lib/queries/boards'
 import { UpdateBoardBody } from '../pages/api/boards/update'
 import * as B from 'react-bootstrap'
+import { LinkButton } from './linkButton'
+
+function ButtonEdit(props: { onEdit }) {
+  return <LinkButton onClick={props.onEdit} icon={<BiPencil />}>Edit</LinkButton>
+}
+
+function ButtonMakePrivate(props: { private, updateBoard }) {
+  return (
+    <LinkButton
+      onClick={() => props.updateBoard({ private: !props.private })}
+      icon={props.private ? <BiLockOpen /> : <BiLock />}
+    >
+      {props.private ? "Make public" : "Make private"}
+    </LinkButton>
+  )
+}
 
 function MenuCopyLink(props: { board: Board }) {
   // TODO should use a local link instead of hardcoding windofchange.me (and in other places too)
@@ -15,16 +31,6 @@ function MenuCopyLink(props: { board: Board }) {
     onClick={() => { copy(`https://windofchange.me${boardRoute(props.board.id)}`) }}>
     <BiShareAlt className="icon" /><span>Copy link</span>
   </B.Dropdown.Item>
-}
-
-function MenuMakePrivate(props: { private, updateBoard }) {
-  return (
-    <B.Dropdown.Item onClick={() => props.updateBoard({ private: !props.private })}>
-      {props.private
-        ? <><BiLockOpen className="icon" /><span>Make public</span></>
-        : <><BiLock className="icon" /><span>Make private</span></>}
-    </B.Dropdown.Item>
-  )
 }
 
 function MenuDelete(props: { deleteBoard }) {
@@ -35,21 +41,13 @@ function MenuDelete(props: { deleteBoard }) {
 }
 
 // "More" button with a dropdown
-export function BoardMenu(props: {
+function BoardMenu(props: {
   board: Board & { canEdit: boolean }
   afterDelete?: () => void
 }) {
   const { board } = props
-  const settings = boardSettings(board)
-  const isPrivate = settings.visibility === 'private'
 
-  const updateBoardMutation = useUpdateBoard()
   const deleteBoardMutation = useDeleteBoard()
-
-  const updateBoard = async (data: Omit<UpdateBoardBody, 'boardId'>) => {
-    await updateBoardMutation.mutateAsync({ boardId: board.id, ...data })
-  }
-
   const deleteBoard = async () => {
     await deleteBoardMutation.mutateAsync({ boardId: board.id })
     if (props.afterDelete) props.afterDelete()
@@ -63,12 +61,34 @@ export function BoardMenu(props: {
       <B.Dropdown.Menu className={styles.actionMenu}>
         <MenuCopyLink board={board} />
         {props.board.canEdit && <>
-          <MenuMakePrivate private={isPrivate} updateBoard={updateBoard} />
           <B.Dropdown.Divider />
           <MenuDelete deleteBoard={deleteBoard} />
         </>
         }
       </B.Dropdown.Menu>
     </B.Dropdown>
+  )
+}
+
+export function BoardActions(props: {
+  board: Board & { canEdit: boolean }
+  onEdit: () => void
+  afterDelete?: () => void
+}) {
+  const { board } = props
+  const settings = boardSettings(board)
+  const isPrivate = settings.visibility === 'private'
+
+  const updateBoardMutation = useUpdateBoard()
+  const updateBoard = async (data: Omit<UpdateBoardBody, 'boardId'>) => {
+    await updateBoardMutation.mutateAsync({ boardId: board.id, ...data })
+  }
+
+  return (
+    <B.Stack direction="horizontal" gap={4}>
+      {board.canEdit && <ButtonEdit onEdit={props.onEdit} />}
+      {board.canEdit && <ButtonMakePrivate private={isPrivate} updateBoard={updateBoard} />}
+      <BoardMenu {...props} />
+    </B.Stack>
   )
 }

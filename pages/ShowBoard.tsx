@@ -11,12 +11,10 @@ import { getSession } from 'next-auth/react'
 import { serialize, deserialize } from 'superjson'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { TransitionGroup, CSSTransition } from 'react-transition-group'
-import { BiPencil } from 'react-icons/bi'
 import { EditBoardModal } from 'components/editBoardModal'
-import { BoardMenu } from 'components/boardMenu'
+import { BoardActions } from 'components/boardActions'
 import { AddCardForm } from 'components/addCardForm'
 import { useRouter } from 'next/router'
-import { LinkButton } from 'components/linkButton'
 import { GetBoardData, serverGetBoard } from './api/boards/get'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { boardsRoute } from 'lib/routes'
@@ -84,12 +82,6 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
       _.orderBy(cards, ['createdAt'], ['desc']),
       card => (!cardSettings(card).archived))
 
-  const moreButton = () => (
-    <BoardMenu
-      board={board}
-      afterDelete={async () => router.replace(boardsRoute())} />
-  )
-
   return (
     <>
       <Head>
@@ -103,30 +95,30 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
         <BoardCrumb board={board} active />
       </B.Breadcrumb>
 
-      <h1 style={{ marginBottom: "1em" }}>
+      {board.canEdit &&
+        <EditBoardModal
+          board={board}
+          show={editing}
+          onHide={() => setEditing(false)}
+          afterSave={() => setEditing(false)}
+        />
+      }
+
+      <h1>
         {isPrivate ? "🔒 " : ""}
         {board.title}
-        {board.canEdit &&
-          <EditBoardModal
-            board={board}
-            show={editing}
-            onHide={() => setEditing(false)}
-            afterSave={() => setEditing(false)}
-          />
-        }
-        <span
-          className="ms-5"
-          style={{ fontSize: "50%" }}
-        >
-          {board.canEdit && <>
-            <LinkButton onClick={() => setEditing(true)} icon={<BiPencil />}>Edit</LinkButton>
-            <span className="me-3" />
-          </>}
-          {moreButton()}
-        </span>
       </h1>
 
+      <div className="mb-5" style={{ marginTop: "calc(0.9rem + 0.3vw)", fontSize: "calc(0.9rem + 0.3vw)" }}>
+        <BoardActions
+          board={board}
+          onEdit={() => setEditing(true)}
+          afterDelete={async () => router.replace(boardsRoute())}
+        />
+      </div>
+
       {board.canEdit && <AddCardForm boardId={board.id} />}
+
       <div style={{ marginTop: "30px" }}>
         <TransitionGroup>
           {normalCards.map(card => (
@@ -136,7 +128,8 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
           ))}
         </TransitionGroup>
       </div>
-      {(archivedCards.length > 0) &&
+      {
+        (archivedCards.length > 0) &&
         <B.Accordion className="mt-5">
           <B.Accordion.Item eventKey="0">
             <B.Accordion.Header><B.Badge bg="secondary">Archived cards</B.Badge></B.Accordion.Header>
