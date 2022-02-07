@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { BiLink } from 'react-icons/bi'
 import ReactTimeAgo from 'react-time-ago'
 import { Gravatar } from './gravatar'
+import { InboxItemActions } from './inboxItemActions'
 
 function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
   return (
@@ -22,7 +23,7 @@ function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
 
 export function InboxItemComponent(props: { item: InboxItem }) {
   const { item } = props
-  const author = item.author
+  const author = item.reply.author
   return (
     <div className="woc-inbox-item woc-inbox-item-reply d-flex">
       <div className="flex-shrink-0">
@@ -42,16 +43,19 @@ export function InboxItemComponent(props: { item: InboxItem }) {
         </strong>
         <div>
           <span className="text-muted small">
-            <LinkPreload href={replyRoute({ cardId: item.comment.cardId, replyId: item.id })}>
+            <LinkPreload href={replyRoute({ cardId: item.reply.comment.cardId, replyId: item.reply.id })}>
               <a className="d-flex align-items-center">
                 <BiLink className="me-1" />
-                <ReactTimeAgo timeStyle="twitter-minute-now" date={item.createdAt} />
+                <ReactTimeAgo timeStyle="twitter-minute-now" date={item.reply.createdAt} />
               </a>
             </LinkPreload>
           </span>
           {/* TODO when private lockIcon */}
         </div>
-        <RenderedMarkdown className="rendered-content mt-1" markdown={item.content} />
+        <RenderedMarkdown className="rendered-content mt-1" markdown={item.reply.content} />
+        <div className='small'>
+          <InboxItemActions inboxItem={item} />
+        </div>
       </div>
     </div>
   )

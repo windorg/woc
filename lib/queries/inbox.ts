@@ -1,6 +1,9 @@
-import { callInboxCount } from "pages/api/inbox/count"
+import { deleteById } from "lib/array"
+import { callInboxCount, InboxCountResponse } from "pages/api/inbox/count"
 import { callGetInbox, GetInboxData, GetInboxQuery } from "pages/api/inbox/get"
+import { callMarkAsRead, MarkAsReadBody } from "pages/api/inbox/mark-as-read"
 import { QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
+import { keyPredicate, updateQueriesData } from "./util"
 
 // Keys
 
@@ -48,4 +51,26 @@ export function useInboxCount(
     }
   )
   return query
+}
+
+// Mutations
+
+export function useMarkAsRead() {
+  const queryClient = useQueryClient()
+  return useMutation(
+    async (data: MarkAsReadBody) => { return callMarkAsRead(data) },
+    {
+      onSuccess: (data, variables) => {
+        updateQueriesData<GetInboxData>(
+          queryClient,
+          { predicate: keyPredicate(fromGetInboxKey, query => true) },
+          getInboxData => deleteById(getInboxData, variables.subscriptionUpdateId)
+        )
+        updateQueriesData<InboxCountResponse>(
+          queryClient,
+          { predicate: keyPredicate(fromGetInboxCountKey, query => true) },
+          inboxCountResponse => ({ itemCount: inboxCountResponse.itemCount - 1 })
+        )
+      }
+    })
 }

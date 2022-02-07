@@ -1,6 +1,6 @@
-import { Reply, User, Comment } from '@prisma/client'
+import { Reply, User, Comment, SubscriptionUpdate } from '@prisma/client'
 import { prisma } from 'lib/db'
-import { CanSee, canSeeReply, PComment, pCommentSelect, pReplySelect } from 'lib/access'
+import { CanSee, canSeeReply, PComment, pCommentSelect, pReplySelect, unsafeCanSee } from 'lib/access'
 import _ from 'lodash'
 import { filterAsync, filterSync } from 'lib/array'
 
@@ -11,10 +11,10 @@ type Reply_ = Reply & {
 
 // Might be more options later
 export type InboxItem =
-  | { tag: "reply" } & Reply_
+  | { tag: "reply", id: SubscriptionUpdate['id'], reply: Reply_ }
 
 async function getUnreadReplies(userId: User['id']): Promise<(CanSee & InboxItem)[]> {
-  return prisma.subscriptionUpdate.findMany({
+  const items: InboxItem[] = await prisma.subscriptionUpdate.findMany({
     where: {
       subscriberId: userId,
       updateKind: 'suk_reply',
@@ -28,25 +28,25 @@ async function getUnreadReplies(userId: User['id']): Promise<(CanSee & InboxItem
         }
       },
     },
-  }).then(xs => _.compact(xs.map(x => x.reply)))
-    .then(xs => filterSync(xs, (reply): reply is Reply_ & CanSee => canSeeReply(userId, reply)))
-    .then(xs => xs.map(x => ({ ...x, tag: 'reply' })))
+  }).then(xs => filterSync(xs, item => item.reply !== null))
+    .then(xs => filterSync(xs, item => canSeeReply(userId, item.reply!)))
+    .then(xs => xs.map(x => ({ id: x.id, reply: x.reply!, tag: 'reply' })))
+  return items.map(unsafeCanSee)
 }
 
 async function getUnreadRepliesCount(userId: User['id']): Promise<number> {
-  return prisma.subscriptionUpdate.findMany({
+  const items = await prisma.subscriptionUpdate.findMany({
     where: {
       subscriberId: userId,
       updateKind: 'suk_reply',
       isRead: false,
     },
-  }).then(xs => _.compact(xs.map(x => x.replyId)))
-    .then(xs => prisma.reply.findMany({
-      where: { id: { in: xs } },
-      select: pReplySelect,
-    }))
-    .then(xs => filterSync(xs, reply => canSeeReply(userId, reply)))
-    .then(xs => xs.length)
+    include: {
+      reply: { select: pReplySelect }
+    },
+  }).then(xs => filterSync(xs, item => item.reply !== null))
+    .then(xs => filterSync(xs, item => canSeeReply(userId, item.reply!)))
+  return items.length
 }
 
 export async function getInboxItems(userId: User['id']): Promise<(CanSee & InboxItem)[]> {
