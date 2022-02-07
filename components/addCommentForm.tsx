@@ -8,6 +8,7 @@ import { useCreateComment } from 'lib/queries/comments'
 // TODO don't allow posting with empty content
 export function AddCommentForm(props: {
   cardId: Card['id']
+  autoFocus?: boolean
   afterCreate?: () => void
 }) {
   const editorRef = React.useRef<TiptapMethods>(null)
@@ -33,7 +34,7 @@ export function AddCommentForm(props: {
             <Tiptap
               content=""
               onSubmit={formik.handleSubmit}
-              autoFocus
+              autoFocus={props.autoFocus}
               ref={editorRef} />
           </div>
           <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>

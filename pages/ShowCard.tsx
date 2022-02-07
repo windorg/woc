@@ -110,8 +110,10 @@ const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
     </div>
     {card.canEdit && <AddCommentForm cardId={card.id} />}
   </>)
+  // Note: we only use autoFocus for 'normalOrderComments' because for 'reverseOrderComments' it's annoying that the focus always jumps to the end of
+  // the page after loading.
   const normalOrderComments = () => (<>
-    {card.canEdit && <AddCommentForm cardId={card.id} />}
+    {card.canEdit && <AddCommentForm cardId={card.id} autoFocus />}
     <div className="mt-4">
       {renderCommentList(_.concat(pinnedComments, otherComments))}
     </div>
