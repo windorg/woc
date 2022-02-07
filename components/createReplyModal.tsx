@@ -17,6 +17,8 @@ export function CreateReplyModal(props: {
   const createReplyMutation = useCreateReply()
   return (
     <B.Modal
+      backdrop="static"
+      keyboard={false}
       show={props.show}
       onHide={props.onHide}
       onEntered={() => editorRef.current!.focus()}

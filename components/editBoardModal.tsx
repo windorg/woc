@@ -16,6 +16,8 @@ export function EditBoardModal(props: {
   return (
     <B.Modal
       size="lg"
+      backdrop="static"
+      keyboard={false}
       show={props.show}
       onHide={props.onHide}
       onEntered={() => titleInputRef.current!.focus()}
