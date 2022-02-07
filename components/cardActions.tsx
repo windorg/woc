@@ -2,27 +2,34 @@ import { Card } from '@prisma/client'
 import { cardSettings } from '../lib/model-settings'
 import * as B from 'react-bootstrap'
 import React from 'react'
-import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt, BiArchiveOut, BiArchiveIn } from 'react-icons/bi'
+import { BiPencil, BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt, BiArchiveOut, BiArchiveIn } from 'react-icons/bi'
 import copy from 'copy-to-clipboard'
 import styles from './actionMenu.module.scss'
 import { cardRoute } from 'lib/routes'
 import { useUpdateCard, useDeleteCard } from 'lib/queries/cards'
+import { LinkButton } from './linkButton'
+import { UpdateCardBody } from 'pages/api/cards/update'
+
+function ButtonEdit(props: { onEdit }) {
+  return <LinkButton onClick={props.onEdit} icon={<BiPencil />}>Edit</LinkButton>
+}
+
+function ButtonMakePrivate(props: { private, updateCard }) {
+  return (
+    <LinkButton
+      onClick={() => props.updateCard({ private: !props.private })}
+      icon={props.private ? <BiLockOpen /> : <BiLock />}
+    >
+      {props.private ? "Make public" : "Make private"}
+    </LinkButton>
+  )
+}
 
 function MenuCopyLink(props: { card: Card }) {
   return <B.Dropdown.Item
     onClick={() => { copy(`https://windofchange.me${cardRoute(props.card.id)}`) }}>
     <BiShareAlt className="icon" /><span>Copy link</span>
   </B.Dropdown.Item>
-}
-
-function MenuMakePrivate(props: { private, updateCard }) {
-  return (
-    <B.Dropdown.Item onClick={() => props.updateCard({ private: !props.private })}>
-      {props.private
-        ? <><BiLockOpen className="icon" /><span>Make public</span></>
-        : <><BiLock className="icon" /><span>Make private</span></>}
-    </B.Dropdown.Item>
-  )
 }
 
 function MenuArchive(props: { archived, updateCard }) {
@@ -42,14 +49,13 @@ function MenuDelete(props: { deleteCard }) {
   </B.Dropdown.Item>
 }
 
-// "More" button with a B.dropdown
-export function CardMenu(props: {
+// "More" button with a dropdown
+function CardMenu(props: {
   card: Card & { canEdit: boolean }
   afterDelete?: () => void
 }) {
   const { card } = props
   const settings = cardSettings(card)
-  const isPrivate = settings.visibility === 'private'
 
   const updateCardMutation = useUpdateCard()
   const deleteCardMutation = useDeleteCard()
@@ -71,7 +77,6 @@ export function CardMenu(props: {
       <B.Dropdown.Menu className={styles.actionMenu}>
         <MenuCopyLink card={card} />
         {props.card.canEdit && <>
-          <MenuMakePrivate private={isPrivate} updateCard={updateCard} />
           <MenuArchive archived={settings.archived} updateCard={updateCard} />
           <B.Dropdown.Divider />
           <MenuDelete deleteCard={deleteCard} />
@@ -79,5 +84,28 @@ export function CardMenu(props: {
         }
       </B.Dropdown.Menu>
     </B.Dropdown>
+  )
+}
+
+export function CardActions(props: {
+  card: Card & { canEdit: boolean }
+  onEdit: () => void
+  afterDelete?: () => void
+}) {
+  const { card } = props
+  const settings = cardSettings(card)
+  const isPrivate = settings.visibility === 'private'
+
+  const updateCardMutation = useUpdateCard()
+  const updateCard = async (data: Omit<UpdateCardBody, 'cardId'>) => {
+    await updateCardMutation.mutateAsync({ cardId: card.id, ...data })
+  }
+
+  return (
+    <B.Stack direction="horizontal" gap={4}>
+      {card.canEdit && <ButtonEdit onEdit={props.onEdit} />}
+      {card.canEdit && <ButtonMakePrivate private={isPrivate} updateCard={updateCard} />}
+      <CardMenu {...props} />
+    </B.Stack>
   )
 }

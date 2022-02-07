@@ -12,8 +12,7 @@ import { deserialize, serialize } from 'superjson'
 import { getSession } from 'next-auth/react'
 import { CommentComponent, Comment_ } from 'components/commentComponent'
 import { EditCardModal } from 'components/editCardModal'
-import { CardMenu } from 'components/cardMenu'
-import { BiPencil } from 'react-icons/bi'
+import { CardActions } from 'components/cardActions'
 import { useRouter } from 'next/router'
 import { deleteById, filterSync, mapAsync, mergeById, updateById } from 'lib/array'
 import { LinkButton } from 'components/linkButton'
@@ -63,7 +62,7 @@ const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
   const { cardId } = initialProps
 
   const router = useRouter()
-  const [editCardShown, setEditCardShown] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   const cardQuery = useCard({ cardId }, { initialData: initialProps.card })
   const commentsQuery = useComments({ cards: [cardId] }, { initialData: initialProps.comments })
@@ -119,12 +118,6 @@ const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
     </div>
   </>)
 
-  const moreButton = () => (
-    <CardMenu
-      card={card}
-      afterDelete={async () => router.replace(boardRoute(card.boardId))} />
-  )
-
   return (
     <>
       <Head>
@@ -139,29 +132,29 @@ const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
         <CardCrumb card={card} active />
       </B.Breadcrumb>
 
-      <h1 className="mb-4">
+      {card.canEdit &&
+        <EditCardModal
+          card={card}
+          show={editing}
+          onHide={() => setEditing(false)}
+          afterSave={() => setEditing(false)}
+        />
+      }
+
+      <h1>
         {cardSettings(card).archived && <B.Badge bg="secondary" className="me-2">Archived</B.Badge>}
         {isPrivate && "🔒 "}
         {card.title}
-        {card.canEdit &&
-          <EditCardModal
-            card={card}
-            show={editCardShown}
-            onHide={() => setEditCardShown(false)}
-            afterSave={() => setEditCardShown(false)}
-          />
-        }
-        <span
-          className="ms-5"
-          style={{ fontSize: "50%" }}
-        >
-          {card.canEdit && <>
-            <LinkButton onClick={() => setEditCardShown(true)} icon={<BiPencil />}>Edit</LinkButton>
-            <span className="me-3" />
-          </>}
-          {moreButton()}
-        </span>
       </h1>
+
+      <div className="mb-5" style={{ marginTop: "calc(0.9rem + 0.3vw)", fontSize: "calc(0.9rem + 0.3vw)" }}>
+        <CardActions
+          card={card}
+          onEdit={() => setEditing(true)}
+          afterDelete={async () => router.replace(boardRoute(card.boardId))}
+        />
+      </div>
+
       {settings.reverseOrder ? reverseOrderComments() : normalOrderComments()}
     </>
   )
