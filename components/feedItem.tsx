@@ -23,7 +23,7 @@ export function FeedItemComponent(props: { item: FeedItem }) {
           <LinkPreload href={userRoute(author.id)}>
             <a>{author.displayName}</a>
           </LinkPreload>
-          {" — "}{item.card.title}
+          {" "}at ‘{item.card.title}’
         </strong>
         <div>
           <span className="text-muted small">
