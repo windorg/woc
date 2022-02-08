@@ -64,7 +64,7 @@ const ShowInbox: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
 
       {session
         ?
-        <div className={styles.inboxItems}>
+        <div className={`${styles.inboxItems} mb-5`}>
           {_.orderBy(inboxItems, ['createdAt'], ['desc'])
             .map(x => <InboxItemComponent key={x.id} item={x} />)
           }

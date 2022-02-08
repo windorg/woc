@@ -63,7 +63,7 @@ const ShowFeed: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
 
       {session
         ?
-        <div className={styles.feedItems}>
+        <div className={`${styles.feedItems} mb-5`}>
           {_.orderBy(feedItems, ['createdAt'], ['desc'])
             .map(x => <FeedItemComponent key={x.id} item={x} />)
           }
