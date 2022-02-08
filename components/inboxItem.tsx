@@ -39,7 +39,7 @@ export function InboxItemComponent(props: { item: InboxItem }) {
             :
             "[deleted]"
           }
-          {/* TODO show the card title */}
+          {" "}replied at ‘{item.reply.comment.card.title}’
         </strong>
         <div>
           <span className="text-muted small">

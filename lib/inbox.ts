@@ -1,12 +1,13 @@
-import { Reply, User, Comment, SubscriptionUpdate } from '@prisma/client'
+import { Reply, User, Comment, SubscriptionUpdate, Card } from '@prisma/client'
 import { prisma } from 'lib/db'
-import { CanSee, canSeeReply, PComment, pCommentSelect, pReplySelect, unsafeCanSee } from 'lib/access'
+import { CanSee, canSeeReply, pCardSelect, PComment, pCommentSelect, pReplySelect, unsafeCanSee } from 'lib/access'
 import _ from 'lodash'
 import { filterAsync, filterSync } from 'lib/array'
+import { commentRoute } from './routes'
 
 type Reply_ = Reply & {
   author: Pick<User, 'id' | 'email' | 'displayName'> | null
-  comment: Pick<Comment, 'cardId'> & PComment
+  comment: Pick<Comment, 'cardId'> & { card: Pick<Card, 'title'> }
 }
 
 // Might be more options later
@@ -24,13 +25,30 @@ async function getUnreadReplies(userId: User['id']): Promise<(CanSee & InboxItem
       reply: {
         include: {
           author: { select: { id: true, email: true, displayName: true } },
-          comment: { select: { cardId: true, ...pCommentSelect } },
+          comment: {
+            select: {
+              ...pCommentSelect,
+              cardId: true,
+              card: { select: { ...pCardSelect, title: true } }
+            },
+          },
         }
       },
     },
   }).then(xs => filterSync(xs, item => item.reply !== null))
     .then(xs => filterSync(xs, item => canSeeReply(userId, item.reply!)))
-    .then(xs => xs.map(x => ({ id: x.id, reply: x.reply!, tag: 'reply' })))
+    // Throw out extra comment & card fields, add a 'reply' tag
+    .then(xs => xs.map(x => ({
+      tag: 'reply',
+      id: x.id,
+      reply: {
+        ...x.reply!,
+        comment: {
+          cardId: x.reply!.comment.cardId,
+          card: _.pick(x.reply!.comment.card, 'title')
+        }
+      }
+    })))
   return items.map(unsafeCanSee)
 }
 
