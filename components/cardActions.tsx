@@ -3,6 +3,7 @@ import { cardSettings } from '../lib/model-settings'
 import * as B from 'react-bootstrap'
 import React from 'react'
 import { BiPencil, BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt, BiArchiveOut, BiArchiveIn } from 'react-icons/bi'
+import { HiArrowRight } from 'react-icons/hi'
 import copy from 'copy-to-clipboard'
 import styles from './actionMenu.module.scss'
 import { cardRoute } from 'lib/routes'
@@ -32,6 +33,13 @@ function MenuCopyLink(props: { card: Card }) {
   </B.Dropdown.Item>
 }
 
+function MenuMove(props: { onMove }) {
+  return <B.Dropdown.Item
+    onClick={props.onMove}>
+    <HiArrowRight className="icon" /><span>Move to</span>
+  </B.Dropdown.Item>
+}
+
 function MenuArchive(props: { archived, updateCard }) {
   return (
     <B.Dropdown.Item onClick={() => props.updateCard({ archived: !props.archived })}>
@@ -52,6 +60,7 @@ function MenuDelete(props: { deleteCard }) {
 // "More" button with a dropdown
 function CardMenu(props: {
   card: Card & { canEdit: boolean }
+  onMove: () => void
   afterDelete?: () => void
 }) {
   const { card } = props
@@ -77,6 +86,7 @@ function CardMenu(props: {
       <B.Dropdown.Menu className={styles.actionMenu}>
         <MenuCopyLink card={card} />
         {props.card.canEdit && <>
+          <MenuMove onMove={props.onMove} />
           <MenuArchive archived={settings.archived} updateCard={updateCard} />
           <B.Dropdown.Divider />
           <MenuDelete deleteCard={deleteCard} />
@@ -90,6 +100,7 @@ function CardMenu(props: {
 export function CardActions(props: {
   card: Card & { canEdit: boolean }
   onEdit: () => void
+  onMove: () => void
   afterDelete?: () => void
 }) {
   const { card } = props

@@ -8,6 +8,7 @@ import { callDeleteCard, DeleteCardBody } from "pages/api/cards/delete"
 import { keyPredicate, updateQueriesData, updateQueryData } from "./util"
 import { deleteById, mergeById } from "lib/array"
 import { callListCards, ListCardsData, ListCardsQuery } from "pages/api/cards/list"
+import { callMoveCard, MoveCardBody } from "pages/api/cards/move"
 
 // Keys
 
@@ -119,6 +120,32 @@ export function useDeleteCard() {
           queryClient,
           { predicate: keyPredicate(fromListCardsKey, query => true) },
           listCardsData => deleteById(listCardsData, variables.cardId)
+        )
+      }
+    })
+}
+
+export function useMoveCard() {
+  const queryClient = useQueryClient()
+  return useMutation(
+    async (data: MoveCardBody) => { return callMoveCard(data) },
+    {
+      onSuccess: (_void, variables) => {
+        // Update the GetCard query. We don't necessarily have the target board's title etc, so we can't update the card.board field. Instead we just
+        // clear the query entirely.
+        queryClient.removeQueries(
+          getCardKey({ cardId: variables.cardId }),
+          { exact: true }
+        )
+        // Update the ListCards queries: remove the card from all boards & invalidate the queries that include the target board. (Regarding the latter
+        // part — a better way would be to find the card data and insert it into the target board queries, but it's a bit hard.)
+        updateQueriesData<ListCardsData>(
+          queryClient,
+          { predicate: keyPredicate(fromListCardsKey, query => true) },
+          listCardsData => deleteById(listCardsData, variables.cardId)
+        )
+        queryClient.removeQueries(
+          { predicate: keyPredicate(fromListCardsKey, query => query.boards.includes(variables.boardId)) },
         )
       }
     })

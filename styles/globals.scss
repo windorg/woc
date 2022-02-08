@@ -36,9 +36,15 @@ ol.breadcrumb {
   min-width: 0;
 }
 
-/* Highlight things linked to via #anchor in the URL */
+// Highlight things linked to via #anchor in the URL
 .hash-target {
   box-shadow: #ffe988 0px 0px 0px 3px;
+}
+
+// Better search highlighting in react-bootstrap-typeahead
+mark.rbt-highlight-text {
+  padding: 0;
+  font-weight: bold;
 }
 
 .tiptap.small {

@@ -10,17 +10,13 @@ import { canEditCard } from 'lib/access'
 import { CardSettings } from 'lib/model-settings'
 import _ from 'lodash'
 
-interface UpdateCardRequest extends NextApiRequest {
-  body: {
-    cardId: Card['id']
-    title?: Card['title']
-    private?: boolean
-    reverseOrder?: boolean
-    archived?: boolean
-  }
+export type UpdateCardBody = {
+  cardId: Card['id']
+  title?: Card['title']
+  private?: boolean
+  reverseOrder?: boolean
+  archived?: boolean
 }
-
-export type UpdateCardBody = UpdateCardRequest['body']
 
 const schema: Schema<UpdateCardBody> = yup.object({
   cardId: yup.string().uuid().required(),
@@ -34,10 +30,10 @@ const schema: Schema<UpdateCardBody> = yup.object({
 //
 // TODO here and in general we shouldn't return the complete 'settings' object because it might contain things we don't
 // want to expose. Instead we should have a different view type for cards, with settings embedded.
-export default async function updateCard(req: UpdateCardRequest, res: NextApiResponse<Partial<Card>>) {
+export default async function updateCard(req: NextApiRequest, res: NextApiResponse<Partial<Card>>) {
   if (req.method === 'PUT') {
-    const body = schema.validateSync(req.body)
     const session = await getSession({ req })
+    const body = schema.cast(req.body)
     const card = await prisma.card.findUnique({
       where: { id: body.cardId },
       include: { board: { select: { ownerId: true, settings: true } } },

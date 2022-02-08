@@ -26,6 +26,7 @@ import { prefetchCard, useCard } from 'lib/queries/cards'
 import { prefetchComments, useComments } from 'lib/queries/comments'
 import { prefetchReplies, useReplies } from 'lib/queries/replies'
 import { SocialTags } from 'components/socialTags'
+import { MoveCardModal } from 'components/moveCardModal'
 
 type Props = {
   cardId: Card['id']
@@ -64,6 +65,7 @@ const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
 
   const router = useRouter()
   const [editing, setEditing] = useState(false)
+  const [moving, setMoving] = useState(false)
 
   const cardQuery = useCard({ cardId }, { initialData: initialProps.card })
   const commentsQuery = useComments({ cards: [cardId] }, { initialData: initialProps.comments })
@@ -136,13 +138,20 @@ const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
         <CardCrumb card={card} active />
       </B.Breadcrumb>
 
-      {card.canEdit &&
+      {card.canEdit && <>
         <EditCardModal
           card={card}
           show={editing}
           onHide={() => setEditing(false)}
           afterSave={() => setEditing(false)}
         />
+        <MoveCardModal
+          card={card}
+          show={moving}
+          onHide={() => setMoving(false)}
+          afterMove={() => setMoving(false)}
+        />
+      </>
       }
 
       <h1>
@@ -155,6 +164,7 @@ const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
         <CardActions
           card={card}
           onEdit={() => setEditing(true)}
+          onMove={() => setMoving(true)}
           afterDelete={async () => router.replace(boardRoute(card.boardId))}
         />
       </div>

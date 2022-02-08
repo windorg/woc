@@ -12,7 +12,8 @@ import { filterSync } from 'lib/array'
 import { Result, wocQuery, wocResponse } from 'lib/http'
 
 export type ListBoardsQuery = {
-  users?: User['id'][] // as a JSON array
+  // A list of users whose boards should be returned. If empty, will return all available boards.
+  users?: User['id'][]
 }
 
 // TODO: get rid of interface extensions everywhere and use yup.cast instead of yup.validate
