@@ -6,17 +6,22 @@ import { Editor, isNodeSelection, posToDOMRect } from "@tiptap/core"
 type Props = {
   editor: Editor
   open: boolean
+  className?: string
 }
 
 export function TiptapBubbleMenu({
   editor,
   open,
   children,
+  className,
 }: React.PropsWithChildren<Props>) {
+  // NB: without disablePortal it doesn't work in modals
   return (
     <Popper
       open={open}
-      placement="top"
+      placement="top-start"
+      className={className}
+      disablePortal={true}
       modifiers={[
         {
           name: "offset",

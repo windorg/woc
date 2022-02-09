@@ -1,3 +1,7 @@
+.linkDialog {
+  z-index: 10000; // so that it would show above modals
+}
+
 .linkHrefInput {
   min-width: 300px;
   font-size: 90%;

@@ -70,7 +70,7 @@ const LinkWithDialog: Mark<LinkWithDialogOptions> = Link.extend({
 // TODO: move this into the LinkWithDialog extension itself, somehow? It's not nice that all the state is handled by the Tiptap component.
 const LinkDialog = (props: { editor: Editor, open, onHide, hrefValue: string, setHrefValue }) => {
   return (
-    <TiptapBubbleMenu editor={props.editor} open={props.open}>
+    <TiptapBubbleMenu className={styles.linkDialog} editor={props.editor} open={props.open}>
       <input
         type="text"
         className={styles.linkHrefInput}
