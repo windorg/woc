@@ -1,12 +1,15 @@
 import Typography from '@tiptap/extension-typography'
 import { useEditor, EditorContent, Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import Link from '@tiptap/extension-link'
+import Link, { LinkOptions } from '@tiptap/extension-link'
 import { TrailingNode } from 'tiptap/demos/src/Experiments/TrailingNode/Vue/trailing-node'
-import { Extension } from '@tiptap/core'
-import { forwardRef, useImperativeHandle, useRef } from 'react'
+import { Extension, getAttributes, Mark } from '@tiptap/core'
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import React from 'react'
+import { Plugin, PluginKey } from 'prosemirror-state'
 import TurndownService from 'turndown'
+import { TiptapBubbleMenu } from './tiptapBubbleMenu'
+import styles from './tiptap.module.scss'
 
 const turndownService = new TurndownService()
 
@@ -27,6 +30,79 @@ const SubmitShortcut = Extension.create<{ onSubmit: () => void }>({
   }
 })
 
+type LinkWithDialogOptions = Omit<LinkOptions, 'openOnClick'> & {
+  onLinkClick: (attrs: { href: string }) => void
+  onLinkCommand: () => void
+}
+
+const LinkWithDialog: Mark<LinkWithDialogOptions> = Link.extend({
+  addKeyboardShortcuts() {
+    return {
+      'Mod-k': () => { this.options.onLinkCommand(); return true }
+    }
+  },
+  addOptions() {
+    return {
+      ...this.parent?.(),
+      openOnClick: false,
+    }
+  },
+  addProseMirrorPlugins() {
+    const plugins = this.parent ? this.parent() : []
+    plugins.push(new Plugin({
+      key: new PluginKey('handleClickLink'),
+      props: {
+        handleClick: (view, pos, event) => {
+          const attrs = getAttributes(view.state, this.type.name)
+          const link = (event.target as HTMLElement)?.closest('a')
+          if (link && attrs.href) {
+            this.options.onLinkClick({ href: attrs.href })
+            return true
+          }
+          return false
+        },
+      },
+    }))
+    return plugins
+  }
+})
+
+// TODO: move this into the LinkWithDialog extension itself, somehow? It's not nice that all the state is handled by the Tiptap component.
+const LinkDialog = (props: { editor: Editor, open, onHide, hrefValue: string, setHrefValue }) => {
+  return (
+    <TiptapBubbleMenu editor={props.editor} open={props.open}>
+      <input
+        type="text"
+        className={styles.linkHrefInput}
+        value={props.hrefValue}
+        onChange={e => props.setHrefValue(e.target.value)}
+        placeholder='Paste or type a link'
+        autoFocus
+        onBlur={props.onHide}
+        onKeyDown={e => {
+          const href = props.hrefValue.trim()
+          if (e.key === 'Enter') {
+            if (props.editor.isActive('link')) {
+              if (href === '') {
+                props.editor.chain().focus().extendMarkRange('link').unsetLink().run()
+              } else {
+                props.editor.chain().focus().extendMarkRange('link').updateAttributes('link', { href }).run()
+              }
+            } else {
+              props.editor.commands.setLink({ href })
+            }
+            props.setHrefValue('')
+            props.onHide()
+          }
+          if (e.key === 'Escape') {
+            props.setHrefValue('')
+            props.onHide()
+          }
+        }} />
+    </TiptapBubbleMenu>
+  )
+}
+
 export type TiptapMethods = {
   focus: () => void
   blur: () => void
@@ -41,6 +117,8 @@ let Tiptap = forwardRef((props: {
   autoFocus?: boolean
   onSubmit: () => void
 }, ref: React.ForwardedRef<TiptapMethods>) => {
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false)
+  const [linkDialogHref, setLinkDialogHref] = useState('')
   // NB: This rerenders on every keypress, which is apparently a feature:
   // https://github.com/ueberdosis/tiptap/issues/2158#issuecomment-979325997
   const editor = useEditor({
@@ -49,7 +127,13 @@ let Tiptap = forwardRef((props: {
         heading: { levels: [1, 2, 3] }
       }),
       Typography,
-      Link,
+      LinkWithDialog.configure({
+        onLinkCommand: () => setLinkDialogOpen(true),
+        onLinkClick: ({ href }) => {
+          setLinkDialogHref(href)
+          setLinkDialogOpen(true)
+        },
+      }),
       TrailingNode,
       SubmitShortcut.configure({ onSubmit: props.onSubmit }),
     ],
@@ -81,7 +165,20 @@ let Tiptap = forwardRef((props: {
   }))
   if (!editor) return null
   return (
-    <EditorContent editor={editor} />
+    <>
+      <EditorContent editor={editor} />
+      {editor &&
+        <LinkDialog
+          editor={editor}
+          open={linkDialogOpen}
+          onHide={() => {
+            setLinkDialogOpen(false)
+            editor.commands.focus()
+          }}
+          hrefValue={linkDialogHref}
+          setHrefValue={setLinkDialogHref}
+        />}
+    </>
   )
 })
 Tiptap.displayName = 'Tiptap'
