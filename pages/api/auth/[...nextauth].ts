@@ -6,7 +6,8 @@ import { checkPassword } from '../../../lib/password'
 
 export default NextAuth({
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
+    maxAge: 10 * 365 * 24 * 60 * 60, // 10 years
   },
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
