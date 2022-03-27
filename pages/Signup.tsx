@@ -1,25 +1,14 @@
-import type { GetServerSideProps, NextPage } from 'next'
+import type { NextPage } from 'next'
 import Head from 'next/head'
 import * as B from 'react-bootstrap'
-import React, { useState } from 'react'
+import React from 'react'
 import { BoardsCrumb } from '../components/breadcrumbs'
-import Link from 'next/link'
-import { getSession, signIn, signOut, useSession } from 'next-auth/react'
+import { signIn, signOut, useSession } from 'next-auth/react'
 import { SuperJSONResult } from 'superjson/dist/types'
-import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
 import { Formik } from 'formik'
 import { callSignup } from './api/auth/signup'
 import { boardsRoute } from 'lib/routes'
-
-type Props = Record<string, never>
-
-export const getServerSideProps: GetServerSideProps<SuperJSONResult> = async (context) => {
-  const props: Props = {}
-  return {
-    props: serialize(props)
-  }
-}
 
 function SignupForm(props) {
   return (

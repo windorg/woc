@@ -74,6 +74,6 @@ export default async function updateComment(req: UpdateCommentRequest, res: Next
 }
 
 export async function callUpdateComment(body: UpdateCommentBody): Promise<Partial<Comment>> {
-  const { data } = await axios.put('/api/comments/update', body)
+  const { data } = await axios.put(`${process.env.NEXT_PUBLIC_APP_URL}/api/comments/update`, body)
   return wocResponse(data)
 }

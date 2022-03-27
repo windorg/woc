@@ -27,6 +27,7 @@ import { prefetchComments, useComments } from 'lib/queries/comments'
 import { prefetchReplies, useReplies } from 'lib/queries/replies'
 import { SocialTags } from 'components/socialTags'
 import { MoveCardModal } from 'components/moveCardModal'
+import { isNextExport } from 'lib/export'
 
 type Props = {
   cardId: Card['id']
@@ -48,13 +49,15 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   const cardId = context.query.cardId as string
   const props: Props = { cardId }
   if (typeof window === 'undefined') {
-    const session = await getSession(context)
-    await serverGetCard(session, { cardId })
-      .then(result => { if (result.success) props.card = result.data })
-    await serverListComments(session, { cards: [cardId] })
-      .then(result => { if (result.success) props.comments = result.data })
-    await serverListReplies(session, { cards: [cardId] })
-      .then(result => { if (result.success) props.replies = result.data })
+    if (!isNextExport(context)) {
+      const session = await getSession(context)
+      await serverGetCard(session, { cardId })
+        .then(result => { if (result.success) props.card = result.data })
+      await serverListComments(session, { cards: [cardId] })
+        .then(result => { if (result.success) props.comments = result.data })
+      await serverListReplies(session, { cards: [cardId] })
+        .then(result => { if (result.success) props.replies = result.data })
+    }
   }
   return serialize(props)
 }

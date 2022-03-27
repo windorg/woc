@@ -4,7 +4,7 @@ services:
     image: "postgres:alpine"
     container_name: "woc-postgres"
     env_file:
-      - ".env"
+      - ".env.development"
     ports:
       - "3999:5432"
     volumes:

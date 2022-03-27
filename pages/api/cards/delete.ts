@@ -53,5 +53,5 @@ export default async function deleteCard(req: DeleteCardRequest, res: NextApiRes
 }
 
 export async function callDeleteCard(body: DeleteCardBody): Promise<void> {
-  await axios.post('/api/cards/delete', body)
+  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL}/api/cards/delete`, body)
 }

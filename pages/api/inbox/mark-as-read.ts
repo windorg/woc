@@ -45,7 +45,7 @@ export default async function apiMarkAsRead(req: NextApiRequest, res: NextApiRes
 export async function callMarkAsRead(body: MarkAsReadBody): Promise<MarkAsReadData>
 export async function callMarkAsRead(body: MarkAsReadBody, opts: { returnErrors: true }): Promise<MarkAsReadResponse>
 export async function callMarkAsRead(body: MarkAsReadBody, opts?) {
-  const { data: result } = await axios.post('/api/inbox/mark-as-read', body)
+  const { data: result } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL}/api/inbox/mark-as-read`, body)
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
   if (result.error.unauthorized) throw new ResponseError('Unauthorized', result.error)

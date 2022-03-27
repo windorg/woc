@@ -20,6 +20,6 @@ export default async function apiInboxCount(req: NextApiRequest, res: NextApiRes
 }
 
 export async function callInboxCount(): Promise<InboxCountResponse> {
-  const { data } = await axios.get('/api/inbox/count')
+  const { data } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL}/api/inbox/count`)
   return data
 }

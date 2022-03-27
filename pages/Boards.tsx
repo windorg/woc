@@ -1,11 +1,9 @@
-import type { GetServerSideProps, NextPage, NextPageContext } from 'next'
+import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
-import type { Board, User } from '@prisma/client'
 import React from 'react'
 import { BoardsCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
 import { getSession, signIn, useSession } from 'next-auth/react'
-import { CanSee, canSeeBoard, unsafeCanSee } from '../lib/access'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
@@ -14,6 +12,7 @@ import * as B from 'react-bootstrap'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { ListBoardsData, serverListBoards } from './api/boards/list'
 import { prefetchBoards, useBoards } from 'lib/queries/boards'
+import { isNextExport } from 'lib/export'
 
 type Props = {
   boards?: ListBoardsData
@@ -28,9 +27,11 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   // Server-side, we want to fetch the data so that we can SSR the page. Client-side, we assume the data is either
   // already preloaded or will be loaded in the component itself, so we don't fetch anything.
   if (typeof window === 'undefined') {
-    const session = await getSession(context)
-    await serverListBoards(session, {})
-      .then(result => { if (result.success) props.boards = result.data })
+    if (!isNextExport(context)) {
+      const session = await getSession(context)
+      await serverListBoards(session, {})
+        .then(result => { if (result.success) props.boards = result.data })
+    }
   }
   return serialize(props)
 }

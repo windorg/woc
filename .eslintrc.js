@@ -72,6 +72,9 @@ module.exports = {
       }
     ],
     "react/no-unstable-nested-components": ['error'],
-    "react/prop-types": ['off'], // buggy
+    // Buggy
+    "react/prop-types": ['off'],
+    // We don't use next/image on purpose because we want 'next export' to work
+    "@next/next/no-img-element": ['off'],
   }
 }

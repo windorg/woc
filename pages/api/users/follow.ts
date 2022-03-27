@@ -47,5 +47,5 @@ export default async function followUser(req: FollowUserRequest, res: NextApiRes
 }
 
 export async function callFollowUser(body: FollowUserBody): Promise<void> {
-  await axios.post('/api/users/follow', body)
+  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL}/api/users/follow`, body)
 }

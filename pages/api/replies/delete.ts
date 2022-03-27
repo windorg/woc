@@ -51,5 +51,5 @@ export default async function deleteReply(req: DeleteReplyRequest, res: NextApiR
 }
 
 export async function callDeleteReply(body: DeleteReplyBody): Promise<void> {
-  await axios.post('/api/replies/delete', body)
+  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL}/api/replies/delete`, body)
 }

@@ -57,6 +57,6 @@ export default async function createComment(req: CreateCommentRequest, res: Next
 }
 
 export async function callCreateComment(body: CreateCommentBody): Promise<Comment_> {
-  const { data } = await axios.post('/api/comments/create', body)
+  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL}/api/comments/create`, body)
   return wocResponse(data)
 }

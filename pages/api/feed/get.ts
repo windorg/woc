@@ -66,7 +66,7 @@ export default async function apiGetFeed(req: NextApiRequest, res: NextApiRespon
 export async function callGetFeed(query: GetFeedQuery): Promise<GetFeedData>
 export async function callGetFeed(query: GetFeedQuery, opts: { returnErrors: true }): Promise<GetFeedResponse>
 export async function callGetFeed(query: GetFeedQuery, opts?) {
-  const { data: result } = await axios.get('/api/feed/get', { params: wocQuery(query) })
+  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL}/api/feed/get`, { params: wocQuery(query) })
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
   if (result.error.unauthorized) throw new ResponseError('Unauthorized', result.error)
