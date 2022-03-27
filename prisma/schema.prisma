@@ -25,6 +25,7 @@ model Board {
 model Card {
   id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   title               String               @default("")
+  tagline             String               @default("")
   boardId             String               @map("board_id") @db.Uuid
   createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
   settings            Json

@@ -13,9 +13,16 @@ export function CardCard({ card }: { card: Card_ }) {
   return (
     <B.Card className={`mb-2 woc-card ${isPrivate ? "woc-card-private" : ""}`}>
       <B.Card.Body>
-        {isPrivate ? "🔒 " : ""}
-        <LinkPreload href={cardRoute(card.id)}><a className="stretched-link">{card.title}</a></LinkPreload>
-        <B.Badge pill style={{ marginLeft: ".5em" }} bg="secondary">{card._count.comments}</B.Badge>
+        <div>
+          {isPrivate ? "🔒 " : ""}
+          <LinkPreload href={cardRoute(card.id)}><a className="stretched-link">{card.title}</a></LinkPreload>
+          <B.Badge pill style={{ marginLeft: ".5em" }} bg="secondary">{card._count.comments}</B.Badge>
+        </div>
+        {card.tagline &&
+          <div>
+            <span className="text-muted small">{card.tagline}</span>
+          </div>
+        }
       </B.Card.Body>
     </B.Card>
   )

@@ -30,9 +30,18 @@ export function EditCardModal(props: {
       </B.Modal.Header>
       <B.Modal.Body>
         <Formik
-          initialValues={{ title: card.title, reverseOrder: cardSettings(card).reverseOrder }}
+          initialValues={{
+            title: card.title,
+            tagline: card.tagline,
+            reverseOrder: cardSettings(card).reverseOrder,
+          }}
           onSubmit={async (values, formik) => {
-            await updateCardMutation.mutateAsync({ cardId: card.id, ...values })
+            await updateCardMutation.mutateAsync({
+              cardId: card.id,
+              ...values,
+              title: values.title.trim(),
+              tagline: values.tagline.trim(),
+            })
             if (props.afterSave) props.afterSave()
             formik.resetForm()
           }}
@@ -40,9 +49,16 @@ export function EditCardModal(props: {
           {formik => (<>
             <B.Form onSubmit={formik.handleSubmit}>
               <B.Form.Group className="mb-3">
+                <B.Form.Label>Title</B.Form.Label>
                 <B.Form.Control
                   name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
-                  type="text" placeholder="Card title" ref={titleInputRef} />
+                  type="text" ref={titleInputRef} />
+              </B.Form.Group>
+              <B.Form.Group className="mb-3">
+                <B.Form.Label>Tagline</B.Form.Label>
+                <B.Form.Control
+                  name="tagline" id="tagline" value={formik.values.tagline} onChange={formik.handleChange}
+                  type="text" />
               </B.Form.Group>
               <B.Form.Check name="reverseOrder" id="reverseOrder" className="mb-3">
                 <B.Form.Check.Input

@@ -13,6 +13,7 @@ import _ from 'lodash'
 export type UpdateCardBody = {
   cardId: Card['id']
   title?: Card['title']
+  tagline?: Card['tagline']
   private?: boolean
   reverseOrder?: boolean
   archived?: boolean
@@ -21,6 +22,7 @@ export type UpdateCardBody = {
 const schema: Schema<UpdateCardBody> = yup.object({
   cardId: yup.string().uuid().required(),
   title: yup.string(),
+  tagline: yup.string(),
   private: yup.boolean(),
   reverseOrder: yup.boolean(),
   archived: yup.boolean(),
@@ -46,6 +48,9 @@ export default async function updateCard(req: NextApiRequest, res: NextApiRespon
     }
     if (body.title !== undefined) {
       diff.title = body.title
+    }
+    if (body.tagline !== undefined) {
+      diff.tagline = body.tagline
     }
     if (body.private !== undefined) {
       diff.settings.visibility = (body.private ? "private" : "public")

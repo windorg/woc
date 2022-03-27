@@ -128,7 +128,11 @@ const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
       </Head>
       <SocialTags
         title={card.title}
-        description={`by @${card.owner.handle}`}
+        description={
+          card.tagline
+            ? `${card.tagline}\n\n— by @${card.owner.handle}`
+            : `— by @${card.owner.handle}`
+        }
       />
 
       <B.Breadcrumb>
@@ -159,6 +163,12 @@ const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
         {isPrivate && "🔒 "}
         {card.title}
       </h1>
+
+      {card.tagline &&
+        <div>
+          <span className="text-muted">{card.tagline}</span>
+        </div>
+      }
 
       <div className="mb-5" style={{ marginTop: "calc(0.9rem + 0.3vw)", fontSize: "calc(0.9rem + 0.3vw)" }}>
         <CardActions
