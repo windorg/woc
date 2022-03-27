@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Card } from "@prisma/client"
 import { cardRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
+import styles from './cardCard.module.scss'
 
 type Card_ = Card & { _count: { comments: number } }
 
@@ -19,7 +20,7 @@ export function CardCard({ card }: { card: Card_ }) {
           <B.Badge pill style={{ marginLeft: ".5em" }} bg="secondary">{card._count.comments}</B.Badge>
         </div>
         {card.tagline &&
-          <div>
+          <div className={styles.tagline}>
             <span className="text-muted small">{card.tagline}</span>
           </div>
         }
