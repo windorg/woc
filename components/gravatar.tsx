@@ -1,5 +1,4 @@
 import gravatar from 'gravatar'
-import Image from 'next/image'
 
 export function Gravatar(props: {
   email: string
@@ -11,7 +10,7 @@ export function Gravatar(props: {
   )
   const size = props.size === "small" ? "32" : "16"
   return (
-    <Image
+    <img
       className="userpic"
       width={size}
       height={size}

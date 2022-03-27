@@ -1,7 +1,6 @@
 import { signIn, signOut, useSession } from "next-auth/react"
 import { ReactNode, useEffect } from "react"
 import Link from "next/link"
-import Image from 'next/image'
 import * as B from 'react-bootstrap'
 import Head from "next/head"
 import Script from "next/script"
