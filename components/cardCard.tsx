@@ -17,7 +17,7 @@ export function CardCard(props: {
   const dragged = props?.dragged ?? false
   const isPrivate = cardSettings(card).visibility === 'private'
   return (
-    <B.Card className={`mb-2 woc-card ${isPrivate ? "woc-card-private" : ""} ${dragged && styles.dragged}`}>
+    <B.Card className={`mb-2 ${styles.card} woc-card ${isPrivate ? "woc-card-private" : ""} ${dragged && styles.dragged}`}>
       <B.Card.Body>
         <div>
           {isPrivate ? "🔒 " : ""}

@@ -3,6 +3,12 @@
   margin-top: 0.3em;
 }
 
+.card {
+  // Forbid long-click on iOS because it messes with touch drag-and-drop
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
 .dragged {
   a:hover {
     text-decoration: none !important;

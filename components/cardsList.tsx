@@ -1,5 +1,6 @@
 import * as Dnd from "@dnd-kit/core"
 import * as DndSort from "@dnd-kit/sortable"
+import * as DndModifiers from "@dnd-kit/modifiers"
 import { Card } from "@prisma/client"
 import { CardCard } from "./cardCard"
 import { CSS } from '@dnd-kit/utilities'
@@ -21,7 +22,8 @@ export function CardsList(props: {
     }),
     Dnd.useSensor(Dnd.TouchSensor, {
       activationConstraint: {
-        distance: 10,
+        delay: 250,
+        tolerance: 5,
       }
     }),
     Dnd.useSensor(Dnd.KeyboardSensor, {
@@ -56,6 +58,7 @@ export function CardsList(props: {
     return (
       <Dnd.DndContext
         sensors={sensors}
+        modifiers={[DndModifiers.restrictToVerticalAxis]}
         collisionDetection={Dnd.closestCenter}
         measuring={{ droppable: { strategy: Dnd.MeasuringStrategy.Always } }}
         onDragEnd={handleDragEnd}
