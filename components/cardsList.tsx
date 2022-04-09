@@ -84,7 +84,7 @@ function Sortable(props: {
   const style = {
     transform: CSS.Translate.toString(transform),
     zIndex: isDragging ? 999 : 0,
-    position: 'relative' as 'relative',
+    position: 'relative' as const,
     transition,
   }
 
