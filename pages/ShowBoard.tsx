@@ -81,7 +81,7 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
   const isPrivate = boardSettings(board).visibility === 'private'
   const [normalCards, archivedCards] =
     _.partition(
-      sortByIdOrder(cards, board.cardOrder),
+      sortByIdOrder(cards, board.cardOrder, { onMissingElement: 'skip' }),
       card => (!cardSettings(card).archived)
     )
 

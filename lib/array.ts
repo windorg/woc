@@ -62,11 +62,17 @@ export function filterSync<T>(
 // Order elements by their position in an array of ids
 export function sortByIdOrder<T, I>(
   xs: (T & { id: I })[],
-  ids: I[]
+  ids: I[],
+  options: { onMissingElement: 'error' | 'skip' },
 ): (T & { id: I })[] {
-  return ids.map(id => {
+  const result: (T & { id: I })[] = []
+  for (const id of ids) {
     const val = xs.find(x => x.id === id)
-    if (val === undefined) throw new Error(`sortByIdOrder: could not find element with id ${id}`)
-    return val
-  })
+    if (val === undefined) {
+      if (options.onMissingElement === 'error') throw new Error(`sortByIdOrder: could not find element with id ${id}`)
+    } else {
+      result.push(val)
+    }
+  }
+  return result
 }
