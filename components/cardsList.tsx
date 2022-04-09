@@ -11,6 +11,7 @@ type Card_ = Card & { _count: { comments: number } }
 // A list of cards, supporting drag-and-drop
 export function CardsList(props: {
   cards: Card_[]
+  allowEdit: boolean
 }) {
   const sensors = Dnd.useSensors(
     Dnd.useSensor(Dnd.MouseSensor, {
@@ -51,21 +52,29 @@ export function CardsList(props: {
     }
   }
 
-  return (
-    <Dnd.DndContext
-      sensors={sensors}
-      collisionDetection={Dnd.closestCenter}
-      measuring={{ droppable: { strategy: Dnd.MeasuringStrategy.Always } }}
-      onDragEnd={handleDragEnd}
-    >
-      <DndSort.SortableContext
-        items={props.cards}
-        strategy={DndSort.verticalListSortingStrategy}
+  if (props.allowEdit) {
+    return (
+      <Dnd.DndContext
+        sensors={sensors}
+        collisionDetection={Dnd.closestCenter}
+        measuring={{ droppable: { strategy: Dnd.MeasuringStrategy.Always } }}
+        onDragEnd={handleDragEnd}
       >
-        {props.cards.map(card => (<Sortable key={card.id} card={card} />))}
-      </DndSort.SortableContext>
-    </Dnd.DndContext>
-  )
+        <DndSort.SortableContext
+          items={props.cards}
+          strategy={DndSort.verticalListSortingStrategy}
+        >
+          {props.cards.map(card => (<Sortable key={card.id} card={card} />))}
+        </DndSort.SortableContext>
+      </Dnd.DndContext>
+    )
+  } else {
+    return (
+      <>
+        {props.cards.map(card => (<CardCard key={card.id} card={card} />))}
+      </>
+    )
+  }
 }
 
 // https://github.com/clauderic/dnd-kit/discussions/108

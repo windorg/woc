@@ -126,14 +126,18 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
       {board.canEdit && <AddCardForm boardId={board.id} />}
 
       <div style={{ marginTop: "30px" }}>
-        <CardsList cards={normalCards} />
+        <CardsList cards={normalCards} allowEdit={board.canEdit} />
       </div>
       {
         (archivedCards.length > 0) &&
         <B.Accordion className="mt-5">
           <B.Accordion.Item eventKey="0">
-            <B.Accordion.Header><B.Badge bg="secondary">Archived cards</B.Badge></B.Accordion.Header>
-            <B.Accordion.Body>{archivedCards.map(card => (<CardCard key={card.id} card={card} />))}</B.Accordion.Body>
+            <B.Accordion.Header>
+              <B.Badge bg="secondary">Archived cards</B.Badge>
+            </B.Accordion.Header>
+            <B.Accordion.Body>
+              <CardsList cards={archivedCards} allowEdit={board.canEdit} />
+            </B.Accordion.Body>
           </B.Accordion.Item>
         </B.Accordion>
       }
