@@ -6,6 +6,7 @@ import { Schema } from 'yup'
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
 import { canEditCard } from 'lib/access'
+import { filterSync } from 'lib/array'
 
 interface DeleteCardRequest extends NextApiRequest {
   body: {
@@ -34,6 +35,17 @@ export default async function deleteCard(req: DeleteCardRequest, res: NextApiRes
 
     await prisma.card.delete({
       where: { id: body.cardId }
+    })
+    await prisma.$transaction(async prisma => {
+      const { cardOrder } = await prisma.board.findUnique({
+        where: { id: card.boardId },
+        select: { cardOrder: true },
+        rejectOnNotFound: true,
+      })
+      await prisma.board.update({
+        where: { id: card.boardId },
+        data: { cardOrder: filterSync(cardOrder, id => id !== body.cardId) },
+      })
     })
 
     return res.status(204).send()

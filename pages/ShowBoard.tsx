@@ -10,8 +10,6 @@ import _ from 'lodash'
 import { getSession } from 'next-auth/react'
 import { serialize, deserialize } from 'superjson'
 import { SuperJSONResult } from 'superjson/dist/types'
-import { TransitionGroup, CSSTransition } from 'react-transition-group'
-import { EditBoardModal } from 'components/editBoardModal'
 import { BoardActions } from 'components/boardActions'
 import { AddCardForm } from 'components/addCardForm'
 import { useRouter } from 'next/router'
@@ -22,6 +20,9 @@ import { prefetchBoard, useBoard } from 'lib/queries/boards'
 import { ListCardsData, serverListCards } from './api/cards/list'
 import { prefetchCards, useCards } from 'lib/queries/cards'
 import { SocialTags } from 'components/socialTags'
+import { CardsList } from 'components/cardsList'
+import { EditBoardModal } from 'components/editBoardModal'
+import { sortByIdOrder } from 'lib/array'
 
 type Props = {
   boardId: Board['id']
@@ -80,8 +81,9 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
   const isPrivate = boardSettings(board).visibility === 'private'
   const [normalCards, archivedCards] =
     _.partition(
-      _.orderBy(cards, ['createdAt'], ['desc']),
-      card => (!cardSettings(card).archived))
+      sortByIdOrder(cards, board.cardOrder),
+      card => (!cardSettings(card).archived)
+    )
 
   return (
     <>
@@ -124,13 +126,7 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
       {board.canEdit && <AddCardForm boardId={board.id} />}
 
       <div style={{ marginTop: "30px" }}>
-        <TransitionGroup>
-          {normalCards.map(card => (
-            <CSSTransition key={card.id} timeout={350} classNames="woc-card">
-              <CardCard card={card} />
-            </CSSTransition>
-          ))}
-        </TransitionGroup>
+        <CardsList cards={normalCards} />
       </div>
       {
         (archivedCards.length > 0) &&

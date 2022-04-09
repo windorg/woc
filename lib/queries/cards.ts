@@ -9,6 +9,9 @@ import { keyPredicate, updateQueriesData, updateQueryData } from "./util"
 import { deleteById, mergeById } from "lib/array"
 import { callListCards, ListCardsData, ListCardsQuery } from "pages/api/cards/list"
 import { callMoveCard, MoveCardBody } from "pages/api/cards/move"
+import { GetBoardData } from "pages/api/boards/get"
+import { fromGetBoardKey, fromListBoardsKey } from "./boards"
+import { ListBoardsData } from "pages/api/boards/list"
 
 // Keys
 
@@ -102,6 +105,22 @@ export function useCreateCard() {
           queryClient,
           { predicate: keyPredicate(fromListCardsKey, query => query.boards.includes(card.boardId)) },
           listCardsData => [...listCardsData, card_]
+        )
+        // Update the GetBoard query
+        updateQueriesData<GetBoardData>(
+          queryClient,
+          { predicate: keyPredicate(fromGetBoardKey, query => query.boardId === card.boardId) },
+          getBoardData => ({ ...getBoardData, cardOrder: [card.id, ...getBoardData.cardOrder] })
+        )
+        // Update the ListBoards queries
+        updateQueriesData<ListBoardsData>(
+          queryClient,
+          { predicate: keyPredicate(fromListBoardsKey, query => true) },
+          listBoardsData => listBoardsData.map(board =>
+            board.id === card.boardId
+              ? { ...board, cardOrder: [card.id, ...board.cardOrder] }
+              : board
+          )
         )
       }
     })

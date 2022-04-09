@@ -58,3 +58,15 @@ export function filterSync<T>(
   // eslint-disable-next-line no-restricted-syntax
   return array.filter(predicate)
 }
+
+// Order elements by their position in an array of ids
+export function sortByIdOrder<T, I>(
+  xs: (T & { id: I })[],
+  ids: I[]
+): (T & { id: I })[] {
+  return ids.map(id => {
+    const val = xs.find(x => x.id === id)
+    if (val === undefined) throw new Error(`sortByIdOrder: could not find element with id ${id}`)
+    return val
+  })
+}

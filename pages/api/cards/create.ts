@@ -46,6 +46,17 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
         ownerId: board.ownerId,
       }
     })
+    await prisma.$transaction(async prisma => {
+      const { cardOrder } = await prisma.board.findUnique({
+        where: { id: body.boardId },
+        select: { cardOrder: true },
+        rejectOnNotFound: true,
+      })
+      await prisma.board.update({
+        where: { id: body.boardId },
+        data: { cardOrder: [card.id, ...cardOrder] },
+      })
+    })
     return res.status(201).json(card)
   }
 }

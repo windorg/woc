@@ -4,6 +4,7 @@ import { callCreateBoard, CreateBoardBody } from "pages/api/boards/create"
 import { callDeleteBoard, DeleteBoardBody } from "pages/api/boards/delete"
 import { callGetBoard, GetBoardData, GetBoardQuery } from "pages/api/boards/get"
 import { callListBoards, ListBoardsData, ListBoardsQuery } from "pages/api/boards/list"
+import { callReorderCards, ReorderCardsBody } from "pages/api/boards/reorderCards"
 import { UpdateBoardBody, callUpdateBoard } from "pages/api/boards/update"
 import { Query, QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
 import { keyPredicate, updateQueriesData, updateQueryData } from "./util"
@@ -116,6 +117,28 @@ export function useDeleteBoard() {
           queryClient,
           { predicate: keyPredicate(fromListBoardsKey, query => true) },
           listBoardsData => deleteById(listBoardsData, variables.boardId)
+        )
+      }
+    })
+}
+
+export function useReorderCards() {
+  const queryClient = useQueryClient()
+  return useMutation(
+    async (data: ReorderCardsBody) => { return callReorderCards(data) },
+    {
+      onSuccess: ({ cardOrder }, variables) => {
+        // Update the GetBoard query
+        updateQueryData<GetBoardData>(
+          queryClient,
+          getBoardKey({ boardId: variables.boardId }),
+          getBoardData => ({ ...getBoardData, cardOrder })
+        )
+        // Update the ListBoards queries
+        updateQueriesData<ListBoardsData>(
+          queryClient,
+          { predicate: keyPredicate(fromListBoardsKey, query => true) },
+          listBoardsData => mergeById(listBoardsData, unsafeCanSee({ cardOrder, id: variables.boardId }))
         )
       }
     })
