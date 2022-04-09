@@ -4,6 +4,7 @@ import { Card } from "@prisma/client"
 import { CardCard } from "./cardCard"
 import { CSS } from '@dnd-kit/utilities'
 import { useReorderCards } from "lib/queries/boards"
+import { filterSync, insertPosition } from "lib/array"
 
 type Card_ = Card & { _count: { comments: number } }
 
@@ -31,11 +32,21 @@ export function CardsList(props: {
 
   const handleDragEnd = async (event: Dnd.DragEndEvent) => {
     const { active, over } = event
-    if (over && (active.id !== over.id)) {
+    if (!over) return
+    const ids = props.cards.map(x => x.id)
+    // The semantics of 'over' is weird — it's the element before if we're dragging back, and element after
+    // if we're dragging forward. However, I've checked and the index of over == the resulting index in the list.
+    const newIndex = ids.indexOf(over.id)
+    // If we know the resulting index, we can just apply the reordering and then look at before/after. Note: we
+    // can't use 'position' because it ignores archived cards.
+    const newOrder = insertPosition(active.id, filterSync(ids, id => id !== active.id), newIndex)
+    const prev: Card['id'] | undefined = newOrder[newIndex - 1]
+    const next: Card['id'] | undefined = newOrder[newIndex + 1]
+    if (active.id !== over.id) {
       await reorderCardsMutation.mutateAsync({
         boardId: props.cards[0].boardId,
         cardId: active.id,
-        position: props.cards.map(x => x.id).indexOf(over.id),
+        ...(next ? { before: next } : { after: prev })
       })
     }
   }

@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import * as R from 'ramda'
 
 // Delete an element based on the 'id' field
@@ -75,4 +76,19 @@ export function sortByIdOrder<T, I>(
     }
   }
   return result
+}
+
+export const insertPosition = <T>(val: T, order: T[], position: number) => {
+  const pos = _.clamp(position, 0, order.length)
+  return _.concat(_.take(order, pos), [val], _.drop(order, pos))
+}
+
+export const insertBefore = <T>(val: T, order: T[], before: T) => {
+  const anchorIndex = _.findIndex(order, x => x === before)
+  return insertPosition(val, order, (anchorIndex === -1) ? 0 : anchorIndex)
+}
+
+export const insertAfter = <T>(val: T, order: T[], after: T) => {
+  const anchorIndex = _.findIndex(order, x => x === after)
+  return insertPosition(val, order, (anchorIndex === -1) ? order.length : (anchorIndex + 1))
 }

@@ -9,7 +9,7 @@ import { getSession } from 'next-auth/react'
 import { canEditBoard, pBoardSelect } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
-import { filterSync } from 'lib/array'
+import { filterSync, insertAfter, insertBefore, insertPosition } from 'lib/array'
 
 export type ReorderCardsBody = {
   boardId: Board['id']
@@ -45,21 +45,6 @@ export type ReorderCardsData = {
 }
 
 export type ReorderCardsResponse = Result<ReorderCardsData, { unauthorized: true } | { notFound: true }>
-
-const insertPosition = <T>(val: T, order: T[], position: number) => {
-  const pos = _.clamp(position, 0, order.length)
-  return _.concat(_.take(order, pos), [val], _.drop(order, pos))
-}
-
-const insertBefore = <T>(val: T, order: T[], before: T) => {
-  const anchorIndex = _.findIndex(order, x => x === before)
-  return insertPosition(val, order, (anchorIndex === -1) ? 0 : anchorIndex)
-}
-
-const insertAfter = <T>(val: T, order: T[], after: T) => {
-  const anchorIndex = _.findIndex(order, x => x === after)
-  return insertPosition(val, order, (anchorIndex === -1) ? order.length : (anchorIndex + 1))
-}
 
 export async function serverReorderCards(session: Session | null, body: ReorderCardsBody): Promise<ReorderCardsResponse> {
   const userId = session?.userId ?? null
