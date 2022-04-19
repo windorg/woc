@@ -1,6 +1,6 @@
 import { prisma } from './lib/db'
 import { chromium, FullConfig } from '@playwright/test'
-import { createAndSaveUser } from './e2e/util'
+import { createAndSaveUser } from './tests/util'
 
 // Clear the database
 async function resetDatabase() {
@@ -16,6 +16,8 @@ async function resetDatabase() {
 
 async function globalSetup(config: FullConfig) {
   await resetDatabase()
+  // Note: regardless of the chosen browser, we always use Chromium to create users. This isn't a conscious choice, it
+  // just happened and should ideally be fixed.
   const browser = await chromium.launch()
   const page = await browser.newPage({ baseURL: config.projects[0].use.baseURL })
   await createAndSaveUser(page,

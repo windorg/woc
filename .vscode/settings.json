@@ -2,5 +2,7 @@
   "editor.tabSize": 2,
   "editor.detectIndentation": false,
   "typescript.format.semicolons": "remove",
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "editor.wordWrapColumn": 120,
+  "evenBetterToml.formatter.columnWidth": 120
 }

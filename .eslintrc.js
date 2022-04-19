@@ -28,7 +28,16 @@ module.exports = {
     'eqeqeq': ['error', 'always', { null: 'ignore' }],
     'valid-typeof': ["error", { "requireStringLiterals": true }],
     '@typescript-eslint/no-floating-promises': 'error',
-    '@typescript-eslint/no-misused-promises': 'error',
+    '@typescript-eslint/no-misused-promises': [
+      "error",
+      {
+        // See https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/docs/rules/no-misused-promises.md#checksvoidreturn
+        "checksVoidReturn": {
+          "arguments": false,
+          "attributes": false
+        }
+      }
+    ],
     '@typescript-eslint/promise-function-async': 'error',
     '@typescript-eslint/no-unused-vars': ['off'],
     '@typescript-eslint/no-non-null-assertion': ['off'],
