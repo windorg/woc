@@ -46,8 +46,9 @@ jobs:
       run: |
         echo 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' | npx prisma db execute --preview-feature --schema=prisma/schema.prisma --stdin
         npx prisma db push
+    # Note: we always install Chromium because we use it in playwright-setup.ts, but ideally it should be fixed
     - name: Install Playwright
-      run: npx playwright install --with-deps ${{ matrix.browser }}
+      run: npx playwright install --with-deps ${{ matrix.browser }} chromium
     - name: Build the app
       run: npm run build
     # Note: Playwright will start the server by itself, see playwright.config.ts
