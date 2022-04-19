@@ -86,5 +86,11 @@
     "not IE 11",
     "not op_mini all",
     "current node"
-  ]
+  ],
+  "engines": {
+    "node": "14.x"
+  },
+  "volta": {
+    "node": "14.19.1"
+  }
 }
