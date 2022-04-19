@@ -88,9 +88,9 @@
     "current node"
   ],
   "engines": {
-    "node": "14.x"
+    "node": "16.x"
   },
   "volta": {
-    "node": "14.19.1"
+    "node": "16.14.2"
   }
 }
