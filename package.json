@@ -27,7 +27,7 @@
     "lodash": "^4.17.21",
     "module-alias": "^2.2.2",
     "moment": "^2.29.1",
-    "next": "^12.0.4",
+    "next": "12.0.7",
     "next-auth": "^0.0.0-pr.3217.87a21677",
     "prosemirror-commands": "^1.1.12",
     "prosemirror-dropcursor": "^1.4.0",
@@ -58,7 +58,7 @@
     "yup": "^1.0.0-beta.2"
   },
   "devDependencies": {
-    "@next/eslint-plugin-next": "^12.0.7",
+    "@next/eslint-plugin-next": "12.0.7",
     "@playwright/test": "^1.21.1",
     "@types/commonmark": "^0.27.5",
     "@types/gravatar": "^1.8.3",
