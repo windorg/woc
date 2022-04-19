@@ -1,6 +1,6 @@
 import { prisma } from './lib/db'
 import { chromium, FullConfig } from '@playwright/test'
-import { createAndSaveUser } from './e2e/util'
+import { createAndSaveUser } from './tests/util'
 
 // Clear the database
 async function resetDatabase() {
