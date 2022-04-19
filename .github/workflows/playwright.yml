@@ -38,7 +38,9 @@ jobs:
     - name: Install dependencies
       run: npm ci
     - name: Create DB tables
-      run: npx prisma db push
+      run: |
+        echo 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' | npx prisma db execute --preview-feature --schema=prisma/schema.prisma --stdin
+        npx prisma db push
     - name: Install Playwright
       run: npx playwright install --with-deps
     - name: Build the app
