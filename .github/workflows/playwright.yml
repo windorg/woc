@@ -7,8 +7,13 @@ on:
 
 jobs:
   test:
+    name: ${{ matrix.browser }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
 
     services:
       postgres:
@@ -42,12 +47,12 @@ jobs:
         echo 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' | npx prisma db execute --preview-feature --schema=prisma/schema.prisma --stdin
         npx prisma db push
     - name: Install Playwright
-      run: npx playwright install --with-deps
+      run: npx playwright install --with-deps ${{ matrix.browser }}
     - name: Build the app
       run: npm run build
     # Note: Playwright will start the server by itself, see playwright.config.ts
     - name: Run Playwright tests
-      run: npx playwright test
+      run: npx playwright test --browser ${{ matrix.browser }}
     - uses: actions/upload-artifact@v2
       if: always()
       with:
