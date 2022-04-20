@@ -73,6 +73,6 @@ export default async function updateCard(req: NextApiRequest, res: NextApiRespon
 }
 
 export async function callUpdateCard(body: UpdateCardBody): Promise<Partial<Card>> {
-  const { data } = await axios.put(`${process.env.NEXT_PUBLIC_APP_URL}/api/cards/update`, body)
+  const { data } = await axios.put(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/update`, body)
   return wocResponse(data)
 }

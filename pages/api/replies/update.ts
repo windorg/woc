@@ -74,6 +74,6 @@ export default async function updateReply(req: UpdateReplyRequest, res: NextApiR
 }
 
 export async function callUpdateReply(body: UpdateReplyBody): Promise<Partial<Reply>> {
-  const { data } = await axios.put(`${process.env.NEXT_PUBLIC_APP_URL}/api/replies/update`, body)
+  const { data } = await axios.put(`${process.env.NEXT_PUBLIC_APP_URL!}/api/replies/update`, body)
   return wocResponse(data)
 }

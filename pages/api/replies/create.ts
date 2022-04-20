@@ -154,6 +154,6 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
 }
 
 export async function callCreateReply(body: CreateReplyBody): Promise<ReplyResponse> {
-  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL}/api/replies/create`, body)
+  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/replies/create`, body)
   return wocResponse(data)
 }

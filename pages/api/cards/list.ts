@@ -56,7 +56,7 @@ export default async function apiListCards(req: NextApiRequest, res: NextApiResp
 export async function callListCards(query: ListCardsQuery): Promise<ListCardsData>
 export async function callListCards(query: ListCardsQuery, opts: { returnErrors: true }): Promise<ListCardsResponse>
 export async function callListCards(query, opts?) {
-  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL}/api/cards/list`, { params: wocQuery(query) })
+  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/list`, { params: wocQuery(query) })
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
 }

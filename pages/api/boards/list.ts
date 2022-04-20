@@ -55,7 +55,7 @@ export default async function apiListBoards(req: NextApiRequest, res: NextApiRes
 export async function callListBoards(query: ListBoardsQuery): Promise<ListBoardsData>
 export async function callListBoards(query: ListBoardsQuery, opts: { returnErrors: true }): Promise<ListBoardsResponse>
 export async function callListBoards(query, opts?) {
-  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL}/api/boards/list`, { params: wocQuery(query) })
+  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/boards/list`, { params: wocQuery(query) })
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
 }

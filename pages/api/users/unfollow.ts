@@ -37,5 +37,5 @@ export default async function unfollowUser(req: UnfollowUserRequest, res: NextAp
 }
 
 export async function callUnfollowUser(body: UnfollowUserBody): Promise<void> {
-  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL}/api/users/unfollow`, body)
+  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/users/unfollow`, body)
 }

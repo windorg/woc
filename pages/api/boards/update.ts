@@ -61,6 +61,6 @@ export default async function updateBoard(req: UpdateBoardRequest, res: NextApiR
 }
 
 export async function callUpdateBoard(body: UpdateBoardBody): Promise<Partial<Board>> {
-  const { data } = await axios.put(`${process.env.NEXT_PUBLIC_APP_URL}/api/boards/update`, body)
+  const { data } = await axios.put(`${process.env.NEXT_PUBLIC_APP_URL!}/api/boards/update`, body)
   return wocResponse(data)
 }

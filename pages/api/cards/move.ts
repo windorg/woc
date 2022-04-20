@@ -54,7 +54,7 @@ export default async function apiMoveCard(req: NextApiRequest, res: NextApiRespo
 export async function callMoveCard(body: MoveCardBody): Promise<MoveCardData>
 export async function callMoveCard(body: MoveCardBody, opts: { returnErrors: true }): Promise<MoveCardResponse>
 export async function callMoveCard(body: MoveCardBody, opts?) {
-  const { data: result } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL}/api/cards/move`, body)
+  const { data: result } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/move`, body)
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
   if (result.error.unauthorized) throw new ResponseError('Unauthorized', result.error)

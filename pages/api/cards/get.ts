@@ -63,7 +63,7 @@ export default async function apiGetCard(req: NextApiRequest, res: NextApiRespon
 export async function callGetCard(query: GetCardQuery): Promise<GetCardData>
 export async function callGetCard(query: GetCardQuery, opts: { returnErrors: true }): Promise<GetCardResponse>
 export async function callGetCard(query: GetCardQuery, opts?) {
-  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL}/api/cards/get`, { params: wocQuery(query) })
+  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/get`, { params: wocQuery(query) })
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
   if (result.error.notFound) throw new ResponseError('Card not found', result.error)

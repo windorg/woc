@@ -60,7 +60,7 @@ export default async function apiGetUser(req: NextApiRequest, res: NextApiRespon
 export async function callGetUser(query: GetUserQuery): Promise<GetUserData>
 export async function callGetUser(query: GetUserQuery, opts: { returnErrors: true }): Promise<GetUserResponse>
 export async function callGetUser(query, opts?) {
-  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL}/api/users/get`, { params: wocQuery(query) })
+  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/users/get`, { params: wocQuery(query) })
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
   if (result.error.notFound) throw new ResponseError('User not found', result.error)

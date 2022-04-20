@@ -46,5 +46,5 @@ export default async function deleteComment(req: DeleteCommentRequest, res: Next
 }
 
 export async function callDeleteComment(body: DeleteCommentBody): Promise<void> {
-  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL}/api/comments/delete`, body)
+  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/comments/delete`, body)
 }

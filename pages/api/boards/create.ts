@@ -49,6 +49,6 @@ export default async function createBoard(req: CreateBoardRequest, res: NextApiR
 }
 
 export async function callCreateBoard(body: CreateBoardBody): Promise<Board_> {
-  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL}/api/boards/create`, body)
+  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/boards/create`, body)
   return wocResponse(data)
 }
