@@ -18,7 +18,7 @@ jobs:
     services:
       postgres:
         image: postgres:latest
-        # Same as in .env.dev
+        # Same as in .env.development
         env:
           POSTGRES_PASSWORD: password
           POSTGRES_USER: user
@@ -38,8 +38,8 @@ jobs:
     - uses: actions/setup-node@v2
       with:
         node-version: '16.x' # Same as in package.json
-    - name: Use .env.dev
-      run: ln -s .env.dev .env
+    - name: Use .env.development
+      run: ln -s .env.development .env
     - name: Install dependencies
       run: npm ci
     - name: Create DB tables
