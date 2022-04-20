@@ -70,6 +70,7 @@ export function sortByIdOrder<T, I>(
   for (const id of ids) {
     const val = xs.find(x => x.id === id)
     if (val === undefined) {
+      // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       if (options.onMissingElement === 'error') throw new Error(`sortByIdOrder: could not find element with id ${id}`)
     } else {
       result.push(val)

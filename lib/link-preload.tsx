@@ -397,6 +397,7 @@ export function LinkPreload(props: React.PropsWithChildren<LinkPreloadProps>) {
       child = React.Children.only(children)
     } catch (err) {
       throw new Error(
+        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         `Multiple children were passed to <Link> with \`href\` of \`${props.href}\` but only one child is supported https://nextjs.org/docs/messages/link-multiple-children` +
         (typeof window !== 'undefined'
           ? " \nOpen your browser's console to view the Component stack trace."
