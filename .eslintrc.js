@@ -27,6 +27,12 @@ module.exports = {
     'default-case': ['error', { commentPattern: '^no default$' }],
     'eqeqeq': ['error', 'always', { null: 'ignore' }],
     'valid-typeof': ["error", { "requireStringLiterals": true }],
+    '@typescript-eslint/restrict-template-expressions': [
+      'error',
+      {
+        "allowNumber": true,
+      }
+    ],
     '@typescript-eslint/no-floating-promises': 'error',
     '@typescript-eslint/no-misused-promises': [
       "error",
@@ -66,6 +72,9 @@ module.exports = {
       }
     ],
     "react/no-unstable-nested-components": ['error'],
-    "react/prop-types": ['off'], // buggy
+    // Buggy
+    "react/prop-types": ['off'],
+    // We don't use next/image on purpose because we want 'next export' to work
+    "@next/next/no-img-element": ['off'],
   }
 }

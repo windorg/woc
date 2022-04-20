@@ -1,25 +1,14 @@
-import type { GetServerSideProps, NextPage } from 'next'
+import type { NextPage } from 'next'
 import Head from 'next/head'
 import React from 'react'
-import { getSession } from 'next-auth/react'
-import _ from 'lodash'
 import { boardsRoute } from 'lib/routes'
-
-export const getServerSideProps: GetServerSideProps = async (context) => {
-  const include = { owner: { select: { handle: true, displayName: true } } }
-  const session = await getSession(context)
-  if (session) {
-    return { redirect: { permanent: false, destination: boardsRoute() } }
-  } else {
-    return { props: {} }
-  }
-}
 
 const Index: NextPage = (props) => {
   return (
     <>
       <Head>
         <title>WOC</title>
+        <meta httpEquiv="refresh" content={`0; URL='${boardsRoute()}'`} />
       </Head>
     </>
   )

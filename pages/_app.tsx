@@ -11,6 +11,7 @@ import { Session } from 'next-auth'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { ReactQueryDevtools } from 'react-query/devtools'
 import React from 'react'
+import { isNextExport } from '../lib/export'
 
 TimeAgo.setDefaultLocale(en.locale)
 TimeAgo.addLocale(en)
@@ -39,9 +40,10 @@ function MyApp(props) {
 MyApp.getInitialProps = async (appContext: AppContext) => {
   let session: Session | null | undefined = undefined
   // getSession works both server-side and client-side but we want to avoid any calls to /api/auth/session
-  // on page navigation, so we only call it server-side.
-  if (typeof window === 'undefined')
-    session = await getSession(appContext.ctx)
+  // on page navigation, so we only call it server-side. We also can't call 'getSession' during 'next export'.
+  if (typeof window === 'undefined') {
+    if (!isNextExport(appContext.ctx)) session = await getSession(appContext.ctx)
+  }
   const appProps = await App.getInitialProps(appContext)
   return { ...appProps, ...((session !== undefined) ? { session } : {}) }
 }

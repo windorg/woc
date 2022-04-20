@@ -15,6 +15,7 @@ import { GetUserData, serverGetUser } from './api/users/get'
 import { ListBoardsData, serverListBoards } from './api/boards/list'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { SocialTags } from 'components/socialTags'
+import { isNextExport } from 'lib/export'
 
 type Props = {
   userId: User['id']
@@ -34,11 +35,13 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   const userId = context.query.userId as string
   const props: Props = { userId }
   if (typeof window === 'undefined') {
-    const session = await getSession(context)
-    await serverGetUser(session, { userId })
-      .then(result => { if (result.success) props.user = result.data })
-    await serverListBoards(session, { users: [userId] })
-      .then(result => { if (result.success) props.boards = result.data })
+    if (!isNextExport(context)) {
+      const session = await getSession(context)
+      await serverGetUser(session, { userId })
+        .then(result => { if (result.success) props.user = result.data })
+      await serverListBoards(session, { users: [userId] })
+        .then(result => { if (result.success) props.boards = result.data })
+    }
   }
   return serialize(props)
 }

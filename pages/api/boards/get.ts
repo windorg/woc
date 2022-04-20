@@ -61,7 +61,7 @@ export default async function apiGetBoard(req: NextApiRequest, res: NextApiRespo
 export async function callGetBoard(query: GetBoardQuery): Promise<GetBoardData>
 export async function callGetBoard(query: GetBoardQuery, opts: { returnErrors: true }): Promise<GetBoardResponse>
 export async function callGetBoard(query: GetBoardQuery, opts?) {
-  const { data: result } = await axios.get('/api/boards/get', { params: wocQuery(query) })
+  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/boards/get`, { params: wocQuery(query) })
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
   if (result.error.notFound) throw new ResponseError('Board not found', result.error)

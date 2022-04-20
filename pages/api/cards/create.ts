@@ -62,6 +62,6 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
 }
 
 export async function callCreateCard(body: CreateCardBody): Promise<Card> {
-  const { data } = await axios.post('/api/cards/create', body)
+  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/create`, body)
   return wocResponse(data)
 }

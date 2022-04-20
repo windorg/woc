@@ -35,7 +35,7 @@ export default async function apiGetInbox(req: NextApiRequest, res: NextApiRespo
 export async function callGetInbox(query: GetInboxQuery): Promise<GetInboxData>
 export async function callGetInbox(query: GetInboxQuery, opts: { returnErrors: true }): Promise<GetInboxResponse>
 export async function callGetInbox(query: GetInboxQuery, opts?) {
-  const { data: result } = await axios.get('/api/inbox/get', { params: wocQuery(query) })
+  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/inbox/get`, { params: wocQuery(query) })
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
   if (result.error.unauthorized) throw new ResponseError('Unauthorized', result.error)

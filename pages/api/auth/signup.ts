@@ -66,7 +66,7 @@ export default async function signup(req: SignupRequest, res: NextApiResponse<Si
 export async function callSignup(body: SignupBody): Promise<SignupData>
 export async function callSignup(body: SignupBody, opts: { returnErrors: true }): Promise<SignupResponse>
 export async function callSignup(body: SignupBody, opts?) {
-  const { data: result } = await axios.post<SignupResponse>('/api/auth/signup', body)
+  const { data: result } = await axios.post<SignupResponse>(`${process.env.NEXT_PUBLIC_APP_URL!}/api/auth/signup`, body)
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
   if (result.error) throw new ResponseError('Signup error', result.error)

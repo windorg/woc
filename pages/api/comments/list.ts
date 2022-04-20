@@ -53,7 +53,7 @@ export default async function apiListComments(req: NextApiRequest, res: NextApiR
 export async function callListComments(query: ListCommentsQuery): Promise<ListCommentsData>
 export async function callListComments(query: ListCommentsQuery, opts: { returnErrors: true }): Promise<ListCommentsResponse>
 export async function callListComments(query, opts?) {
-  const { data: result } = await axios.get('/api/comments/list', { params: wocQuery(query) })
+  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/comments/list`, { params: wocQuery(query) })
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
 }

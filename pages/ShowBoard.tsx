@@ -23,6 +23,7 @@ import { SocialTags } from 'components/socialTags'
 import { CardsList } from 'components/cardsList'
 import { EditBoardModal } from 'components/editBoardModal'
 import { sortByIdOrder } from 'lib/array'
+import { isNextExport } from 'lib/export'
 
 type Props = {
   boardId: Board['id']
@@ -46,11 +47,13 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   // Server-side, we want to fetch the data so that we can SSR the page. Client-side, we assume the data is either
   // already preloaded or will be loaded in the component itself, so we don't fetch the board.
   if (typeof window === 'undefined') {
-    const session = await getSession(context)
-    await serverGetBoard(session, { boardId })
-      .then(result => { if (result.success) props.board = result.data })
-    await serverListCards(session, { boards: [boardId] })
-      .then(result => { if (result.success) props.cards = result.data })
+    if (!isNextExport(context)) {
+      const session = await getSession(context)
+      await serverGetBoard(session, { boardId })
+        .then(result => { if (result.success) props.board = result.data })
+      await serverListCards(session, { boards: [boardId] })
+        .then(result => { if (result.success) props.cards = result.data })
+    }
   }
   return serialize(props)
 }

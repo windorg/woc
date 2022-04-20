@@ -15,6 +15,7 @@ import { signIn } from "next-auth/react"
 import { FeedItem, serverGetFeed } from './api/feed/get'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { prefetchFeed, useFeed } from 'lib/queries/feed'
+import { isNextExport } from 'lib/export'
 
 type Props = {
   feedItems?: (CanSee & FeedItem)[]
@@ -29,9 +30,11 @@ async function preload(context: PreloadContext): Promise<void> {
 async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
   const props: Props = {}
   if (typeof window === 'undefined') {
-    const session = await getSession(context)
-    await serverGetFeed(session, { days: 3 })
-      .then(result => { if (result.success) props.feedItems = result.data })
+    if (!isNextExport(context)) {
+      const session = await getSession(context)
+      await serverGetFeed(session, { days: 3 })
+        .then(result => { if (result.success) props.feedItems = result.data })
+    }
   }
   return serialize(props)
 }

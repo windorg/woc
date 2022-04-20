@@ -16,6 +16,7 @@ import { CanSee } from 'lib/access'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { prefetchInbox, useInbox } from 'lib/queries/inbox'
 import { serverGetInbox } from './api/inbox/get'
+import { isNextExport } from 'lib/export'
 
 type Props = {
   inboxItems?: (CanSee & InboxItem)[]
@@ -30,9 +31,11 @@ async function preload(context: PreloadContext): Promise<void> {
 async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
   const props: Props = {}
   if (typeof window === 'undefined') {
-    const session = await getSession(context)
-    await serverGetInbox(session, {})
-      .then(result => { if (result.success) props.inboxItems = result.data })
+    if (!isNextExport(context)) {
+      const session = await getSession(context)
+      await serverGetInbox(session, {})
+        .then(result => { if (result.success) props.inboxItems = result.data })
+    }
   }
   return serialize(props)
 }
