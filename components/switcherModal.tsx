@@ -36,7 +36,6 @@ function FilterBox<Item>(props: {
 
   const handleMouseEnter = (index: number) => () => {
     if (!isNavigating) {
-      console.log('mouse enter', index)
       setActiveItemIndex(index)
     }
   }
@@ -48,7 +47,6 @@ function FilterBox<Item>(props: {
         event.preventDefault()
         setIsNavigating(true)
         const newIndex = (activeItemIndex + length + 1) % length
-        console.log('down', newIndex)
         setActiveItemIndex(newIndex)
         if (filteredItems[newIndex]) {
           scrollIntoView(
@@ -65,7 +63,6 @@ function FilterBox<Item>(props: {
         setIsNavigating(true)
         const newIndex = (activeItemIndex + length - 1) % length
         setActiveItemIndex(newIndex)
-        console.log('up', newIndex)
         if (filteredItems[newIndex]) {
           scrollIntoView(
             filteredItems[newIndex].ref.current!,
