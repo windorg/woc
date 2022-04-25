@@ -10,6 +10,7 @@ import { cardRoute } from 'lib/routes'
 import { useRouter } from 'next/router'
 import { LinkPreload } from 'lib/link-preload'
 import styles from './switcherModal.module.scss'
+import scrollIntoView from 'scroll-into-view-if-needed'
 
 // Note: we can't use forwardRef, see https://stackoverflow.com/questions/58469229/react-with-typescript-generics-while-using-react-forwardref/58473012
 
@@ -25,20 +26,54 @@ function FilterBox<Item>(props: {
   searchInputRef?: React.RefObject<HTMLInputElement>
 }) {
   const [searchText, setSearchText] = React.useState('')
-  const filteredItems = !(_.isUndefined(props.items)) ? filterSync(props.items, item => props.match(searchText, item)) : []
+  const filteredItems =
+    (!(_.isUndefined(props.items)) ? filterSync(props.items, item => props.match(searchText, item)) : [])
+      .map(item => ({ ...item, ref: React.createRef<HTMLAnchorElement>() }))
   const [activeItemIndex, setActiveItemIndex] = React.useState(0)
+  // Don't allow mouse events when we are navigating with the keyboard
+  const [isNavigating, setIsNavigating] = React.useState(false)
+  const [latestTimeout, setLatestTimeout] = React.useState<null | NodeJS.Timeout>(null)
+
+  const handleMouseEnter = (index: number) => () => {
+    if (!isNavigating) {
+      console.log('mouse enter', index)
+      setActiveItemIndex(index)
+    }
+  }
 
   const handleKeyDown: KeyboardEventHandler = (event) => {
     const length = Math.max(1, filteredItems.length) // "max 1" because we can't divide by zero
     switch (event.key) {
       case Key.ArrowDown: {
         event.preventDefault()
-        setActiveItemIndex((activeItemIndex + length + 1) % length)
+        setIsNavigating(true)
+        const newIndex = (activeItemIndex + length + 1) % length
+        console.log('down', newIndex)
+        setActiveItemIndex(newIndex)
+        if (filteredItems[newIndex]) {
+          scrollIntoView(
+            filteredItems[newIndex].ref.current!,
+            { scrollMode: 'if-needed', block: 'nearest', inline: 'nearest' },
+          )
+        }
+        if (latestTimeout) clearTimeout(latestTimeout)
+        setLatestTimeout(setTimeout(() => setIsNavigating(false), 100))
         break
       }
       case Key.ArrowUp: {
         event.preventDefault()
-        setActiveItemIndex((activeItemIndex + length - 1) % length)
+        setIsNavigating(true)
+        const newIndex = (activeItemIndex + length - 1) % length
+        setActiveItemIndex(newIndex)
+        console.log('up', newIndex)
+        if (filteredItems[newIndex]) {
+          scrollIntoView(
+            filteredItems[newIndex].ref.current!,
+            { scrollMode: 'if-needed', block: 'nearest', inline: 'nearest' },
+          )
+        }
+        if (latestTimeout) clearTimeout(latestTimeout)
+        setLatestTimeout(setTimeout(() => setIsNavigating(false), 100))
         break
       }
       case Key.Enter: {
@@ -69,8 +104,9 @@ function FilterBox<Item>(props: {
                 className={styles.itemWrapper}
                 key={index}
                 active={index === activeItemIndex}
-                onMouseEnter={() => setActiveItemIndex(index)}
+                onMouseEnter={handleMouseEnter(index)}
                 onClick={() => props.onSelect(item)}
+                ref={item.ref}
               >
                 {props.renderItem(item)}
               </B.ListGroupItem>
