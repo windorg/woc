@@ -106,10 +106,12 @@ function Switcher() {
     }
   )
   return (
-    session && <SwitcherModal
-      show={switcherShown}
-      onHide={() => setSwitcherShown(false)}
-    />
+    session
+      ? <SwitcherModal
+        show={switcherShown}
+        onHide={() => setSwitcherShown(false)}
+      />
+      : null
   )
 }
 
