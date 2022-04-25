@@ -1,5 +1,5 @@
 import { signIn, signOut, useSession } from "next-auth/react"
-import { ReactNode, useEffect } from "react"
+import { ReactNode, useEffect, useState } from "react"
 import Link from "next/link"
 import * as B from 'react-bootstrap'
 import Head from "next/head"
@@ -7,6 +7,8 @@ import Script from "next/script"
 import { useInboxCount } from "lib/queries/inbox"
 import { feedRoute, inboxRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
+import { useHotkeys } from "react-hotkeys-hook"
+import { SwitcherModal } from "./switcherModal"
 
 function ChangelogButton() {
   const headwayConfig = {
@@ -88,6 +90,31 @@ function NavHeader() {
   )
 }
 
+function Switcher() {
+  const [switcherShown, setSwitcherShown] = useState(false)
+  const session = useSession().data
+  useHotkeys(
+    'ctrl+k, command+k',
+    () => {
+      if (!switcherShown) {
+        setSwitcherShown(true)
+      }
+    },
+    {
+      enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'],
+      enableOnContentEditable: true,
+    }
+  )
+  return (
+    session
+      ? <SwitcherModal
+        show={switcherShown}
+        onHide={() => setSwitcherShown(false)}
+      />
+      : null
+  )
+}
+
 type Props = {
   children?: ReactNode | undefined
 }
@@ -113,6 +140,7 @@ function Layout(props: Props): JSX.Element {
       <div id="layout">
         <div className="container mt-4">
           <NavHeader />
+          <Switcher />
           {props.children}
         </div>
         <footer className="container py-4">

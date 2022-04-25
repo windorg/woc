@@ -56,7 +56,10 @@ export function useCard(
 
 export function useCards(
   query: ListCardsQuery,
-  options?: { initialData?: ListCardsData }
+  options?: {
+    initialData?: ListCardsData
+    enabled?: boolean
+  }
 ) {
   return useQuery(
     listCardsKey(query),
@@ -65,6 +68,7 @@ export function useCards(
       cacheTime: Infinity,
       staleTime: Infinity,
       initialData: options?.initialData,
+      enabled: options?.enabled,
     }
   )
 }

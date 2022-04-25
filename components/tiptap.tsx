@@ -38,7 +38,7 @@ type LinkWithDialogOptions = Omit<LinkOptions, 'openOnClick'> & {
 const LinkWithDialog: Mark<LinkWithDialogOptions> = Link.extend({
   addKeyboardShortcuts() {
     return {
-      'Mod-k': () => { this.options.onLinkCommand(); return true }
+      'Mod-u': () => { this.options.onLinkCommand(); return true }
     }
   },
   addOptions() {
