@@ -8,9 +8,9 @@ import { filterSync } from 'lib/array'
 import _ from 'lodash'
 import { cardRoute } from 'lib/routes'
 import { useRouter } from 'next/router'
-import { LinkPreload } from 'lib/link-preload'
 import styles from './switcherModal.module.scss'
 import scrollIntoView from 'scroll-into-view-if-needed'
+import Link from 'next/link'
 
 // Note: we can't use forwardRef, see https://stackoverflow.com/questions/58469229/react-with-typescript-generics-while-using-react-forwardref/58473012
 
@@ -148,7 +148,7 @@ export function SwitcherModal(props: {
           }
           match={(text, card) => card.title.toLowerCase().includes(text.toLowerCase())}
           renderItem={card => (
-            <LinkPreload href={cardRoute(card.id)}><span>{card.title}</span></LinkPreload>
+            <span>{card.title}</span>
           )}
           onSelect={async card => {
             props.onHide()
