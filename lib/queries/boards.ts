@@ -52,7 +52,10 @@ export function useBoard(
 
 export function useBoards(
   query: ListBoardsQuery,
-  options?: { initialData?: ListBoardsData }
+  options?: {
+    initialData?: ListBoardsData
+    enabled?: boolean
+  }
 ) {
   return useQuery(
     listBoardsKey(query),
@@ -61,6 +64,7 @@ export function useBoards(
       cacheTime: Infinity,
       staleTime: Infinity,
       initialData: options?.initialData,
+      enabled: options?.enabled,
     }
   )
 }
