@@ -38,7 +38,8 @@ export default async function createBoard(req: CreateBoardRequest, res: NextApiR
         title: body.title.trim(),
         settings,
         // TODO will this fail loudly if the user doesn't exist (but the session is still alive)?
-        ownerId: session.userId
+        ownerId: session.userId,
+        cardOrder: [],
       },
       include: {
         owner: { select: { handle: true, displayName: true } }

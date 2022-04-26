@@ -113,14 +113,16 @@ model SubscriptionUpdate {
 }
 
 model User {
-  id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  email               String               @unique
-  handle              String               @unique
-  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
-  displayName         String               @map("display_name")
-  passwordHash        String               @map("password_hash")
-  lockedAt            DateTime?            @map("locked_at") @db.Timestamptz(6)
-  failedLoginAttempts Int                  @default(0) @map("failed_login_attempts")
+  id                  String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email               String    @unique
+  handle              String    @unique
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  displayName         String    @map("display_name")
+  passwordHash        String    @map("password_hash")
+  lockedAt            DateTime? @map("locked_at") @db.Timestamptz(6)
+  failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
+  settings            Json      @default("{}")
+
   boards              Board[]
   cards               Card[]
   comments            Comment[]

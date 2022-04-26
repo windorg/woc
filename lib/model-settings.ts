@@ -5,6 +5,18 @@ import { Board, Card, Comment, Reply, User } from "@prisma/client"
 // If you ever change this, grep for 'private' and 'public'
 export type Visibility = 'private' | 'public'
 
+export type UserSettings = {
+  beeminderUsername: string | null
+  beeminderAccessToken: string | null
+}
+export function userSettings(user: Pick<Board, 'settings'>): UserSettings {
+  const def: UserSettings = {
+    beeminderUsername: null,
+    beeminderAccessToken: null,
+  }
+  return { ...def, ...(user.settings as object) }
+}
+
 export type BoardSettings = {
   visibility: Visibility
 }
