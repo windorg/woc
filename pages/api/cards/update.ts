@@ -17,6 +17,7 @@ export type UpdateCardBody = {
   private?: boolean
   reverseOrder?: boolean
   archived?: boolean
+  beeminderGoal?: CardSettings['beeminderGoal']
 }
 
 const schema: Schema<UpdateCardBody> = yup.object({
@@ -26,6 +27,7 @@ const schema: Schema<UpdateCardBody> = yup.object({
   private: yup.boolean(),
   reverseOrder: yup.boolean(),
   archived: yup.boolean(),
+  beeminderGoal: yup.string().nullable(),
 })
 
 // Returns only the updated fields (the 'settings' field is always returned in full)
@@ -60,6 +62,9 @@ export default async function updateCard(req: NextApiRequest, res: NextApiRespon
     }
     if (body.archived !== undefined) {
       diff.settings.archived = body.archived
+    }
+    if (body.beeminderGoal !== undefined) {
+      diff.settings.beeminderGoal = body.beeminderGoal
     }
     await prisma.card.update({
       where: { id: body.cardId },

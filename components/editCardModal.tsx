@@ -4,6 +4,8 @@ import { cardSettings } from "lib/model-settings"
 import React from "react"
 import * as B from 'react-bootstrap'
 import { useUpdateCard } from "lib/queries/cards"
+import Link from "next/link"
+import { accountRoute } from "lib/routes"
 
 export function EditCardModal(props: {
   card: Card
@@ -34,6 +36,7 @@ export function EditCardModal(props: {
             title: card.title,
             tagline: card.tagline,
             reverseOrder: cardSettings(card).reverseOrder,
+            beeminderGoal: cardSettings(card).beeminderGoal || '',
           }}
           onSubmit={async (values, formik) => {
             await updateCardMutation.mutateAsync({
@@ -41,6 +44,7 @@ export function EditCardModal(props: {
               ...values,
               title: values.title.trim(),
               tagline: values.tagline.trim(),
+              beeminderGoal: values.beeminderGoal.trim() || null,
             })
             if (props.afterSave) props.afterSave()
             formik.resetForm()
@@ -48,35 +52,56 @@ export function EditCardModal(props: {
         >
           {formik => (<>
             <B.Form onSubmit={formik.handleSubmit}>
-              <B.Form.Group className="mb-3">
-                <B.Form.Label>Title</B.Form.Label>
-                <B.Form.Control
-                  name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
-                  type="text" ref={titleInputRef} />
-              </B.Form.Group>
-              <B.Form.Group className="mb-3">
-                <B.Form.Label>Tagline</B.Form.Label>
-                <B.Form.Control
-                  name="tagline" id="tagline" value={formik.values.tagline} onChange={formik.handleChange}
-                  type="text" />
-              </B.Form.Group>
-              <B.Form.Check name="reverseOrder" id="reverseOrder" className="mb-3">
-                <B.Form.Check.Input
-                  name="reverseOrder" id="reverseOrder"
-                  checked={formik.values.reverseOrder}
-                  onChange={formik.handleChange} type="checkbox" />
-                <B.Form.Check.Label>
-                  Show comments in reverse order<br />
-                  <span className="text-muted small">
-                    Good for cards that work like blog posts. Or maybe you just really like the reverse order.
-                  </span>
-                </B.Form.Check.Label>
-              </B.Form.Check>
+
+              <B.Tabs defaultActiveKey="general" transition={false}>
+                <B.Tab eventKey="general" title="General" className="pt-3">
+                  <B.Form.Group className="mb-3">
+                    <B.Form.Label>Title</B.Form.Label>
+                    <B.Form.Control
+                      name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
+                      type="text" ref={titleInputRef} />
+                  </B.Form.Group>
+
+                  <B.Form.Group className="mb-3">
+                    <B.Form.Label>Tagline</B.Form.Label>
+                    <B.Form.Control
+                      name="tagline" id="tagline" value={formik.values.tagline} onChange={formik.handleChange}
+                      type="text" />
+                  </B.Form.Group>
+
+                  <B.Form.Check name="reverseOrder" id="reverseOrder" className="mb-3">
+                    <B.Form.Check.Input
+                      name="reverseOrder" id="reverseOrder"
+                      checked={formik.values.reverseOrder}
+                      onChange={formik.handleChange} type="checkbox" />
+                    <B.Form.Check.Label>
+                      Show comments in reverse order<br />
+                      <span className="text-muted small">
+                        Good for cards that work like blog posts. Or maybe you just really like the reverse order.
+                      </span>
+                    </B.Form.Check.Label>
+                  </B.Form.Check>
+                </B.Tab>
+
+                <B.Tab eventKey="beeminder" title="Beeminder" className="pt-3">
+                  <p className="text-muted small">
+                    Sync comment count to <a href="https://beeminder.com">Beeminder</a>. The current count will be posted as a datapoint — so your goal type should be something like “Lose weight” rather than “Do more”. Make sure your account is connected to Beeminder in <Link href={accountRoute()}><a>account settings</a></Link>.
+                  </p>
+                  <B.Form.Group className="mb-3">
+                    <B.Form.Label>Beeminder goal slug</B.Form.Label>
+                    <B.Form.Control
+                      name="beeminderGoal" id="beeminderGoal" value={formik.values.beeminderGoal} onChange={formik.handleChange}
+                      type="text" />
+                  </B.Form.Group>
+                </B.Tab>
+              </B.Tabs>
+
               <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>
                 Save
                 {formik.isSubmitting &&
                   <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
               </B.Button>
+
               <B.Button className="ms-2" variant="secondary" type="button"
                 onClick={props.onHide}>
                 Cancel
