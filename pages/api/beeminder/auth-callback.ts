@@ -56,7 +56,7 @@ export default async function apiBeeminderAuthCallback(req: NextApiRequest, res:
     if (response.success) {
       return res.redirect(boardsRoute())
     } else {
-      return res.status(403).send('Unauthorized')
+      return res.status(401).send('Unauthorized')
     }
   }
 }

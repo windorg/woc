@@ -1,5 +1,9 @@
 import { Board, Card, User, Comment } from "@prisma/client"
 
+export function accountRoute() {
+  return `/account`
+}
+
 export function boardsRoute() {
   return `/Boards`
 }
