@@ -85,7 +85,7 @@ export function EditCardModal(props: {
 
                 <B.Tab eventKey="beeminder" title="Beeminder" className="pt-3">
                   <p className="text-muted small">
-                    Sync comment count to <a href="https://beeminder.com">Beeminder</a>. The current count will be posted as a datapoint — so your goal type should be something like “Lose weight” rather than “Do more”. Make sure your account is connected to Beeminder in <Link href={accountRoute()}><a>account settings</a></Link>.
+                    Sync comment count to <a href="https://beeminder.com">Beeminder</a>. The current count will be posted as a datapoint — so your goal type should be something like “Gain weight” rather than “Do more”. Make sure your account is connected to Beeminder in <Link href={accountRoute()}><a>account settings</a></Link>.
                   </p>
                   <B.Form.Group className="mb-3">
                     <B.Form.Label>Beeminder goal slug</B.Form.Label>

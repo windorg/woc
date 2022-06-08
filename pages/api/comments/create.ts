@@ -7,7 +7,8 @@ import axios from 'axios'
 import { wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
 import { canEditCard } from 'lib/access'
-import { CommentSettings } from 'lib/model-settings'
+import { cardSettings, CommentSettings } from 'lib/model-settings'
+import { addJob } from '@lib/job-queue'
 
 interface CreateCommentRequest extends NextApiRequest {
   body: {
@@ -34,9 +35,11 @@ export default async function createComment(req: CreateCommentRequest, res: Next
     const card = await prisma.card.findUnique({
       where: { id: body.cardId },
       select: {
+        id: true,
         ownerId: true,
         settings: true,
-        board: { select: { ownerId: true, settings: true } }
+        board: { select: { ownerId: true, settings: true } },
+        _count: { select: { comments: true } }
       },
       rejectOnNotFound: true,
     })
@@ -52,11 +55,14 @@ export default async function createComment(req: CreateCommentRequest, res: Next
         ownerId: card.ownerId,
       }
     })
+    if (cardSettings(card).beeminderGoal) {
+      await addJob('beeminder-sync-card', {
+        cardId: card.id,
+        timestamp: Date.now(),
+        commentCount: card._count.comments + 1,
+      })
+    }
     return res.status(201).json({ ...comment, canEdit: true })
   }
 }
 
-export async function callCreateComment(body: CreateCommentBody): Promise<Comment_> {
-  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/comments/create`, body)
-  return wocResponse(data)
-}

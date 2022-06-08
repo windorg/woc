@@ -3,12 +3,11 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
-import axios from 'axios'
-import { wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
 import { canEditCard } from 'lib/access'
 import { CardSettings } from 'lib/model-settings'
 import _ from 'lodash'
+import { addJob } from '@lib/job-queue'
 
 export type UpdateCardBody = {
   cardId: Card['id']
@@ -40,7 +39,10 @@ export default async function updateCard(req: NextApiRequest, res: NextApiRespon
     const body = schema.cast(req.body)
     const card = await prisma.card.findUnique({
       where: { id: body.cardId },
-      include: { board: { select: { ownerId: true, settings: true } } },
+      include: {
+        board: { select: { ownerId: true, settings: true } },
+        _count: { select: { comments: true } },
+      },
       rejectOnNotFound: true,
     })
     if (!canEditCard(session?.userId ?? null, card)) return res.status(403)
@@ -71,13 +73,16 @@ export default async function updateCard(req: NextApiRequest, res: NextApiRespon
       // See https://github.com/prisma/prisma/issues/9247
       data: (diff as unknown) as Prisma.InputJsonObject
     })
+
+    if (diff.settings.beeminderGoal) {
+      await addJob('beeminder-sync-card', {
+        cardId: card.id,
+        timestamp: Date.now(),
+        commentCount: card._count.comments,
+      })
+    }
     // If we ever have "updatedAt", we should also return it here
 
     return res.status(200).json(diff)
   }
-}
-
-export async function callUpdateCard(body: UpdateCardBody): Promise<Partial<Card>> {
-  const { data } = await axios.put(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/update`, body)
-  return wocResponse(data)
 }
