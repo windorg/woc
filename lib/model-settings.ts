@@ -9,7 +9,7 @@ export type UserSettings = {
   beeminderUsername: string | null
   beeminderAccessToken: string | null
 }
-export function userSettings(user: Pick<Board, 'settings'>): UserSettings {
+export function userSettings(user: Pick<User, 'settings'>): UserSettings {
   const def: UserSettings = {
     beeminderUsername: null,
     beeminderAccessToken: null,

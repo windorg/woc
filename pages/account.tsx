@@ -9,6 +9,10 @@ import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
 import * as B from 'react-bootstrap'
 import { beeminderAuthUrl } from 'lib/beeminder'
+import { userSettings } from '@lib/model-settings'
+import { useUser } from '@lib/queries/user'
+import { GetUserData } from './api/users/get'
+import { User } from '@prisma/client'
 
 type Props = Record<string, never>
 
@@ -21,6 +25,9 @@ const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   const { data: session } = useSession()
   const userId = session?.userId ?? null
   const initialProps = deserialize<Props>(serializedInitialProps)
+
+  const userQuery = useUser({ userId: userId! })
+  const user = userQuery.data ? (userQuery.data as GetUserData & { settings: User['settings'] }) : null
 
   return (
     <>
@@ -36,7 +43,14 @@ const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
         ?
         <>
           <ul>
-            <li><Link href={beeminderAuthUrl()}><a>Connect to Beeminder</a></Link></li>
+            <li>
+              <Link href={beeminderAuthUrl()}><a>Connect to Beeminder</a></Link>
+              {user
+                ? (userSettings(user).beeminderUsername
+                  ? ` (connected as ${userSettings(user).beeminderUsername!})` : '')
+                : ' (...)'
+              }
+            </li>
           </ul>
         </>
         :

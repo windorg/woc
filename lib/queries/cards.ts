@@ -1,7 +1,8 @@
 import { Card } from "@prisma/client"
 import { unsafeCanSee } from "lib/access"
 import { callGetCard, GetCardData, GetCardQuery } from "pages/api/cards/get"
-import { callUpdateCard, UpdateCardBody } from "pages/api/cards/update"
+import { UpdateCardBody } from "pages/api/cards/update"
+import { callUpdateCard } from '@lib/api'
 import { callCreateCard, CreateCardBody } from "pages/api/cards/create"
 import { QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
 import { callDeleteCard, DeleteCardBody } from "pages/api/cards/delete"
