@@ -9,7 +9,7 @@ export type UserSettings = {
   beeminderUsername: string | null
   beeminderAccessToken: string | null
 }
-export function userSettings(user: Pick<Board, 'settings'>): UserSettings {
+export function userSettings(user: Pick<User, 'settings'>): UserSettings {
   const def: UserSettings = {
     beeminderUsername: null,
     beeminderAccessToken: null,
@@ -32,12 +32,15 @@ export type CardSettings = {
   // Whether to show updates from oldest to newest
   reverseOrder: boolean
   archived: boolean
+  // Beeminder goal to sync with (goal name in the current user's connected Beeminder account)
+  beeminderGoal: string | null
 }
 export function cardSettings(card: Pick<Card, 'settings'>): CardSettings {
   const def: CardSettings = {
     visibility: 'public',
     reverseOrder: false,
-    archived: false
+    archived: false,
+    beeminderGoal: null,
   }
   return { ...def, ...(card.settings as object) }
 }

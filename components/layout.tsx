@@ -5,10 +5,11 @@ import * as B from 'react-bootstrap'
 import Head from "next/head"
 import Script from "next/script"
 import { useInboxCount } from "lib/queries/inbox"
-import { feedRoute, inboxRoute } from "lib/routes"
+import { accountRoute, boardsRoute, feedRoute, inboxRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
 import { useHotkeys } from "react-hotkeys-hook"
 import { SwitcherModal } from "./switcherModal"
+import styles from "./layout.module.scss"
 
 function ChangelogButton() {
   const headwayConfig = {
@@ -60,7 +61,18 @@ function NavHeader() {
   const { data: session } = useSession()
   const loginOrLogout =
     session
-      ? <a href="#" onClick={async () => signOut()}>Log out</a>
+      ?
+      <B.Dropdown>
+        <B.Dropdown.Toggle as="a" style={{ cursor: 'pointer' }} id="dropdown-account">
+          Account
+        </B.Dropdown.Toggle>
+        <B.Dropdown.Menu align='end' className={styles.accountMenu}>
+          {/* TODO: this doesn't use the Link machinery */}
+          <B.Dropdown.Item href={boardsRoute()}>All boards</B.Dropdown.Item>
+          <B.Dropdown.Item href={accountRoute()}>Account settings</B.Dropdown.Item>
+          <B.Dropdown.Item onClick={async () => signOut()}>Log out</B.Dropdown.Item>
+        </B.Dropdown.Menu>
+      </B.Dropdown>
       : <>
         <Link href="/Signup"><a className="me-4">Sign up</a></Link>
         <a href="#" onClick={async () => signIn()}>Log in</a>

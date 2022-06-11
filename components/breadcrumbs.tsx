@@ -3,13 +3,21 @@ import React from "react"
 import * as B from 'react-bootstrap'
 import { boardSettings } from "../lib/model-settings"
 import Link from 'next/link'
-import { boardRoute, boardsRoute, cardRoute, feedRoute, inboxRoute, userRoute } from "lib/routes"
+import { boardRoute, boardsRoute, cardRoute, feedRoute, inboxRoute, userRoute, accountRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
 
 function LinkItem(props: { href: string, children: React.ReactNode, active?: boolean, preload?: boolean }) {
   return props.active
     ? (<B.Breadcrumb.Item active>{props.children}</B.Breadcrumb.Item>)
     : <B.Breadcrumb.Item linkAs={props.preload ? LinkPreload : Link} href={props.href}><a>{props.children}</a></B.Breadcrumb.Item>
+}
+
+export function AccountCrumb(props: { active?: boolean }) {
+  return (
+    <LinkItem active={props.active} href={accountRoute()}>
+      Your account
+    </LinkItem>
+  )
 }
 
 export function FeedCrumb(props: { active?: boolean }) {

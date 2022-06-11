@@ -6,6 +6,8 @@ import { Schema } from 'yup'
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
 import { canEditComment } from 'lib/access'
+import { cardSettings } from '@lib/model-settings'
+import { addJob } from '@lib/job-queue'
 
 interface DeleteCommentRequest extends NextApiRequest {
   body: {
@@ -28,8 +30,9 @@ export default async function deleteComment(req: DeleteCommentRequest, res: Next
       include: {
         card: {
           select: {
-            ownerId: true, settings: true,
-            board: { select: { ownerId: true, settings: true } }
+            id: true, ownerId: true, settings: true,
+            board: { select: { ownerId: true, settings: true } },
+            _count: { select: { comments: true } }
           }
         }
       },
@@ -41,10 +44,14 @@ export default async function deleteComment(req: DeleteCommentRequest, res: Next
       where: { id: body.commentId }
     })
 
+    if (cardSettings(comment.card).beeminderGoal) {
+      await addJob('beeminder-sync-card', {
+        cardId: comment.card.id,
+        timestamp: Date.now(),
+        commentCount: comment.card._count.comments - 1,
+      })
+    }
+
     return res.status(204).send()
   }
-}
-
-export async function callDeleteComment(body: DeleteCommentBody): Promise<void> {
-  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/comments/delete`, body)
 }
