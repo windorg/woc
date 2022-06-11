@@ -10,7 +10,7 @@ import { filterSync } from '../lib/array'
 export async function createAndSaveUser(
   page: Page,
   options?: { logout?: boolean },
-  data?: { email, handle, displayName },
+  data?: { email: string, handle: string, displayName: string },
 ): Promise<string> {
   const randomHandle = randomWords(2).join('-')
   const { email, handle, displayName } =
@@ -35,9 +35,12 @@ export async function createAndSaveUser(
   await page.fill('input[name="email"]', email)
   await page.fill('input[name="password"]', 'test')
   await page.click('text=Sign in with credentials')
-  await page.waitForSelector('text=Log out')
+  await page.waitForSelector('text=Account')
   await page.context().storageState({ path: `test-tmp/${handle}.storageState.json` })
-  if (options?.logout) await page.click('text=Log out')
+  if (options?.logout) {
+    await page.click('text=Account')
+    await page.click('text=Log out')
+  }
   return handle
 }
 
@@ -167,7 +170,7 @@ export function expectNoLeakage(
     const matches = filterSync(blacklist, word => response.includes(word))
     if (matches.length > 0) {
       // @ts-ignore
-      expect(null).fail(`The response for ${request.url()} leaks data: ${matches}`)
+      expect(null).fail(`The response for ${request.url()} leaks data: ${JSON.stringify(matches)}`)
     }
   }
 }
