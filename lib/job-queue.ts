@@ -1,9 +1,10 @@
-import { Worker, Queue, Job } from 'bullmq'
+import { Worker, Queue, Job, RedisOptions } from 'bullmq'
 import { beeminderSyncCard, BeeminderSyncCardPayload } from './jobs/beeminder-sync-card'
 
-const redisConnection = {
+const redisConnection: RedisOptions = {
   host: process.env.REDIS_HOST!,
-  port: process.env.REDIS_PORT!,
+  port: parseInt(process.env.REDIS_PORT!),
+  username: process.env.REDIS_USERNAME!,
   password: process.env.REDIS_PASSWORD!,
 }
 
