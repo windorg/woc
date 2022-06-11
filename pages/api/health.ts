@@ -7,10 +7,10 @@ import { startJobQueueProcessing } from '@lib/job-queue'
 
 let initCalled = false
 
-export default function handler(req, res: NextApiResponse) {
+export default async function handler(req, res: NextApiResponse) {
   if (!initCalled) {
     initCalled = true
-    startJobQueueProcessing()
+    await startJobQueueProcessing()
   }
   res.send('OK')
 }
