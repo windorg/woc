@@ -6,6 +6,7 @@ const redisConnection: RedisOptions = {
   port: parseInt(process.env.REDIS_PORT!),
   username: process.env.REDIS_USERNAME!,
   password: process.env.REDIS_PASSWORD!,
+  ...(process.env.REDIS_TLS! === 'true' ? { tls: {} } : {}),
 }
 
 const jobQueue = new Queue('jobs', {
@@ -17,7 +18,7 @@ export async function addJob(job: string, payload: any) {
   return await jobQueue.add(job, payload)
 }
 
-export function startJobQueueProcessing() {
+export async function startJobQueueProcessing() {
   const worker = new Worker('jobs',
     async job => {
       switch (job.name) {
@@ -35,4 +36,9 @@ export function startJobQueueProcessing() {
   worker.on('failed', (job, err) => {
     console.error(`Job ${job.name} failed: ${err.message}`)
   })
+  // Wait for the queue to actually get connected
+  await jobQueue.waitUntilReady()
+  await worker.waitUntilReady()
+  console.log('job-queue: connected to Redis and ready')
+  return
 }
