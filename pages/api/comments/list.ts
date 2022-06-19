@@ -27,9 +27,7 @@ export type ListCommentsData =
 export type ListCommentsResponse = Result<ListCommentsData, never>
 
 export async function serverListComments(session: Session | null, query: ListCommentsQuery): Promise<ListCommentsResponse> {
-  const where: Prisma.CommentWhereInput = {}
-  where.cardId = { in: query.cards }
-  const comments = await prisma.comment.findMany({ where })
+  const comments = await prisma.comment.findMany({ where: { cardId: { in: query.cards } } })
     .then(async xs => filterAsync(xs, async (comment) => canSeeComment(session?.userId ?? null, comment)))
     .then(xs => xs.map(comment => ({
       ...comment,

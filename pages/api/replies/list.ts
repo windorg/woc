@@ -32,10 +32,8 @@ export type ListRepliesData =
 export type ListRepliesResponse = Result<ListRepliesData, never>
 
 export async function serverListReplies(session: Session | null, query: ListRepliesQuery): Promise<ListRepliesResponse> {
-  const where: Prisma.ReplyWhereInput = {}
-  where.comment = { cardId: { in: query.cards } }
   const replies = await prisma.reply.findMany({
-    where,
+    where: { comment: { cardId: { in: query.cards } } },
     include: {
       comment: { select: { cardId: true, ownerId: true } },
       author: { select: { id: true, handle: true, email: true, displayName: true } }
