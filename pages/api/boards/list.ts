@@ -1,4 +1,4 @@
-import { Card, Prisma, User } from '@prisma/client'
+import { Card, CardType, Prisma, User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from 'lib/db'
 import * as yup from 'yup'
@@ -31,7 +31,7 @@ export type ListBoardsResponse = Result<ListBoardsData, never>
 
 export async function serverListBoards(session: Session | null, query: ListBoardsQuery): Promise<ListBoardsResponse> {
   const include = { owner: { select: { handle: true, displayName: true } } }
-  const where: Prisma.CardWhereInput = {}
+  const where: Prisma.CardWhereInput = { type: CardType.Board }
   if (query?.users !== undefined) where.ownerId = { in: query.users }
   const boards = await prisma.card.findMany({
     include,
