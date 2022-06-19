@@ -1,4 +1,4 @@
-import { Card, CardType, User } from '@prisma/client'
+import { Card, User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
@@ -35,7 +35,7 @@ export default async function createBoard(req: CreateBoardRequest, res: NextApiR
     }
     const board = await prisma.card.create({
       data: {
-        type: CardType.Board,
+        type: 'Board',
         title: body.title.trim(),
         settings,
         // TODO will this fail loudly if the user doesn't exist (but the session is still alive)?

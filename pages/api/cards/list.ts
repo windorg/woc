@@ -1,4 +1,4 @@
-import { Card, CardType, User } from '@prisma/client'
+import { Card, User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from 'lib/db'
 import * as yup from 'yup'
@@ -26,7 +26,7 @@ export type ListCardsResponse = Result<ListCardsData, never>
 
 export async function serverListCards(session: Session | null, query: ListCardsQuery): Promise<ListCardsResponse> {
   const cards = await prisma.card.findMany({
-    where: { type: CardType.Card, parentId: { in: query.boards } },
+    where: { type: 'Card', parentId: { in: query.boards } },
     include: {
       _count: { select: { comments: true } }
     }
