@@ -40,7 +40,6 @@ export default async function updateCard(req: NextApiRequest, res: NextApiRespon
     const card = await prisma.card.findUnique({
       where: { id: body.cardId },
       include: {
-        board: { select: { ownerId: true, settings: true } },
         _count: { select: { comments: true } },
       },
       rejectOnNotFound: true,

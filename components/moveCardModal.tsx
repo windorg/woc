@@ -1,4 +1,4 @@
-import { Board, Card } from "@prisma/client"
+import { Card } from "@prisma/client"
 import { Formik } from "formik"
 import { cardSettings } from "lib/model-settings"
 import React from "react"
@@ -9,7 +9,7 @@ import { useBoards } from "lib/queries/boards"
 import { useSession } from "next-auth/react"
 
 export function MoveCardModal(props: {
-  card: Card & { board: Pick<Board, 'id' | 'title'> }
+  card: Card & { parent: Pick<Card, 'id' | 'title'> }
   show: boolean
   onHide: () => void
   afterMove?: () => void
@@ -42,9 +42,9 @@ export function MoveCardModal(props: {
       </B.Modal.Header>
       <B.Modal.Body>
         <Formik
-          initialValues={{ board: card.board }}
+          initialValues={{ board: card.parent }}
           onSubmit={async (values, formik) => {
-            await moveCardMutation.mutateAsync({ cardId: card.id, boardId: values.board.id })
+            await moveCardMutation.mutateAsync({ cardId: card.id, parentId: values.board.id })
             if (props.afterMove) props.afterMove()
             searchRef.current?.clear()
             formik.resetForm()
@@ -69,7 +69,7 @@ export function MoveCardModal(props: {
                 }
               </B.Form.Group>
               <B.Button variant="primary" type="submit"
-                disabled={formik.isSubmitting || typeof formik.values.board !== 'object' || formik.values.board.id === card.board.id}
+                disabled={formik.isSubmitting || typeof formik.values.board !== 'object' || formik.values.board.id === card.parent.id}
               >
                 Move
                 {formik.isSubmitting &&

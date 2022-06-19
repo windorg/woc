@@ -43,7 +43,6 @@ export default async function updateReply(req: UpdateReplyRequest, res: NextApiR
             card: {
               select: {
                 ownerId: true, settings: true,
-                board: { select: { ownerId: true, settings: true } }
               }
             }
           }

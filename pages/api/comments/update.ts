@@ -42,7 +42,6 @@ export default async function updateComment(req: UpdateCommentRequest, res: Next
         card: {
           select: {
             ownerId: true, settings: true,
-            board: { select: { ownerId: true, settings: true } }
           }
         }
       },

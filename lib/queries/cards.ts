@@ -1,5 +1,3 @@
-import { Card } from "@prisma/client"
-import { unsafeCanSee } from "lib/access"
 import { callGetCard, GetCardData, GetCardQuery } from "pages/api/cards/get"
 import { UpdateCardBody } from "pages/api/cards/update"
 import { callUpdateCard } from '@lib/api'
@@ -92,7 +90,7 @@ export function useUpdateCard() {
         updateQueriesData<ListCardsData>(
           queryClient,
           { predicate: keyPredicate(fromListCardsKey, query => true) },
-          listCardsData => mergeById(listCardsData, unsafeCanSee({ ...updates, id: variables.cardId }))
+          listCardsData => mergeById(listCardsData, { ...updates, id: variables.cardId })
         )
       }
     })
@@ -105,25 +103,25 @@ export function useCreateCard() {
     {
       onSuccess: (card, variables) => {
         // Update the ListCards queries
-        const card_ = unsafeCanSee({ ...card, _count: { comments: 0 } })
+        const card_ = { ...card, _count: { comments: 0 } }
         updateQueriesData<ListCardsData>(
           queryClient,
-          { predicate: keyPredicate(fromListCardsKey, query => query.boards.includes(card.boardId)) },
+          { predicate: keyPredicate(fromListCardsKey, query => query.boards.includes(card.parentId)) },
           listCardsData => [...listCardsData, card_]
         )
         // Update the GetBoard query
         updateQueriesData<GetBoardData>(
           queryClient,
-          { predicate: keyPredicate(fromGetBoardKey, query => query.boardId === card.boardId) },
-          getBoardData => ({ ...getBoardData, cardOrder: [card.id, ...getBoardData.cardOrder] })
+          { predicate: keyPredicate(fromGetBoardKey, query => query.boardId === card.parentId) },
+          getBoardData => ({ ...getBoardData, childrenOrder: [card.id, ...getBoardData.childrenOrder] })
         )
         // Update the ListBoards queries
         updateQueriesData<ListBoardsData>(
           queryClient,
           { predicate: keyPredicate(fromListBoardsKey, query => true) },
           listBoardsData => listBoardsData.map(board =>
-            board.id === card.boardId
-              ? { ...board, cardOrder: [card.id, ...board.cardOrder] }
+            board.id === card.parentId
+              ? { ...board, childrenOrder: [card.id, ...board.childrenOrder] }
               : board
           )
         )
@@ -169,7 +167,7 @@ export function useMoveCard() {
           listCardsData => deleteById(listCardsData, variables.cardId)
         )
         queryClient.removeQueries(
-          { predicate: keyPredicate(fromListCardsKey, query => query.boards.includes(variables.boardId)) },
+          { predicate: keyPredicate(fromListCardsKey, query => query.boards.includes(variables.parentId)) },
         )
       }
     })

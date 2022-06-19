@@ -1,15 +1,15 @@
-import { Board } from '@prisma/client'
+import { Card, CardType } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
-import { canEditBoard } from 'lib/access'
+import { canEditCard } from 'lib/access'
 
 interface DeleteBoardRequest extends NextApiRequest {
   body: {
-    boardId: Board['id']
+    boardId: Card['id']
   }
 }
 
@@ -23,13 +23,13 @@ export default async function deleteBoard(req: DeleteBoardRequest, res: NextApiR
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
-    const board = await prisma.board.findUnique({
+    const board = await prisma.card.findUnique({
       where: { id: body.boardId },
       rejectOnNotFound: true,
     })
-    if (!canEditBoard(session?.userId ?? null, board)) return res.status(403)
+    if (!canEditCard(session?.userId ?? null, board)) return res.status(403)
 
-    await prisma.board.delete({
+    await prisma.card.delete({
       where: { id: body.boardId }
     })
 

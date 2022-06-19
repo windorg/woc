@@ -1,14 +1,14 @@
-import { Board, Card, Reply, Prisma, Comment, User } from '@prisma/client'
+import { Card, Reply, Prisma, Comment, User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from 'lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
-import { canDeleteReply, canEditReply, CanSee, canSeeReply, pCommentSelect } from 'lib/access'
+import { canDeleteReply, canEditReply, canSeeReply } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
-import { filterSync, mapAsync } from 'lib/array'
+import { filterAsync, filterSync, mapAsync } from 'lib/array'
 import { Result, wocQuery, wocResponse } from 'lib/http'
 
 export type ListRepliesQuery = {
@@ -21,7 +21,7 @@ const schema: Schema<ListRepliesQuery> = yup.object({
 })
 
 export type ListRepliesData =
-  (CanSee & Reply & {
+  (Reply & {
     // The author can be 'null' if it was deleted. We don't delete replies if the author's account is gone.
     author: Pick<User, 'id' | 'handle' | 'email' | 'displayName'> | null
     canEdit: boolean
@@ -37,11 +37,11 @@ export async function serverListReplies(session: Session | null, query: ListRepl
   const replies = await prisma.reply.findMany({
     where,
     include: {
-      comment: { select: { ...pCommentSelect, cardId: true } },
+      comment: { select: { cardId: true, ownerId: true } },
       author: { select: { id: true, handle: true, email: true, displayName: true } }
     }
   })
-    .then(xs => filterSync(xs, (reply): reply is typeof reply & CanSee => canSeeReply(session?.userId ?? null, reply)))
+    .then(async xs => filterAsync(xs, async (reply) => canSeeReply(session?.userId ?? null, reply)))
     .then(xs => xs.map(reply => ({
       ...(_.omit(reply, 'comment')),
       comment: { cardId: reply.comment.cardId },

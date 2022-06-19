@@ -1,18 +1,18 @@
-import { Board, Card, Prisma, User } from '@prisma/client'
+import { Card, Prisma, User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from 'lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
-import { CanSee, canSeeCard, pBoardSelect } from 'lib/access'
+import { canSeeCard } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
-import { filterSync, mapAsync } from 'lib/array'
+import { filterAsync, filterSync, mapAsync } from 'lib/array'
 import { Result, wocQuery, wocResponse } from 'lib/http'
 
 export type ListCardsQuery = {
-  boards: Board['id'][] // as a JSON array
+  boards: Card['id'][] // as a JSON array
 }
 
 const schema: Schema<ListCardsQuery> = yup.object({
@@ -20,24 +20,20 @@ const schema: Schema<ListCardsQuery> = yup.object({
 })
 
 export type ListCardsData =
-  (CanSee & Card & { _count: { comments: number } })[]
+  (Card & { _count: { comments: number } })[]
 
 export type ListCardsResponse = Result<ListCardsData, never>
 
 export async function serverListCards(session: Session | null, query: ListCardsQuery): Promise<ListCardsResponse> {
   const where: Prisma.CardWhereInput = {}
-  where.boardId = { in: query.boards }
+  where.parentId = { in: query.boards }
   const cards = await prisma.card.findMany({
     where,
     include: {
-      board: { select: pBoardSelect },
       _count: { select: { comments: true } }
     }
   })
-    // NB: unfortunately this pattern (lambda + type guard signature) isn't entirely typesafe because of
-    // https://github.com/microsoft/TypeScript/issues/12798
-    .then(xs => filterSync(xs, (card): card is typeof card & CanSee => canSeeCard(session?.userId ?? null, card)))
-    .then(xs => xs.map(card => _.omit(card, 'board')))
+    .then(async xs => filterAsync(xs, async (card) => canSeeCard(session?.userId ?? null, card)))
   return {
     success: true,
     data: cards,
