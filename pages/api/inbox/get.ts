@@ -4,7 +4,6 @@ import { Schema } from 'yup'
 import axios from 'axios'
 import { ResponseError, Result, wocQuery, wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
-import { CanSee } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
 import { getInboxItems, InboxItem } from 'lib/inbox'
@@ -13,7 +12,7 @@ export type GetInboxQuery = Record<string, never>
 
 const schema: Schema<GetInboxQuery> = yup.object({})
 
-export type GetInboxData = (CanSee & InboxItem)[]
+export type GetInboxData = InboxItem[]
 
 export type GetInboxResponse = Result<GetInboxData, { unauthorized: true }>
 

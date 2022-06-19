@@ -8,46 +8,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Board {
-  id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  title               String               @default("")
-  ownerId             String               @map("owner_id") @db.Uuid
-  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
-  settings            Json
-  cardOrder           String[]             @map("card_order") @db.Uuid // List of card IDs
-  owner               User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "boards_ref_owner_id")
-  cards               Card[]
-  subscriptionUpdates SubscriptionUpdate[]
-
-  @@index([ownerId], map: "boards_owner_id_index")
-  @@map("boards")
-}
-
 model Card {
-  id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  title               String               @default("")
-  tagline             String               @default("")
-  boardId             String               @map("board_id") @db.Uuid
-  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
-  settings            Json
-  ownerId             String               @map("owner_id") @db.Uuid
-  board               Board                @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cards_ref_board_id")
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  type          CardType
+  title         String   @default("")
+  tagline       String   @default("")
+  parentId      String?  @map("parent_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  settings      Json
+  childrenOrder String[] @map("children_order") @db.Uuid // List of card IDs
+  ownerId       String   @map("owner_id") @db.Uuid
+
+  parent              Card?                @relation(name: "parent-child", fields: [parentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cards_ref_parent_id")
   owner               User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cards_ref_owner_id")
+  children            Card[]               @relation(name: "parent-child")
   comments            Comment[]
   subscriptionUpdates SubscriptionUpdate[]
 
   @@index([ownerId], map: "cards_owner_id_index")
+  @@index([type], map: "cards_type_index")
   @@map("cards")
 }
 
 model Comment {
-  id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   // If we ever add "updatedAt", see the note in 'updateComment'
-  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
-  content             String
-  cardId              String               @map("card_id") @db.Uuid
-  settings            Json
-  ownerId             String               @map("owner_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  content   String
+  cardId    String   @map("card_id") @db.Uuid
+  settings  Json
+  ownerId   String   @map("owner_id") @db.Uuid
+
   card                Card                 @relation(fields: [cardId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "card_updates_ref_card_id")
   owner               User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "card_updates_ref_owner_id")
   replies             Reply[]
@@ -63,8 +54,9 @@ model FollowedUser {
   subscriberId   String   @map("subscriber_id") @db.Uuid
   followedUserId String   @map("followed_user_id") @db.Uuid
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  followedUser   User     @relation("followed_users_followed_user_idTousers", fields: [followedUserId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "followed_users_ref_followed_user_id")
-  subscriber     User     @relation("followed_users_subscriber_idTousers", fields: [subscriberId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "followed_users_ref_subscriber_id")
+
+  followedUser User @relation("followed_users_followed_user_idTousers", fields: [followedUserId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "followed_users_ref_followed_user_id")
+  subscriber   User @relation("followed_users_subscriber_idTousers", fields: [subscriberId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "followed_users_ref_subscriber_id")
 
   @@unique([subscriberId, followedUserId], map: "followed_users_unique")
   @@index([followedUserId], map: "followed_users_followed_user_id_index")
@@ -73,12 +65,13 @@ model FollowedUser {
 }
 
 model Reply {
-  id                  String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
-  content             String
-  commentId           String               @map("card_update_id") @db.Uuid
-  authorId            String?              @map("author_id") @db.Uuid
-  settings            Json
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  content   String
+  commentId String   @map("card_update_id") @db.Uuid
+  authorId  String?  @map("author_id") @db.Uuid
+  settings  Json
+
   author              User?                @relation(fields: [authorId], references: [id], onUpdate: NoAction, map: "replies_ref_author_id")
   comment             Comment              @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "replies_ref_card_update_id")
   subscriptionUpdates SubscriptionUpdate[]
@@ -91,20 +84,18 @@ model Reply {
 model SubscriptionUpdate {
   id           String                   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   subscriberId String                   @map("subscriber_id") @db.Uuid
-  boardId      String?                  @map("board_id") @db.Uuid
   cardId       String?                  @map("card_id") @db.Uuid
   commentId    String?                  @map("card_update_id") @db.Uuid
   replyId      String?                  @map("reply_id") @db.Uuid
   createdAt    DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
   updateKind   subscription_update_kind @map("update_kind")
   isRead       Boolean                  @default(false) @map("is_read")
-  board        Board?                   @relation(fields: [boardId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_board_id")
-  card         Card?                    @relation(fields: [cardId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_card_id")
-  comment      Comment?                 @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_card_update_id")
-  reply        Reply?                   @relation(fields: [replyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_reply_id")
-  subscriber   User                     @relation(fields: [subscriberId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_subscriber_id")
 
-  @@index([boardId], map: "subscription_updates_board_id_index")
+  card       Card?    @relation(fields: [cardId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_card_id")
+  comment    Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_card_update_id")
+  reply      Reply?   @relation(fields: [replyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_reply_id")
+  subscriber User     @relation(fields: [subscriberId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "subscription_updates_ref_subscriber_id")
+
   @@index([cardId], map: "subscription_updates_card_id_index")
   @@index([commentId], map: "subscription_updates_card_update_id_index")
   @@index([replyId], map: "subscription_updates_reply_id_index")
@@ -123,7 +114,6 @@ model User {
   failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
   settings            Json      @default("{}")
 
-  boards              Board[]
   cards               Card[]
   comments            Comment[]
   followedUserRefs    FollowedUser[]       @relation("followed_users_followed_user_idTousers")
@@ -132,6 +122,13 @@ model User {
   subscriptionUpdates SubscriptionUpdate[]
 
   @@map("users")
+}
+
+enum CardType {
+  Card   @map("card")
+  Board  @map("board")
+
+  @@map("card_type")
 }
 
 enum subscription_update_kind {

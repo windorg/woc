@@ -1,11 +1,11 @@
-import { Board } from "@prisma/client"
+import { Card } from "@prisma/client"
 import { Formik } from "formik"
 import * as B from 'react-bootstrap'
 import React from "react"
 import { useUpdateBoard } from "lib/queries/boards"
 
 export function EditBoardModal(props: {
-  board: Board
+  board: Card
   show: boolean
   onHide: () => void
   afterSave?: () => void

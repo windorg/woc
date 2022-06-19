@@ -11,6 +11,7 @@ type Card_ = Card & { _count: { comments: number } }
 
 // A list of cards, supporting drag-and-drop
 export function CardsList(props: {
+  parentId: Card['id']
   cards: Card_[]
   allowEdit: boolean
 }) {
@@ -47,7 +48,7 @@ export function CardsList(props: {
     const next: Card['id'] | undefined = newOrder[newIndex + 1]
     if (active.id !== over.id) {
       await reorderCardsMutation.mutateAsync({
-        boardId: props.cards[0].boardId,
+        parentId: props.parentId,
         cardId: active.id,
         ...(next ? { before: next } : { after: prev })
       })

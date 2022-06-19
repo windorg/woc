@@ -1,5 +1,5 @@
-import { Board } from '@prisma/client'
-import { boardSettings } from '../lib/model-settings'
+import { Card } from '@prisma/client'
+import { cardSettings } from '../lib/model-settings'
 import React from 'react'
 import { BiPencil, BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 'react-icons/bi'
 import copy from 'copy-to-clipboard'
@@ -25,7 +25,7 @@ function ButtonMakePrivate(props: { private, updateBoard }) {
   )
 }
 
-function MenuCopyLink(props: { board: Board }) {
+function MenuCopyLink(props: { board: Card }) {
   // TODO should use a local link instead of hardcoding windofchange.me (and in other places too)
   return <B.Dropdown.Item
     onClick={() => { copy(`https://windofchange.me${boardRoute(props.board.id)}`) }}>
@@ -42,7 +42,7 @@ function MenuDelete(props: { deleteBoard }) {
 
 // "More" button with a dropdown
 function BoardMenu(props: {
-  board: Board & { canEdit: boolean }
+  board: Card & { canEdit: boolean }
   afterDelete?: () => void
 }) {
   const { board } = props
@@ -71,12 +71,12 @@ function BoardMenu(props: {
 }
 
 export function BoardActions(props: {
-  board: Board & { canEdit: boolean }
+  board: Card & { canEdit: boolean }
   onEdit: () => void
   afterDelete?: () => void
 }) {
   const { board } = props
-  const settings = boardSettings(board)
+  const settings = cardSettings(board)
   const isPrivate = settings.visibility === 'private'
 
   const updateBoardMutation = useUpdateBoard()

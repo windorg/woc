@@ -1,6 +1,6 @@
 import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
-import type { Board, User, Card, Comment, Reply } from '@prisma/client'
+import type { User, Card, Comment, Reply } from '@prisma/client'
 import { cardSettings, commentSettings } from '../lib/model-settings'
 import * as B from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb, CardCrumb } from '../components/breadcrumbs'
@@ -141,7 +141,7 @@ const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
       <B.Breadcrumb>
         <BoardsCrumb />
         <UserCrumb user={card.owner} />
-        <BoardCrumb board={card.board} />
+        <BoardCrumb board={card.parent} />
         <CardCrumb card={card} active />
       </B.Breadcrumb>
 
@@ -178,7 +178,7 @@ const ShowCard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
           card={card}
           onEdit={() => setEditing(true)}
           onMove={() => setMoving(true)}
-          afterDelete={async () => router.replace(boardRoute(card.boardId))}
+          afterDelete={async () => router.replace(boardRoute(card.parentId!))}
         />
       </div>
 

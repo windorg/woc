@@ -1,6 +1,6 @@
 import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
-import type { Board, User } from '@prisma/client'
+import type { Card, User } from '@prisma/client'
 import React, { useState } from 'react'
 import { BoardsCrumb, UserCrumb } from '../components/breadcrumbs'
 import { getSession, useSession } from 'next-auth/react'
