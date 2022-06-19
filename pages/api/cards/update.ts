@@ -1,4 +1,5 @@
-import { Card, Prisma } from '@prisma/client'
+import { Card } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'

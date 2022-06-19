@@ -1,4 +1,4 @@
-import { Card, Reply, Prisma, Comment, User } from '@prisma/client'
+import { Card, Reply, Comment, User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from 'lib/db'
 import * as yup from 'yup'

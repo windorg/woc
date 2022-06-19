@@ -1,4 +1,5 @@
-import { Prisma, Reply, User, Comment, subscription_update_kind } from '@prisma/client'
+import { Reply, User, Comment, subscription_update_kind } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from 'lib/db'
 import * as yup from 'yup'
