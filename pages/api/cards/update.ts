@@ -1,4 +1,5 @@
-import { Card, Prisma } from '@prisma/client'
+import { Card } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
@@ -40,7 +41,6 @@ export default async function updateCard(req: NextApiRequest, res: NextApiRespon
     const card = await prisma.card.findUnique({
       where: { id: body.cardId },
       include: {
-        board: { select: { ownerId: true, settings: true } },
         _count: { select: { comments: true } },
       },
       rejectOnNotFound: true,

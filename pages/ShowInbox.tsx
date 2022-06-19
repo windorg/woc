@@ -12,14 +12,13 @@ import _ from 'lodash'
 import styles from './ShowInbox.module.scss'
 import { InboxItemComponent } from 'components/inboxItem'
 import { InboxItem } from 'lib/inbox'
-import { CanSee } from 'lib/access'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { prefetchInbox, useInbox } from 'lib/queries/inbox'
 import { serverGetInbox } from './api/inbox/get'
 import { isNextExport } from 'lib/export'
 
 type Props = {
-  inboxItems?: (CanSee & InboxItem)[]
+  inboxItems?: InboxItem[]
 }
 
 async function preload(context: PreloadContext): Promise<void> {

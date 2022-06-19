@@ -1,4 +1,3 @@
-import { unsafeCanSee } from "lib/access"
 import { deleteById, mergeById } from "lib/array"
 import { callCreateBoard, CreateBoardBody } from "pages/api/boards/create"
 import { callDeleteBoard, DeleteBoardBody } from "pages/api/boards/delete"
@@ -80,7 +79,7 @@ export function useCreateBoard() {
         updateQueriesData<ListBoardsData>(
           queryClient,
           { predicate: keyPredicate(fromListBoardsKey, query => query?.users === undefined || query.users.includes(board.ownerId)) },
-          listBoardsData => [...listBoardsData, unsafeCanSee(board)]
+          listBoardsData => [...listBoardsData, board]
         )
       }
     })
@@ -102,7 +101,7 @@ export function useUpdateBoard() {
         updateQueriesData<ListBoardsData>(
           queryClient,
           { predicate: keyPredicate(fromListBoardsKey, query => true) },
-          listBoardsData => mergeById(listBoardsData, unsafeCanSee({ ...updates, id: variables.boardId }))
+          listBoardsData => mergeById(listBoardsData, { ...updates, id: variables.boardId })
         )
       }
     })
@@ -131,18 +130,18 @@ export function useReorderCards() {
   return useMutation(
     async (data: ReorderCardsBody) => { return callReorderCards(data) },
     {
-      onSuccess: ({ cardOrder }, variables) => {
+      onSuccess: ({ childrenOrder }, variables) => {
         // Update the GetBoard query
         updateQueryData<GetBoardData>(
           queryClient,
-          getBoardKey({ boardId: variables.boardId }),
-          getBoardData => ({ ...getBoardData, cardOrder })
+          getBoardKey({ boardId: variables.parentId }),
+          getBoardData => ({ ...getBoardData, childrenOrder })
         )
         // Update the ListBoards queries
         updateQueriesData<ListBoardsData>(
           queryClient,
           { predicate: keyPredicate(fromListBoardsKey, query => true) },
-          listBoardsData => mergeById(listBoardsData, unsafeCanSee({ cardOrder, id: variables.boardId }))
+          listBoardsData => mergeById(listBoardsData, { childrenOrder, id: variables.parentId })
         )
       }
     })

@@ -1,16 +1,16 @@
-import { boardSettings } from "../lib/model-settings"
+import { cardSettings } from "../lib/model-settings"
 import Link from 'next/link'
-import { Board, User } from "@prisma/client"
+import { Card, User } from "@prisma/client"
 import { boardRoute, userRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
 import * as B from 'react-bootstrap'
 
 type Kind = 'own-board' | 'other-board'
-type Board_ = Board & { owner: Pick<User, 'handle' | 'displayName'> }
+type Board_ = Card & { owner: Pick<User, 'handle' | 'displayName'> }
 
 export function BoardCard(props: { board: Board_, kind: Kind }) {
   const { board, kind } = props
-  const isPrivate = boardSettings(board).visibility === 'private'
+  const isPrivate = cardSettings(board).visibility === 'private'
   return (
     <B.Card className={`woc-board mt-3 mb-3 ${isPrivate ? "woc-board-private" : ""}`}>
       <B.Card.Body>

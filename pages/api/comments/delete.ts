@@ -31,7 +31,6 @@ export default async function deleteComment(req: DeleteCommentRequest, res: Next
         card: {
           select: {
             id: true, ownerId: true, settings: true,
-            board: { select: { ownerId: true, settings: true } },
             _count: { select: { comments: true } }
           }
         }

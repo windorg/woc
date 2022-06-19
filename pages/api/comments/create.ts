@@ -38,7 +38,6 @@ export default async function createComment(req: CreateCommentRequest, res: Next
         id: true,
         ownerId: true,
         settings: true,
-        board: { select: { ownerId: true, settings: true } },
         _count: { select: { comments: true } }
       },
       rejectOnNotFound: true,

@@ -1,7 +1,7 @@
 import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
-import type { Board, Card } from '@prisma/client'
-import { boardSettings, cardSettings } from '../lib/model-settings'
+import type { Card } from '@prisma/client'
+import { cardSettings } from '../lib/model-settings'
 import * as B from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, BoardCrumb } from '../components/breadcrumbs'
 import { CardCard } from '../components/cardCard'
@@ -26,7 +26,7 @@ import { sortByIdOrder } from 'lib/array'
 import { isNextExport } from 'lib/export'
 
 type Props = {
-  boardId: Board['id']
+  boardId: Card['id']
   board?: GetBoardData
   cards?: ListCardsData
 }
@@ -81,10 +81,10 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
   const board = boardQuery.data
   const cards = cardsQuery.data
 
-  const isPrivate = boardSettings(board).visibility === 'private'
+  const isPrivate = cardSettings(board).visibility === 'private'
   const [normalCards, archivedCards] =
     _.partition(
-      sortByIdOrder(cards, board.cardOrder, { onMissingElement: 'skip' }),
+      sortByIdOrder(cards, board.childrenOrder, { onMissingElement: 'skip' }),
       card => (!cardSettings(card).archived)
     )
 
@@ -126,10 +126,10 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
         />
       </div>
 
-      {board.canEdit && <AddCardForm boardId={board.id} />}
+      {board.canEdit && <AddCardForm parentId={board.id} />}
 
       <div style={{ marginTop: "30px" }}>
-        <CardsList cards={normalCards} allowEdit={board.canEdit} />
+        <CardsList parentId={board.id} cards={normalCards} allowEdit={board.canEdit} />
       </div>
       {
         (archivedCards.length > 0) &&
@@ -139,7 +139,7 @@ const ShowBoard: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
               <B.Badge bg="secondary">Archived cards</B.Badge>
             </B.Accordion.Header>
             <B.Accordion.Body>
-              <CardsList cards={archivedCards} allowEdit={board.canEdit} />
+              <CardsList parentId={board.id} cards={archivedCards} allowEdit={board.canEdit} />
             </B.Accordion.Body>
           </B.Accordion.Item>
         </B.Accordion>

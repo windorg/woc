@@ -1,11 +1,11 @@
-import { Board } from '@prisma/client'
+import { Card } from '@prisma/client'
 import _ from "lodash"
 import { useState } from "react"
 import * as B from 'react-bootstrap'
 import { BoardCard } from "./boardCard"
 import { CreateBoardModal } from "./createBoardModal"
 
-type Board_ = Board & { owner: { handle: string, displayName: string } }
+type Board_ = Card & { owner: { handle: string, displayName: string } }
 
 export function BoardsList(props: {
   allowNewBoard: boolean

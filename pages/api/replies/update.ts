@@ -1,4 +1,5 @@
-import { Reply, Prisma } from '@prisma/client'
+import { Reply } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
@@ -43,7 +44,6 @@ export default async function updateReply(req: UpdateReplyRequest, res: NextApiR
             card: {
               select: {
                 ownerId: true, settings: true,
-                board: { select: { ownerId: true, settings: true } }
               }
             }
           }

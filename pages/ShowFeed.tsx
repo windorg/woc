@@ -5,7 +5,6 @@ import * as B from 'react-bootstrap'
 import { BoardsCrumb, FeedCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
 import { getSession, useSession } from 'next-auth/react'
-import { CanSee } from '../lib/access'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
@@ -18,7 +17,7 @@ import { prefetchFeed, useFeed } from 'lib/queries/feed'
 import { isNextExport } from 'lib/export'
 
 type Props = {
-  feedItems?: (CanSee & FeedItem)[]
+  feedItems?: FeedItem[]
 }
 
 async function preload(context: PreloadContext): Promise<void> {

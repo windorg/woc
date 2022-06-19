@@ -1,4 +1,4 @@
-import { Board, Card, Prisma, Reply, User } from '@prisma/client'
+import { Card, Reply, User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
@@ -6,7 +6,7 @@ import { Schema } from 'yup'
 import axios from 'axios'
 import { ResponseError, Result, wocQuery, wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
-import { canEditBoard, canEditCard, CanSee, canSeeBoard, canSeeCard, PCard } from 'lib/access'
+import { canEditCard, canSeeCard } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
 
@@ -19,20 +19,21 @@ const schema: Schema<GetCardQuery> = yup.object({
 })
 
 export type GetCardData =
-  CanSee & Card & {
+  Card & {
     owner: Pick<User, 'id' | 'handle' | 'displayName'>
-    board: Pick<Board, 'id' | 'ownerId' | 'settings' | 'title'>
+    parent: Pick<Card, 'id' | 'ownerId' | 'settings' | 'title'>
     canEdit: boolean
   }
 
 export type GetCardResponse = Result<GetCardData, { notFound: true }>
 
+// NB: does not currently work for boards, because boards don't have a parent
 export async function serverGetCard(session: Session | null, query: GetCardQuery): Promise<GetCardResponse> {
   const card = await prisma.card.findUnique({
     where: { id: query.cardId },
     include: {
       owner: { select: { id: true, handle: true, displayName: true } },
-      board: { select: { id: true, ownerId: true, settings: true, title: true } }
+      parent: { select: { id: true, ownerId: true, settings: true, title: true } }
     }
   }).then(async card => card
     ? {
@@ -41,13 +42,13 @@ export async function serverGetCard(session: Session | null, query: GetCardQuery
     }
     : null
   )
-  if (!card || !canSeeCard(session?.userId ?? null, card)) return {
+  if (!card || !card.parent || !(await canSeeCard(session?.userId ?? null, card))) return {
     success: false,
     error: { notFound: true }
   }
   return {
     success: true,
-    data: card,
+    data: { ...card, parent: card.parent },
   }
 }
 

@@ -5,13 +5,13 @@ import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
 import { wocResponse } from 'lib/http'
-import { canEditBoard } from 'lib/access'
+import { canEditCard } from 'lib/access'
 import { getSession } from 'next-auth/react'
 import { CardSettings } from 'lib/model-settings'
 
 interface CreateCardRequest extends NextApiRequest {
   body: {
-    boardId: Card['boardId']
+    parentId: Card['id']
     title: Card['title']
     private?: boolean
   }
@@ -20,7 +20,7 @@ interface CreateCardRequest extends NextApiRequest {
 export type CreateCardBody = CreateCardRequest['body']
 
 const schema: Schema<CreateCardBody> = yup.object({
-  boardId: yup.string().uuid().required(),
+  parentId: yup.string().uuid().required(),
   title: yup.string().required(),
   private: yup.boolean()
 })
@@ -29,39 +29,40 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
-    const board = await prisma.board.findUnique({
-      where: { id: body.boardId },
-      select: { ownerId: true, settings: true },
+    const board = await prisma.card.findUnique({
+      where: { id: body.parentId },
+      select: { id: true, ownerId: true, settings: true },
       rejectOnNotFound: true,
     })
-    if (!canEditBoard(session?.userId ?? null, board)) return res.status(403)
+    if (!canEditCard(session?.userId ?? null, board)) return res.status(403)
     const settings: Partial<CardSettings> = {
       visibility: body.private ? 'private' : 'public'
     }
     const card = await prisma.card.create({
       data: {
+        type: 'Card',
         title: body.title.trim(),
-        boardId: body.boardId,
+        parentId: body.parentId,
         settings,
         ownerId: board.ownerId,
       }
     })
     await prisma.$transaction(async prisma => {
-      const { cardOrder } = await prisma.board.findUnique({
-        where: { id: body.boardId },
-        select: { cardOrder: true },
+      const { childrenOrder } = await prisma.card.findUnique({
+        where: { id: body.parentId },
+        select: { childrenOrder: true },
         rejectOnNotFound: true,
       })
-      await prisma.board.update({
-        where: { id: body.boardId },
-        data: { cardOrder: [card.id, ...cardOrder] },
+      await prisma.card.update({
+        where: { id: body.parentId },
+        data: { childrenOrder: [card.id, ...childrenOrder] },
       })
     })
     return res.status(201).json(card)
   }
 }
 
-export async function callCreateCard(body: CreateCardBody): Promise<Card> {
+export async function callCreateCard(body: CreateCardBody): Promise<Card & { parentId: string }> {
   const { data } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/create`, body)
   return wocResponse(data)
 }

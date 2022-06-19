@@ -32,7 +32,6 @@ export default async function deleteReply(req: DeleteReplyRequest, res: NextApiR
             card: {
               select: {
                 ownerId: true, settings: true,
-                board: { select: { ownerId: true, settings: true } }
               }
             }
           }

@@ -1,4 +1,3 @@
-import { unsafeCanSee } from "lib/access"
 import { deleteById, mergeById } from "lib/array"
 import { callCreateReply, CreateReplyBody } from "pages/api/replies/create"
 import { callDeleteReply, DeleteReplyBody } from "pages/api/replies/delete"
@@ -49,7 +48,7 @@ export function useCreateReply() {
         updateQueriesData<ListRepliesData>(
           queryClient,
           { predicate: keyPredicate(fromListRepliesKey, query => query.cards.includes(reply.comment.cardId)) },
-          listRepliesData => [...listRepliesData, unsafeCanSee(reply)]
+          listRepliesData => [...listRepliesData, reply]
         )
       }
     })

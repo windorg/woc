@@ -1,14 +1,14 @@
-import { Board, Card, Comment, Prisma, User } from '@prisma/client'
+import { Card, Comment, User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from 'lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
-import { canEditBoard, canEditComment, CanSee, canSeeBoard, canSeeCard, canSeeComment, PCard, pCardSelect } from 'lib/access'
+import { canEditComment, canSeeComment } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
-import { filterSync, mapAsync } from 'lib/array'
+import { filterAsync, filterSync, mapAsync } from 'lib/array'
 import { Result, wocQuery, wocResponse } from 'lib/http'
 
 export type ListCommentsQuery = {
@@ -20,19 +20,17 @@ const schema: Schema<ListCommentsQuery> = yup.object({
 })
 
 export type ListCommentsData =
-  (CanSee & Comment & {
+  (Comment & {
     canEdit: boolean
   })[]
 
 export type ListCommentsResponse = Result<ListCommentsData, never>
 
 export async function serverListComments(session: Session | null, query: ListCommentsQuery): Promise<ListCommentsResponse> {
-  const where: Prisma.CommentWhereInput = {}
-  where.cardId = { in: query.cards }
-  const comments = await prisma.comment.findMany({ where, include: { card: { select: pCardSelect } } })
-    .then(xs => filterSync(xs, (comment): comment is typeof comment & CanSee => canSeeComment(session?.userId ?? null, comment)))
+  const comments = await prisma.comment.findMany({ where: { cardId: { in: query.cards } } })
+    .then(async xs => filterAsync(xs, async (comment) => canSeeComment(session?.userId ?? null, comment)))
     .then(xs => xs.map(comment => ({
-      ..._.omit(comment, 'card'),
+      ...comment,
       canEdit: canEditComment(session?.userId ?? null, comment)
     })))
   return {
