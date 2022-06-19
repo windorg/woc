@@ -1,4 +1,4 @@
-import { Card, CardType } from '@prisma/client'
+import { Card } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
@@ -40,7 +40,7 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
     }
     const card = await prisma.card.create({
       data: {
-        type: CardType.Card,
+        type: 'Card',
         title: body.title.trim(),
         parentId: body.parentId,
         settings,
