@@ -1,4 +1,4 @@
-import { Board, Card, Prisma, User } from '@prisma/client'
+import { Card, User } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
@@ -6,20 +6,19 @@ import { Schema } from 'yup'
 import axios from 'axios'
 import { ResponseError, Result, wocQuery, wocResponse } from 'lib/http'
 import { getSession } from 'next-auth/react'
-import { canEditBoard, CanSee, canSeeBoard } from 'lib/access'
+import { canEditCard, canSeeCard } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
-import { filterSync } from 'lib/array'
 
 export type GetBoardQuery = {
-  boardId: Board['id']
+  boardId: Card['id']
 }
 
 const schema: Schema<GetBoardQuery> = yup.object({
   boardId: yup.string().uuid().required(),
 })
 
-export type GetBoardData = CanSee & Board & {
+export type GetBoardData = Card & {
   owner: Pick<User, 'id' | 'handle'>
   canEdit: boolean
 }
@@ -27,7 +26,7 @@ export type GetBoardData = CanSee & Board & {
 export type GetBoardResponse = Result<GetBoardData, { notFound: true }>
 
 export async function serverGetBoard(session: Session | null, query: GetBoardQuery): Promise<GetBoardResponse> {
-  const board = await prisma.board.findUnique({
+  const board = await prisma.card.findUnique({
     where: { id: query.boardId },
     include: {
       owner: { select: { id: true, handle: true } },
@@ -35,11 +34,11 @@ export async function serverGetBoard(session: Session | null, query: GetBoardQue
   }).then(async board => board
     ? {
       ...board,
-      canEdit: canEditBoard(session?.userId ?? null, board)
+      canEdit: canEditCard(session?.userId ?? null, board)
     }
     : null
   )
-  if (!board || !canSeeBoard(session?.userId ?? null, board)) return {
+  if (!board || !(await canSeeCard(session?.userId ?? null, board))) return {
     success: false,
     error: { notFound: true }
   }

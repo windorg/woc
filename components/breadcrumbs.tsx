@@ -1,7 +1,7 @@
-import { Board, Card, User } from "@prisma/client"
+import { Card, User } from "@prisma/client"
 import React from "react"
 import * as B from 'react-bootstrap'
-import { boardSettings } from "../lib/model-settings"
+import { cardSettings } from "../lib/model-settings"
 import Link from 'next/link'
 import { boardRoute, boardsRoute, cardRoute, feedRoute, inboxRoute, userRoute, accountRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
@@ -52,8 +52,8 @@ export function UserCrumb(props: { active?: boolean, user: Pick<User, 'id' | 'ha
   )
 }
 
-export function BoardCrumb(props: { active?: boolean, board: Pick<Board, 'id' | 'title' | 'settings'> }) {
-  const isPrivate = boardSettings(props.board).visibility === 'private'
+export function BoardCrumb(props: { active?: boolean, board: Pick<Card, 'id' | 'title' | 'settings'> }) {
+  const isPrivate = cardSettings(props.board).visibility === 'private'
   return (
     <LinkItem active={props.active} href={boardRoute(props.board.id)} preload>
       {isPrivate ? "🔒 " : ""}
@@ -63,7 +63,7 @@ export function BoardCrumb(props: { active?: boolean, board: Pick<Board, 'id' | 
 }
 
 export function CardCrumb(props: { active?: boolean, card: Pick<Card, 'id' | 'title' | 'settings'> }) {
-  const isPrivate = boardSettings(props.card).visibility === 'private'
+  const isPrivate = cardSettings(props.card).visibility === 'private'
   return (
     <LinkItem active={props.active} href={cardRoute(props.card.id)} preload>
       {isPrivate ? "🔒 " : ""}

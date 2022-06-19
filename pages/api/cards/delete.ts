@@ -27,7 +27,7 @@ export default async function deleteCard(req: DeleteCardRequest, res: NextApiRes
     const card = await prisma.card.findUnique({
       where: { id: body.cardId },
       include: {
-        board: { select: { ownerId: true, settings: true } }
+        parent: { select: { ownerId: true, settings: true } }
       },
       rejectOnNotFound: true,
     })
@@ -37,19 +37,21 @@ export default async function deleteCard(req: DeleteCardRequest, res: NextApiRes
       where: { id: body.cardId }
     })
     await prisma.$transaction(async prisma => {
-      const { cardOrder } = await prisma.board.findUnique({
-        where: { id: card.boardId },
-        select: { cardOrder: true },
-        rejectOnNotFound: true,
-      })
-      await prisma.board.update({
-        where: { id: card.boardId },
-        data: { cardOrder: filterSync(cardOrder, id => id !== body.cardId) },
-      })
+      if (card.parentId !== null) {
+        const { childrenOrder } = await prisma.card.findUnique({
+          where: { id: card.parentId },
+          select: { childrenOrder: true },
+          rejectOnNotFound: true,
+        })
+        await prisma.card.update({
+          where: { id: card.parentId },
+          data: { childrenOrder: filterSync(childrenOrder, id => id !== body.cardId) },
+        })
+      }
     })
-
-    return res.status(204).send()
   }
+
+  return res.status(204).send()
 }
 
 export async function callDeleteCard(body: DeleteCardBody): Promise<void> {

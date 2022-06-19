@@ -1,6 +1,6 @@
 // Settings types used in most models (Board, Card, etc)
 
-import { Board, Card, Comment, Reply, User } from "@prisma/client"
+import { Card, Comment, Reply, User } from "@prisma/client"
 
 // If you ever change this, grep for 'private' and 'public'
 export type Visibility = 'private' | 'public'
@@ -15,16 +15,6 @@ export function userSettings(user: Pick<User, 'settings'>): UserSettings {
     beeminderAccessToken: null,
   }
   return { ...def, ...(user.settings as object) }
-}
-
-export type BoardSettings = {
-  visibility: Visibility
-}
-export function boardSettings(board: Pick<Board, 'settings'>): BoardSettings {
-  const def: BoardSettings = {
-    visibility: 'public'
-  }
-  return { ...def, ...(board.settings as object) }
 }
 
 export type CardSettings = {

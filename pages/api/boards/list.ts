@@ -1,14 +1,15 @@
-import { Board, Card, Prisma, User } from '@prisma/client'
+import { Card, User } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from 'lib/db'
 import * as yup from 'yup'
 import { Schema } from 'yup'
 import axios from 'axios'
 import { getSession } from 'next-auth/react'
-import { canEditBoard, CanSee, canSeeBoard, canSeeCard, PCard } from 'lib/access'
+import { canEditCard, canSeeCard } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
-import { filterSync } from 'lib/array'
+import { filterAsync, filterSync } from 'lib/array'
 import { Result, wocQuery, wocResponse } from 'lib/http'
 
 export type ListBoardsQuery = {
@@ -23,7 +24,7 @@ const schema: Schema<ListBoardsQuery> = yup.object({
 })
 
 export type ListBoardsData =
-  (CanSee & Board & {
+  (Card & {
     owner: Pick<User, 'handle' | 'displayName'>
   })[]
 
@@ -31,12 +32,12 @@ export type ListBoardsResponse = Result<ListBoardsData, never>
 
 export async function serverListBoards(session: Session | null, query: ListBoardsQuery): Promise<ListBoardsResponse> {
   const include = { owner: { select: { handle: true, displayName: true } } }
-  const where: Prisma.BoardWhereInput = {}
+  const where: Prisma.CardWhereInput = { type: 'Board' }
   if (query?.users !== undefined) where.ownerId = { in: query.users }
-  const boards = await prisma.board.findMany({
+  const boards = await prisma.card.findMany({
     include,
     ...(_.isEmpty(where) ? {} : { where })
-  }).then(xs => filterSync(xs, (board): board is typeof board & CanSee => canSeeBoard(session?.userId ?? null, board)))
+  }).then(async xs => filterAsync(xs, async board => canSeeCard(session?.userId ?? null, board)))
   return {
     success: true,
     data: boards,

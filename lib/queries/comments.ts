@@ -1,4 +1,3 @@
-import { unsafeCanSee } from "lib/access"
 import { deleteById, mergeById } from "lib/array"
 import { CreateCommentBody } from "pages/api/comments/create"
 import { DeleteCommentBody } from "pages/api/comments/delete"
@@ -50,7 +49,7 @@ export function useCreateComment() {
         updateQueriesData<ListCommentsData>(
           queryClient,
           { predicate: keyPredicate(fromListCommentsKey, query => query.cards.includes(comment.cardId)) },
-          listCommentsData => [...listCommentsData, unsafeCanSee(comment)]
+          listCommentsData => [...listCommentsData, comment]
         )
       }
     })

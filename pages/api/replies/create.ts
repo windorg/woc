@@ -1,4 +1,5 @@
-import { Prisma, Reply, User, Comment, subscription_update_kind } from '@prisma/client'
+import { Reply, User, Comment, subscription_update_kind } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from 'lib/db'
 import * as yup from 'yup'
@@ -79,18 +80,17 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
     const comment = await prisma.comment.findUnique({
       where: { id: body.commentId },
       select: {
-        ownerId: true, settings: true,
+        id: true, ownerId: true, settings: true,
         card: {
           select: {
             ownerId: true, settings: true,
-            board: { select: { ownerId: true, settings: true } }
           }
         }
       },
       rejectOnNotFound: true,
     })
     if (!session) return res.status(403)
-    if (!canReplyToComment(session.userId, comment)) return res.status(403)
+    if (!await canReplyToComment(session.userId, comment)) return res.status(403)
 
     // Create the reply
     const reply = await prisma.reply.create({
