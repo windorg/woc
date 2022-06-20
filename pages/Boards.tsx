@@ -10,16 +10,16 @@ import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
 import * as B from 'react-bootstrap'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
-import { ListBoardsData, serverListBoards } from './api/boards/list'
-import { prefetchBoards, useBoards } from 'lib/queries/boards'
 import { isNextExport } from 'lib/export'
+import { ListCardsData, serverListCards } from './api/cards/list'
+import { prefetchCards, useCards } from '@lib/queries/cards'
 
 type Props = {
-  boards?: ListBoardsData
+  boards?: ListCardsData
 }
 
 async function preload(context: PreloadContext): Promise<void> {
-  await prefetchBoards(context.queryClient, {})
+  await prefetchCards(context.queryClient, { onlyTopLevel: true })
 }
 
 async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
@@ -29,7 +29,7 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   if (typeof window === 'undefined') {
     if (!isNextExport(context)) {
       const session = await getSession(context)
-      await serverListBoards(session, {})
+      await serverListCards(session, { onlyTopLevel: true })
         .then(result => { if (result.success) props.boards = result.data })
     }
   }
@@ -41,7 +41,7 @@ const Boards: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) 
   const userId = session?.userId ?? null
   const initialProps = deserialize<Props>(serializedInitialProps)
 
-  const boardsQuery = useBoards({}, { initialData: initialProps?.boards })
+  const boardsQuery = useCards({ onlyTopLevel: true }, { initialData: initialProps?.boards })
 
   if (boardsQuery.status === 'loading' || boardsQuery.status === 'idle')
     return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
@@ -72,13 +72,11 @@ const Boards: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) 
             allowNewBoard={true}
             heading="Your boards"
             boards={userBoards}
-            showUserHandles={false}
             kind="own-board" />
           <BoardsList
             allowNewBoard={false}
             heading="Others' public boards"
             boards={otherBoards}
-            showUserHandles={false}
             kind="other-board" />
         </>
         :
@@ -90,7 +88,6 @@ const Boards: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) 
             allowNewBoard={false}
             heading="Public boards"
             boards={otherBoards}
-            showUserHandles={false}
             kind="other-board" />
         </>
       }

@@ -3,8 +3,9 @@ import React from "react"
 import * as B from 'react-bootstrap'
 import { cardSettings } from "../lib/model-settings"
 import Link from 'next/link'
-import { boardRoute, boardsRoute, cardRoute, feedRoute, inboxRoute, userRoute, accountRoute } from "lib/routes"
+import { boardsRoute, cardRoute, feedRoute, inboxRoute, userRoute, accountRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
+import { useCard } from "@lib/queries/cards"
 
 function LinkItem(props: { href: string, children: React.ReactNode, active?: boolean, preload?: boolean }) {
   return props.active
@@ -52,22 +53,25 @@ export function UserCrumb(props: { active?: boolean, user: Pick<User, 'id' | 'ha
   )
 }
 
-export function BoardCrumb(props: { active?: boolean, board: Pick<Card, 'id' | 'title' | 'settings'> }) {
-  const isPrivate = cardSettings(props.board).visibility === 'private'
-  return (
-    <LinkItem active={props.active} href={boardRoute(props.board.id)} preload>
-      {isPrivate ? "🔒 " : ""}
-      {props.board.title}
-    </LinkItem>
-  )
-}
-
 export function CardCrumb(props: { active?: boolean, card: Pick<Card, 'id' | 'title' | 'settings'> }) {
   const isPrivate = cardSettings(props.card).visibility === 'private'
   return (
     <LinkItem active={props.active} href={cardRoute(props.card.id)} preload>
       {isPrivate ? "🔒 " : ""}
       {props.card.title}
+    </LinkItem>
+  )
+}
+
+export function CardCrumbFetch(props: { active?: boolean, cardId: Card['id'] }) {
+  const cardQuery = useCard({ cardId: props.cardId })
+  const isPrivate = cardQuery.data ? (cardSettings(cardQuery.data).visibility === 'private') : false
+  return (
+    <LinkItem active={props.active} href={cardRoute(props.cardId)} preload>
+      {cardQuery.data
+        ? <>{isPrivate ? "🔒 " : ""} {cardQuery.data.title}</>
+        : <B.Spinner animation="border" size="sm" />
+      }
     </LinkItem>
   )
 }

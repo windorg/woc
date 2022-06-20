@@ -10,24 +10,24 @@ import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
 import * as B from 'react-bootstrap'
 import { prefetchUser, useFollowUser, useUnfollowUser, useUser } from 'lib/queries/user'
-import { prefetchBoards, useBoards } from 'lib/queries/boards'
 import { GetUserData, serverGetUser } from './api/users/get'
-import { ListBoardsData, serverListBoards } from './api/boards/list'
 import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { SocialTags } from 'components/socialTags'
 import { isNextExport } from 'lib/export'
+import { ListCardsData, serverListCards } from './api/cards/list'
+import { prefetchCards, useCards } from '@lib/queries/cards'
 
 type Props = {
   userId: User['id']
   user?: GetUserData
-  boards?: ListBoardsData
+  boards?: ListCardsData
 }
 
 async function preload(context: PreloadContext): Promise<void> {
   const userId = context.query.userId as string
   await Promise.all([
     prefetchUser(context.queryClient, { userId }),
-    prefetchBoards(context.queryClient, { users: [userId] })
+    prefetchCards(context.queryClient, { owners: [userId], onlyTopLevel: true })
   ])
 }
 
@@ -39,7 +39,7 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
       const session = await getSession(context)
       await serverGetUser(session, { userId })
         .then(result => { if (result.success) props.user = result.data })
-      await serverListBoards(session, { users: [userId] })
+      await serverListCards(session, { owners: [userId], onlyTopLevel: true })
         .then(result => { if (result.success) props.boards = result.data })
     }
   }
@@ -78,7 +78,7 @@ const ShowUser: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
   const { data: session } = useSession()
 
   const userQuery = useUser({ userId }, { initialData: initialProps?.user })
-  const boardsQuery = useBoards({ users: [userId] }, { initialData: initialProps?.boards })
+  const boardsQuery = useCards({ owners: [userId], onlyTopLevel: true }, { initialData: initialProps?.boards })
 
   if (userQuery.status === 'loading' || userQuery.status === 'idle')
     return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
@@ -119,7 +119,6 @@ const ShowUser: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
         allowNewBoard={(session?.userId ?? null) === user.id}
         heading="Boards"
         boards={boards}
-        showUserHandles={false}
         kind="own-board" />
     </>
   )

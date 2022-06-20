@@ -1,15 +1,22 @@
 .tagline {
   line-height: 120%;
   margin-top: 0.3em;
+  font-weight: 400;
 }
 
 .card {
   // Forbid long-click on iOS because it messes with touch drag-and-drop
   -webkit-touch-callout: none;
   user-select: none;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  padding-left: 1rem;
+  border-radius: 3px;
+  margin: 0;
 }
 
 .dragged {
+  background-color: #ddd;
   a:hover {
     text-decoration: none !important;
   }

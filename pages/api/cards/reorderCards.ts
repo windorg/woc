@@ -92,7 +92,7 @@ export default async function apiReorderCards(req: NextApiRequest, res: NextApiR
 export async function callReorderCards(body: ReorderCardsBody): Promise<ReorderCardsData>
 export async function callReorderCards(body: ReorderCardsBody, opts: { returnErrors: true }): Promise<ReorderCardsResponse>
 export async function callReorderCards(body: ReorderCardsBody, opts?) {
-  const { data: result } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/boards/reorderCards`, body)
+  const { data: result } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/reorderCards`, body)
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
   if (result.error.unauthorized) throw new ResponseError('Unauthorized', result.error)

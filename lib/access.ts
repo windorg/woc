@@ -36,7 +36,7 @@ export async function canSeeComment<T extends { id: Comment['id'], ownerId: Comm
 export function canEditComment<T extends { id: Comment['id'], ownerId: Comment['ownerId'] }>(userId: User['id'] | null, comment: T) {
   if (!userId) return false // logged-out users cannot edit anything
   return comment.ownerId === userId
-  // If this logic changes, you should also change the logic in ShowCard.tsx
+  // If this logic changes, you should also change the logic in card.tsx
 }
 export async function canReplyToComment<T extends { id: Comment['id'], ownerId: Comment['ownerId'] }>(userId: User['id'] | null, comment: T) {
   if (!userId) return false // logged-out users cannot reply to anything

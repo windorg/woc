@@ -5,12 +5,10 @@ import { callCreateCard, CreateCardBody } from "pages/api/cards/create"
 import { QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
 import { callDeleteCard, DeleteCardBody } from "pages/api/cards/delete"
 import { keyPredicate, updateQueriesData, updateQueryData } from "./util"
-import { deleteById, mergeById } from "lib/array"
+import { deleteById, filterSync, mergeById } from "lib/array"
 import { callListCards, ListCardsData, ListCardsQuery } from "pages/api/cards/list"
 import { callMoveCard, MoveCardBody } from "pages/api/cards/move"
-import { GetBoardData } from "pages/api/boards/get"
-import { fromGetBoardKey, fromListBoardsKey } from "./boards"
-import { ListBoardsData } from "pages/api/boards/list"
+import { callReorderCards, ReorderCardsBody } from "pages/api/cards/reorderCards"
 
 // Keys
 
@@ -80,13 +78,13 @@ export function useUpdateCard() {
     async (data: UpdateCardBody) => { return callUpdateCard(data) },
     {
       onSuccess: (updates, variables) => {
-        // Update the GetCard query
+        // Update the GetCard query for the card itself
         updateQueryData<GetCardData>(
           queryClient,
           getCardKey({ cardId: variables.cardId }),
           getCardData => ({ ...getCardData, ...updates })
         )
-        // Update the ListCards queries
+        // Update all ListCards queries
         updateQueriesData<ListCardsData>(
           queryClient,
           { predicate: keyPredicate(fromListCardsKey, query => true) },
@@ -102,29 +100,27 @@ export function useCreateCard() {
     async (data: CreateCardBody) => { return callCreateCard(data) },
     {
       onSuccess: (card, variables) => {
-        // Update the ListCards queries
+        // Update the ListCards queries that might want to list this new card
         const card_ = { ...card, _count: { comments: 0 } }
         updateQueriesData<ListCardsData>(
           queryClient,
-          { predicate: keyPredicate(fromListCardsKey, query => query.boards.includes(card.parentId)) },
+          {
+            predicate: keyPredicate(fromListCardsKey, query =>
+              (query.owners === undefined ? true : query.owners.includes(card.ownerId)) &&
+              (query.parents === undefined ? true : (card.parentId !== null && query.parents.includes(card.parentId))) &&
+              (query.onlyTopLevel ? card.parentId === null : true)
+            )
+          },
           listCardsData => [...listCardsData, card_]
         )
-        // Update the GetBoard query
-        updateQueriesData<GetBoardData>(
-          queryClient,
-          { predicate: keyPredicate(fromGetBoardKey, query => query.boardId === card.parentId) },
-          getBoardData => ({ ...getBoardData, childrenOrder: [card.id, ...getBoardData.childrenOrder] })
-        )
-        // Update the ListBoards queries
-        updateQueriesData<ListBoardsData>(
-          queryClient,
-          { predicate: keyPredicate(fromListBoardsKey, query => true) },
-          listBoardsData => listBoardsData.map(board =>
-            board.id === card.parentId
-              ? { ...board, childrenOrder: [card.id, ...board.childrenOrder] }
-              : board
+        // Update the parent card
+        if (card.parentId !== null) {
+          updateQueryData<GetCardData>(
+            queryClient,
+            getCardKey({ cardId: card.parentId }),
+            getCardData => ({ ...getCardData, childrenOrder: [card.id, ...getCardData.childrenOrder] })
           )
-        )
+        }
       }
     })
 }
@@ -135,9 +131,17 @@ export function useDeleteCard() {
     async (data: DeleteCardBody) => { return callDeleteCard(data) },
     {
       onSuccess: (_void, variables) => {
-        // Update the GetCard query
+        // Erase the GetCard query for this card
         queryClient.removeQueries(getCardKey({ cardId: variables.cardId }), { exact: true })
-        // Update the ListCards queries
+        // Update all GetCard queries and remove the card from the list of children. We could update just the parent
+        // instead but we don't have info about the parent.
+        updateQueriesData<GetCardData>(
+          queryClient,
+          { predicate: keyPredicate(fromGetCardKey, query => true) },
+          getCardData => ({ ...getCardData, childrenOrder: filterSync(getCardData.childrenOrder, id => id !== variables.cardId) })
+        )
+        // Update all ListCards queries (easy!). Note that cards in ListCards don't include children order so we don't
+        // have to do any more changes.
         updateQueriesData<ListCardsData>(
           queryClient,
           { predicate: keyPredicate(fromListCardsKey, query => true) },
@@ -153,22 +157,29 @@ export function useMoveCard() {
     async (data: MoveCardBody) => { return callMoveCard(data) },
     {
       onSuccess: (_void, variables) => {
-        // Update the GetCard query. We don't necessarily have the target board's title etc, so we can't update the card.board field. Instead we just
-        // clear the query entirely.
-        queryClient.removeQueries(
-          getCardKey({ cardId: variables.cardId }),
-          { exact: true }
-        )
-        // Update the ListCards queries: remove the card from all boards & invalidate the queries that include the target board. (Regarding the latter
-        // part — a better way would be to find the card data and insert it into the target board queries, but it's a bit hard.)
-        updateQueriesData<ListCardsData>(
+        // We can't easily surgically update the GetCard query for the moved card, because we'd have to recalculate its
+        // parent chain. We also can't easily surgically update ListCards query (although we could grab the logic from
+        // useCreateCard and reuse it here). Instead, we just kill all GetCards and ListCards queries.
+        queryClient.removeQueries(getCardKey({ cardId: variables.cardId }), { exact: true })
+        queryClient.removeQueries({ predicate: keyPredicate(fromListCardsKey, query => true) })
+      }
+    })
+}
+
+export function useReorderCards() {
+  const queryClient = useQueryClient()
+  return useMutation(
+    async (data: ReorderCardsBody) => { return callReorderCards(data) },
+    {
+      onSuccess: ({ childrenOrder }, variables) => {
+        // Update the GetCard query
+        updateQueryData<GetCardData>(
           queryClient,
-          { predicate: keyPredicate(fromListCardsKey, query => true) },
-          listCardsData => deleteById(listCardsData, variables.cardId)
+          getCardKey({ cardId: variables.parentId }),
+          getCardData => ({ ...getCardData, childrenOrder })
         )
-        queryClient.removeQueries(
-          { predicate: keyPredicate(fromListCardsKey, query => query.boards.includes(variables.parentId)) },
-        )
+        // NB: we don't need to update the ListCards queries for the parent because they don't include children order
+        // anymore.
       }
     })
 }
