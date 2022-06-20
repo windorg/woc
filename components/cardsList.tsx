@@ -4,10 +4,10 @@ import * as DndModifiers from "@dnd-kit/modifiers"
 import { Card } from "@prisma/client"
 import { CardCard } from "./cardCard"
 import { CSS } from '@dnd-kit/utilities'
-import { useReorderCards } from "lib/queries/boards"
+import { useReorderCards } from "lib/queries/cards"
 import { filterSync, insertPosition } from "lib/array"
 
-type Card_ = Card & { _count: { comments: number } }
+type Card_ = Omit<Card, "childrenOrder"> & { _count: { comments: number } }
 
 // A list of cards, supporting drag-and-drop
 export function CardsList(props: {

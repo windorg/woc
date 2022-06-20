@@ -21,34 +21,46 @@ const schema: Schema<GetCardQuery> = yup.object({
 export type GetCardData =
   Card & {
     owner: Pick<User, 'id' | 'handle' | 'displayName'>
-    parent: Pick<Card, 'id' | 'ownerId' | 'settings' | 'title'>
+    parentChain: Card['id'][] // IDs of all cards in the parent chain (first == toplevel), will be [] if parentId === null
     canEdit: boolean
   }
 
 export type GetCardResponse = Result<GetCardData, { notFound: true }>
 
-// NB: does not currently work for boards, because boards don't have a parent
+// NB: works for boards as well
 export async function serverGetCard(session: Session | null, query: GetCardQuery): Promise<GetCardResponse> {
   const card = await prisma.card.findUnique({
     where: { id: query.cardId },
     include: {
       owner: { select: { id: true, handle: true, displayName: true } },
-      parent: { select: { id: true, ownerId: true, settings: true, title: true } }
     }
-  }).then(async card => card
-    ? {
-      ...card,
-      canEdit: canEditCard(session?.userId ?? null, card)
-    }
-    : null
-  )
-  if (!card || !card.parent || !(await canSeeCard(session?.userId ?? null, card))) return {
+  })
+  if (!card || !(await canSeeCard(session?.userId ?? null, card))) return {
     success: false,
     error: { notFound: true }
   }
+
+  // Get the parent chain
+  let parentChain: Card['id'][] = []
+  let currentParent: Card['id'] | null = card.parentId
+  while (currentParent) {
+    parentChain = [currentParent, ...parentChain]
+    const parentCard = await prisma.card.findUnique({
+      where: { id: currentParent },
+      select: { parentId: true },
+      rejectOnNotFound: true,
+    })
+    currentParent = parentCard.parentId
+  }
+
+  // Return
   return {
     success: true,
-    data: { ...card, parent: card.parent },
+    data: {
+      ...card,
+      canEdit: canEditCard(session?.userId ?? null, card),
+      parentChain
+    },
   }
 }
 

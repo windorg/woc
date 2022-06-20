@@ -11,7 +11,7 @@ import { CardSettings } from 'lib/model-settings'
 
 interface CreateCardRequest extends NextApiRequest {
   body: {
-    parentId: Card['id']
+    parentId: Card['id'] | null // if null, we create a board
     title: Card['title']
     private?: boolean
   }
@@ -20,7 +20,7 @@ interface CreateCardRequest extends NextApiRequest {
 export type CreateCardBody = CreateCardRequest['body']
 
 const schema: Schema<CreateCardBody> = yup.object({
-  parentId: yup.string().uuid().required(),
+  parentId: yup.string().uuid().required().nullable(),
   title: yup.string().required(),
   private: yup.boolean()
 })
@@ -29,34 +29,40 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
-    const board = await prisma.card.findUnique({
-      where: { id: body.parentId },
-      select: { id: true, ownerId: true, settings: true },
-      rejectOnNotFound: true,
-    })
-    if (!canEditCard(session?.userId ?? null, board)) return res.status(403)
+    // TODO all 403s etc must end with send() otherwise they aren't sent
+    if (!session) return res.status(403)
+    const parent =
+      body.parentId
+        ? await prisma.card.findUnique({
+          where: { id: body.parentId },
+          select: { id: true, ownerId: true, settings: true },
+          rejectOnNotFound: true,
+        })
+        : null
+    if (parent && !canEditCard(session?.userId ?? null, parent)) return res.status(403)
     const settings: Partial<CardSettings> = {
       visibility: body.private ? 'private' : 'public'
     }
     const card = await prisma.card.create({
       data: {
-        type: 'Card',
         title: body.title.trim(),
         parentId: body.parentId,
         settings,
-        ownerId: board.ownerId,
+        ownerId: parent ? parent.ownerId : session?.userId,
       }
     })
     await prisma.$transaction(async prisma => {
-      const { childrenOrder } = await prisma.card.findUnique({
-        where: { id: body.parentId },
-        select: { childrenOrder: true },
-        rejectOnNotFound: true,
-      })
-      await prisma.card.update({
-        where: { id: body.parentId },
-        data: { childrenOrder: [card.id, ...childrenOrder] },
-      })
+      if (body.parentId) {
+        const { childrenOrder } = await prisma.card.findUnique({
+          where: { id: body.parentId },
+          select: { childrenOrder: true },
+          rejectOnNotFound: true,
+        })
+        await prisma.card.update({
+          where: { id: body.parentId },
+          data: { childrenOrder: [card.id, ...childrenOrder] },
+        })
+      }
     })
     return res.status(201).json(card)
   }
