@@ -1,10 +1,13 @@
 import { sortByIdOrder } from '@lib/array'
 import { cardSettings } from '@lib/model-settings'
+import { LinkButton } from 'components/linkButton'
 import _ from 'lodash'
 import { GetCardData } from 'pages/api/cards/get'
 import { ListCardsData } from 'pages/api/cards/list'
+import * as React from 'react'
 import { AddCardForm } from './addCardForm'
 import { CardsList } from './cardsList'
+import { BiArchive } from 'react-icons/bi'
 import styles from './shared.module.scss'
 
 export function Subcards(props: {
@@ -17,14 +20,19 @@ export function Subcards(props: {
       sortByIdOrder(cards, parent.childrenOrder, { onMissingElement: 'skip' }),
       card => (!cardSettings(card).archived)
     )
+  const [showArchived, setShowArchived] = React.useState(false)
   return (
     <div className={styles.subcards}>
-      <div className={styles._label}>
-        <span>Sub-cards</span>
+      <div className={styles._header}>
+        <span className={styles._label}>Sub-cards {showArchived ? "— archived" : ""}</span>
+        {showArchived
+          ? <LinkButton icon={<BiArchive />} onClick={() => setShowArchived(false)}>Back</LinkButton>
+          : <LinkButton icon={<BiArchive />} onClick={() => setShowArchived(true)}>Archived</LinkButton>
+        }
       </div>
       <div className={styles._list}>
-        {parent.canEdit && <AddCardForm parentId={parent.id} />}
-        <CardsList parentId={parent.id} cards={normalCards} allowEdit={parent.canEdit} />
+        {(parent.canEdit && !showArchived) && <AddCardForm parentId={parent.id} />}
+        <CardsList parentId={parent.id} cards={showArchived ? archivedCards : normalCards} allowEdit={parent.canEdit} />
       </div>
     </div>
     //   {

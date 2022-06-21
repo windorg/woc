@@ -1,11 +1,15 @@
 .subcards {
   margin: 30px 0;
   max-width: 40rem;
-  ._label {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #888;
+  ._header {
     margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    ._label {
+      font-weight: 500;
+      color: #6c757d;
+    }
   }
   ._list {
     border-top: 1px solid #ccc;
