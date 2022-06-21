@@ -12,21 +12,32 @@ import { filterAsync, filterSync, mapAsync } from 'lib/array'
 import { Result, wocQuery, wocResponse } from 'lib/http'
 
 export type ListCardsQuery = {
-  boards: Card['id'][] // as a JSON array
+  parents?: Card['id'][] // as a JSON array
+  owners?: User['id'][] // as a JSON array
+  onlyTopLevel?: boolean // if true, returns cards w/ parent === null
 }
 
 const schema: Schema<ListCardsQuery> = yup.object({
-  boards: yup.array().json().of(yup.string().uuid().required()).required()
+  parents: yup.array().json().of(yup.string().uuid().required()),
+  owners: yup.array().json().of(yup.string().uuid().required()),
+  onlyTopLevel: yup.boolean()
 })
 
 export type ListCardsData =
-  (Card & { _count: { comments: number } })[]
+  (Omit<Card, 'childrenOrder'>
+    & { _count: { comments: number } }
+  )[]
 
 export type ListCardsResponse = Result<ListCardsData, never>
 
+// NB: Can return either cards or boards!
 export async function serverListCards(session: Session | null, query: ListCardsQuery): Promise<ListCardsResponse> {
   const cards = await prisma.card.findMany({
-    where: { type: 'Card', parentId: { in: query.boards } },
+    where: {
+      ...(query.parents ? { parentId: { in: query.parents } } : {}),
+      ...(query.owners ? { ownerId: { in: query.owners } } : {}),
+      ...(query.onlyTopLevel ? { parentId: null } : {})
+    },
     include: {
       _count: { select: { comments: true } }
     }
@@ -34,7 +45,7 @@ export async function serverListCards(session: Session | null, query: ListCardsQ
     .then(async xs => filterAsync(xs, async (card) => canSeeCard(session?.userId ?? null, card)))
   return {
     success: true,
-    data: cards,
+    data: cards.map(card => _.omit(card, 'childrenOrder')),
   }
 }
 

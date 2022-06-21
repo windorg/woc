@@ -61,7 +61,7 @@ export async function createBoard(
   await page.click('button:has-text("Create a board")')
   if (options?.navigate) {
     await page.click(`text=${name}`)
-    await page.waitForURL('**/ShowBoard*')
+    await page.waitForURL('**/card*')
   }
   return name
 }
@@ -74,16 +74,17 @@ export async function createCard(
     navigate?: boolean
   }
 ): Promise<string> {
-  expect(page.url().includes('/ShowBoard'))
+  expect(page.url().includes('/card'))
   const name = randomWords(3).join('-')
-  await page.fill('[placeholder="Card title"]', name)
+  await page.focus('[placeholder="New card..."]')
+  await page.fill('[placeholder="New card..."]', name)
   if (options?.private) {
     await page.check('input[name="private"]')
   }
-  await page.press('[placeholder="Card title"]', 'Enter')
+  await page.press('[placeholder="New card..."]', 'Enter')
   if (options?.navigate) {
     await page.click(`text=${name}`)
-    await page.waitForURL('**/ShowCard*')
+    await page.waitForURL('**/card*')
   }
   return name
 }
@@ -95,14 +96,14 @@ export async function createComment(
     private?: boolean
   }
 ): Promise<string> {
-  expect(page.url().includes('/ShowCard'))
+  expect(page.url().includes('/card'))
   const content = randomWords(4).join('-')
   await page.click('.woc-comment-form .tiptap')
   await page.keyboard.type(content)
   if (options?.private) {
-    await page.check('input[name="private"]')
+    await page.check('.woc-comment-form input[name="private"]')
   }
-  await page.click('button:has-text("Post")')
+  await page.click('.woc-comment-form button:has-text("Post")')
   return content
 }
 
@@ -111,7 +112,7 @@ export async function createReply(
   page: Page,
   comment: string
 ): Promise<string> {
-  expect(page.url().includes('/ShowCard'))
+  expect(page.url().includes('/card'))
   const content = randomWords(4).join('-')
   const commentHandle = await page.locator('.woc-comment', { hasText: comment }).elementHandle()
   await (await commentHandle!.$('text=Reply'))?.click()
@@ -123,7 +124,7 @@ export async function createReply(
 
 // Expect a reply with certain text to not be present on the page and in the database
 export async function expectReplyGone(page: Page, replyContent: string) {
-  expect(page.url().includes('/ShowCard'))
+  expect(page.url().includes('/card'))
   await expect(page.locator('#layout')).not.toContainText(replyContent)
   const reply = await prisma.reply.findFirst({
     where: {

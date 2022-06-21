@@ -5,13 +5,13 @@ import * as B from 'react-bootstrap'
 import { BoardCard } from "./boardCard"
 import { CreateBoardModal } from "./createBoardModal"
 
-type Board_ = Card & { owner: { handle: string, displayName: string } }
+type Board_ = Omit<Card, 'childrenOrder'>
 
 export function BoardsList(props: {
   allowNewBoard: boolean
   heading: string
   boards: Board_[]
-  showUserHandles: boolean
+  // If other-board, we will show user handles
   kind: 'own-board' | 'other-board'
 }) {
   const [createBoardShown, setCreateBoardShown] = useState(false)

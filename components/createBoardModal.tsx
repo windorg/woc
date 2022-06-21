@@ -1,7 +1,7 @@
 import React, { useRef } from 'react'
 import * as B from 'react-bootstrap'
 import { Formik } from 'formik'
-import { useCreateBoard } from 'lib/queries/boards'
+import { useCreateCard } from '@lib/queries/cards'
 
 export function CreateBoardModal(props: {
   show: boolean
@@ -9,7 +9,7 @@ export function CreateBoardModal(props: {
   afterCreate?: () => void
 }) {
   const titleInputRef: React.RefObject<HTMLInputElement> = useRef(null)
-  const createBoardMutation = useCreateBoard()
+  const createBoardMutation = useCreateCard()
   return (
     <B.Modal
       size="lg"
@@ -26,7 +26,7 @@ export function CreateBoardModal(props: {
         <Formik
           initialValues={{ private: false, title: "" }}
           onSubmit={async (values, formik) => {
-            await createBoardMutation.mutateAsync(values)
+            await createBoardMutation.mutateAsync({ ...values, parentId: null })
             if (props.afterCreate) props.afterCreate()
             formik.resetForm()
           }}

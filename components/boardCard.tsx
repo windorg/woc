@@ -1,22 +1,26 @@
 import { cardSettings } from "../lib/model-settings"
 import Link from 'next/link'
 import { Card, User } from "@prisma/client"
-import { boardRoute, userRoute } from "lib/routes"
+import { cardRoute, userRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
 import * as B from 'react-bootstrap'
+import { useUser } from "@lib/queries/user"
 
 type Kind = 'own-board' | 'other-board'
-type Board_ = Card & { owner: Pick<User, 'handle' | 'displayName'> }
+type Board_ = Omit<Card, 'childrenOrder'>
 
 export function BoardCard(props: { board: Board_, kind: Kind }) {
   const { board, kind } = props
   const isPrivate = cardSettings(board).visibility === 'private'
+
+  const ownerQuery = useUser({ userId: props.board.ownerId })
+
   return (
     <B.Card className={`woc-board mt-3 mb-3 ${isPrivate ? "woc-board-private" : ""}`}>
       <B.Card.Body>
         <h3>
           {isPrivate && "🔒 "}
-          <LinkPreload href={boardRoute(board.id)}>
+          <LinkPreload href={cardRoute(board.id)}>
             <a className={(kind === 'other-board') ? "text-muted" : "stretched-link"}>
               {board.title}
             </a>
@@ -26,8 +30,13 @@ export function BoardCard(props: { board: Board_, kind: Kind }) {
           <LinkPreload href={userRoute(board.ownerId)}>
             <a>
               <span>
-                <span className="me-2">{board.owner.displayName}</span>
-                <em>@{board.owner.handle}</em>
+                {ownerQuery.data
+                  ? <>
+                    <span className="me-2">{ownerQuery.data.displayName}</span>
+                    <em>@{ownerQuery.data.handle}</em>
+                  </>
+                  : <B.Spinner animation="border" size="sm" />
+                }
               </span>
             </a>
           </LinkPreload>

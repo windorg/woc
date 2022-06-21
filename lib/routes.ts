@@ -12,20 +12,16 @@ export function userRoute(userId: User['id']) {
   return `/ShowUser?userId=${userId}`
 }
 
-export function boardRoute(boardId: Card['id']) {
-  return `/ShowBoard?boardId=${boardId}`
-}
-
 export function cardRoute(cardId: Card['id']) {
-  return `/ShowCard?cardId=${cardId}`
+  return `/card?id=${cardId}`
 }
 
 export function commentRoute(args: { cardId: Card['id'], commentId: Comment['id'] }) {
-  return `/ShowCard?cardId=${args.cardId}#comment-${args.commentId}`
+  return `/card?id=${args.cardId}#comment-${args.commentId}`
 }
 
 export function replyRoute(args: { cardId: Card['id'], replyId: Comment['id'] }) {
-  return `/ShowCard?cardId=${args.cardId}#reply-${args.replyId}`
+  return `/card?id=${args.cardId}#reply-${args.replyId}`
 }
 
 export function feedRoute() {
