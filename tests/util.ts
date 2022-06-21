@@ -76,11 +76,12 @@ export async function createCard(
 ): Promise<string> {
   expect(page.url().includes('/card'))
   const name = randomWords(3).join('-')
-  await page.fill('[placeholder="Card title"]', name)
+  await page.focus('[placeholder="New card..."]')
+  await page.fill('[placeholder="New card..."]', name)
   if (options?.private) {
     await page.check('input[name="private"]')
   }
-  await page.press('[placeholder="Card title"]', 'Enter')
+  await page.press('[placeholder="New card..."]', 'Enter')
   if (options?.navigate) {
     await page.click(`text=${name}`)
     await page.waitForURL('**/card*')
