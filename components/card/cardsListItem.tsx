@@ -1,14 +1,14 @@
-import { cardSettings } from "../lib/model-settings"
+import { cardSettings } from "../../lib/model-settings"
 import * as B from 'react-bootstrap'
 import { Card } from "@prisma/client"
 import { cardRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
-import styles from './cardCard.module.scss'
+import styles from './shared.module.scss'
 
 type Card_ = Pick<Card, "id" | "title" | "tagline" | "settings"> & { _count: { comments: number } }
 
-// A card, e.g. in a board view.
-export function CardCard(props: {
+// A card in the sub-cards list
+export function CardsListItem(props: {
   // Whether the card is being dragged in a list
   dragged?: boolean
   card: Card_
@@ -17,7 +17,8 @@ export function CardCard(props: {
   const dragged = props?.dragged ?? false
   const isPrivate = cardSettings(card).visibility === 'private'
   return (
-    <div className={`${styles.card} woc-card ${isPrivate ? "woc-card-private" : ""} ${dragged ? styles.dragged : ""}`}>
+    // TODO: move .woc-card-private into scss module
+    <div className={`${styles.cardsListItem} woc-card ${isPrivate ? "woc-card-private" : ""} ${dragged ? styles._dragged : ""}`}>
       <div>
         {isPrivate ? "🔒 " : ""}
         {dragged
@@ -27,7 +28,7 @@ export function CardCard(props: {
         <B.Badge pill style={{ marginLeft: ".5em" }} bg="secondary">{card._count.comments}</B.Badge>
       </div>
       {card.tagline &&
-        <div className={styles.tagline}>
+        <div className={styles._tagline}>
           <span className="text-muted small">{card.tagline}</span>
         </div>
       }

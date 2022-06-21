@@ -2,7 +2,7 @@ import * as Dnd from "@dnd-kit/core"
 import * as DndSort from "@dnd-kit/sortable"
 import * as DndModifiers from "@dnd-kit/modifiers"
 import { Card } from "@prisma/client"
-import { CardCard } from "./cardCard"
+import { CardsListItem } from "./cardsListItem"
 import { CSS } from '@dnd-kit/utilities'
 import { useReorderCards } from "lib/queries/cards"
 import { filterSync, insertPosition } from "lib/array"
@@ -75,7 +75,7 @@ export function CardsList(props: {
   } else {
     return (
       <>
-        {props.cards.map(card => (<CardCard key={card.id} card={card} />))}
+        {props.cards.map(card => (<CardsListItem key={card.id} card={card} />))}
       </>
     )
   }
@@ -114,7 +114,7 @@ function Sortable(props: {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <CardCard card={props.card} dragged={isDragging} />
+      <CardsListItem card={props.card} dragged={isDragging} />
     </div>
   )
 }
