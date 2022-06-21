@@ -28,9 +28,8 @@ import { SocialTags } from 'components/socialTags'
 import { MoveCardModal } from 'components/moveCardModal'
 import { isNextExport } from 'lib/export'
 import { ListCardsData, serverListCards } from './api/cards/list'
-import { CardsList } from 'components/cardsList'
-import { AddCardForm } from 'components/addCardForm'
 import styles from './card.module.scss'
+import { Subcards } from 'components/card/subcards'
 
 type Props = {
   cardId: Card['id']
@@ -104,12 +103,6 @@ const CardPage: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
   const children = childrenQuery.data
   const comments = commentsQuery.data
   const replies = repliesQuery.data
-
-  const [normalCards, archivedCards] =
-    _.partition(
-      sortByIdOrder(children, card.childrenOrder, { onMissingElement: 'skip' }),
-      card => (!cardSettings(card).archived)
-    )
 
   const renderCommentList = (comments) => comments.map(comment => (
     <CommentComponent key={comment.id}
@@ -204,28 +197,7 @@ const CardPage: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
         />
       </div>
 
-      <div className={styles.childrenCards}>
-        <div className={styles.childrenCardsLabel}>
-          <span>Sub-cards</span>
-        </div>
-        <div className={styles.childrenCardsList}>
-          {card.canEdit && <AddCardForm parentId={card.id} />}
-          <CardsList parentId={card.id} cards={normalCards} allowEdit={card.canEdit} />
-        </div>
-      </div>
-      {
-        (archivedCards.length > 0) &&
-        <B.Accordion className="mt-5">
-          <B.Accordion.Item eventKey="0">
-            <B.Accordion.Header>
-              <B.Badge bg="secondary">Archived cards</B.Badge>
-            </B.Accordion.Header>
-            <B.Accordion.Body>
-              <CardsList parentId={card.id} cards={archivedCards} allowEdit={card.canEdit} />
-            </B.Accordion.Body>
-          </B.Accordion.Item>
-        </B.Accordion>
-      }
+      <Subcards parent={card} cards={children} />
 
       {settings.reverseOrder ? reverseOrderComments() : normalOrderComments()}
     </>

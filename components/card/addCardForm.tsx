@@ -3,7 +3,7 @@ import * as B from 'react-bootstrap'
 import React, { useRef } from 'react'
 import { Formik } from 'formik'
 import { useCreateCard } from 'lib/queries/cards'
-import styles from './addCardForm.module.scss'
+import styles from './shared.module.scss'
 
 export function AddCardForm(props: {
   parentId: Card['id']
@@ -32,7 +32,11 @@ export function AddCardForm(props: {
           setFocused(false)
         }
         return (
-          <B.Form className={`${styles.form} ${focused ? styles.formFocused : ''}`} onSubmit={formik.handleSubmit} onAbort={onCancel}>
+          <B.Form
+            className={`${styles.addCardForm} ${focused ? styles._focused : ''}`}
+            onSubmit={formik.handleSubmit}
+            onAbort={onCancel}
+          >
             <B.Form.Control
               ref={inputRef}
               onFocus={() => setFocused(true)}
@@ -41,7 +45,7 @@ export function AddCardForm(props: {
               }}
               name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
               type="text" placeholder="New card..." />
-            <div className={styles.controls} style={focused ? {} : { display: 'none' }}>
+            <div className={styles._controls}>
               <B.Form.Check
                 name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
                 type="checkbox" inline label="🔒 Private card" />
