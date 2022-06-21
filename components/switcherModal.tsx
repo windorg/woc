@@ -1,7 +1,6 @@
 import React, { KeyboardEventHandler } from 'react'
 import * as B from 'react-bootstrap'
 import { useSession } from 'next-auth/react'
-import { useBoards } from 'lib/queries/boards'
 import { useCards } from 'lib/queries/cards'
 import { Key } from 'ts-key-enum'
 import { filterSync } from 'lib/array'
@@ -124,8 +123,8 @@ export function SwitcherModal(props: {
   // See https://github.com/react-bootstrap/react-bootstrap/issues/5102
   const searchInputRef: React.RefObject<HTMLInputElement> = React.useRef(null)
   const session = useSession().data!  // assuming there's definitely a user, otherwise we shouldn't allow the switcher
-  const boardsQuery = useBoards({ users: [session.userId] }, { enabled: props.show })
-  const cardsQuery = useCards({ boards: (boardsQuery.isSuccess ? boardsQuery.data.map(x => x.id) : []) }, { enabled: boardsQuery.isSuccess })
+  // This gets both boards and cards now
+  const cardsQuery = useCards({ owners: [session.userId] })
   const router = useRouter()
 
   return (

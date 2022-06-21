@@ -10,7 +10,6 @@ datasource db {
 
 model Card {
   id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  type          CardType
   title         String   @default("")
   tagline       String   @default("")
   parentId      String?  @map("parent_id") @db.Uuid
@@ -26,7 +25,6 @@ model Card {
   subscriptionUpdates SubscriptionUpdate[]
 
   @@index([ownerId], map: "cards_owner_id_index")
-  @@index([type], map: "cards_type_index")
   @@map("cards")
 }
 
@@ -122,13 +120,6 @@ model User {
   subscriptionUpdates SubscriptionUpdate[]
 
   @@map("users")
-}
-
-enum CardType {
-  Card   @map("card")
-  Board  @map("board")
-
-  @@map("card_type")
 }
 
 enum subscription_update_kind {

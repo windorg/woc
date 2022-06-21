@@ -15,55 +15,59 @@ export type MoveCardBody = {
   // Move this card
   cardId: Card['id']
   // ...into this parent
-  parentId: Card['id']
+  newParentId: Card['id']
 }
 
 const schema: Schema<MoveCardBody> = yup.object({
   cardId: yup.string().uuid().required(),
-  parentId: yup.string().uuid().required(),
+  newParentId: yup.string().uuid().required(),
 })
 
 export type MoveCardData = Record<string, never>
 
 export type MoveCardResponse = Result<MoveCardData, { unauthorized: true } | { notFound: true }>
 
-// NB: only works for cards and not for boards at the moment, because boards don't have parents
+// NB: works for cards and for boards
+//
+// TODO: check that we aren't trying to move a card into its own child!
 export async function serverMoveCard(session: Session | null, body: MoveCardBody): Promise<MoveCardResponse> {
   const userId = session?.userId ?? null
   const card = await prisma.card.findUnique({
     where: { id: body.cardId },
   })
-  const board = await prisma.card.findUnique({
-    where: { id: body.parentId },
+  const newParent = await prisma.card.findUnique({
+    where: { id: body.newParentId },
   })
-  if (!card || !board) return { success: false, error: { notFound: true } }
-  if (!canEditCard(userId, card) || !canEditCard(userId, board)) return { success: false, error: { unauthorized: true } }
+  if (!card || !newParent) return { success: false, error: { notFound: true } }
+  if (!canEditCard(userId, card) || !canEditCard(userId, newParent)) return { success: false, error: { unauthorized: true } }
   await prisma.$transaction(async prisma => {
     // Move the actual card
     await prisma.card.update({
       where: { id: body.cardId },
-      data: { parentId: body.parentId },
+      data: { parentId: body.newParentId },
     })
-    // Delete the card from the old board childrenOrder
-    const { childrenOrder: childrenOrderFrom } = await prisma.card.findUnique({
-      where: { id: card.parentId! },
-      select: { childrenOrder: true },
-      rejectOnNotFound: true,
-    })
-    await prisma.card.update({
-      where: { id: card.parentId! },
-      data: {
-        childrenOrder: filterSync(childrenOrderFrom, id => id !== body.cardId),
-      },
-    })
+    // Delete the card from the old parent childrenOrder
+    if (card.parentId) {
+      const { childrenOrder: childrenOrderFrom } = await prisma.card.findUnique({
+        where: { id: card.parentId },
+        select: { childrenOrder: true },
+        rejectOnNotFound: true,
+      })
+      await prisma.card.update({
+        where: { id: card.parentId },
+        data: {
+          childrenOrder: filterSync(childrenOrderFrom, id => id !== body.cardId),
+        },
+      })
+    }
     // Add the card to the new board childrenOrder
     const { childrenOrder: childrenOrderTo } = await prisma.card.findUnique({
-      where: { id: body.parentId },
+      where: { id: body.newParentId },
       select: { childrenOrder: true },
       rejectOnNotFound: true,
     })
     await prisma.card.update({
-      where: { id: body.parentId },
+      where: { id: body.newParentId },
       data: {
         childrenOrder: [body.cardId, ...childrenOrderTo],
       },
