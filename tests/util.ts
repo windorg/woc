@@ -101,9 +101,9 @@ export async function createComment(
   await page.click('.woc-comment-form .tiptap')
   await page.keyboard.type(content)
   if (options?.private) {
-    await page.check('input[name="private"]')
+    await page.check('.woc-comment-form input[name="private"]')
   }
-  await page.click('button:has-text("Post")')
+  await page.click('.woc-comment-form button:has-text("Post")')
   return content
 }
 
