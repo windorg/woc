@@ -17,21 +17,24 @@ export function CardsListItem(props: {
   const dragged = props?.dragged ?? false
   const isPrivate = cardSettings(card).visibility === 'private'
   return (
-    // TODO: move .woc-card-private into scss module
-    <div className={`${styles.cardsListItem} woc-card ${isPrivate ? "woc-card-private" : ""} ${dragged ? styles._dragged : ""}`}>
-      <div>
-        {isPrivate ? "🔒 " : ""}
-        {dragged
-          ? <a className="stretched-link">{card.title}</a>
-          : <LinkPreload href={cardRoute(card.id)}><a className="stretched-link">{card.title}</a></LinkPreload>
-        }
-        <B.Badge pill style={{ marginLeft: ".5em" }} bg="secondary">{card._count.comments}</B.Badge>
+    <div className={`${styles.cardsListItem} woc-card ${dragged ? styles._dragged : ""}`}>
+      <div className={styles._counter}>
+        {card._count.comments || "−"}
       </div>
-      {card.tagline &&
-        <div className={styles._tagline}>
-          <span className="text-muted small">{card.tagline}</span>
+      <div className={styles._body}>
+        <div>
+          {isPrivate ? "🔒 " : ""}
+          {dragged
+            ? <a className="stretched-link">{card.title}</a>
+            : <LinkPreload href={cardRoute(card.id)}><a className="stretched-link">{card.title}</a></LinkPreload>
+          }
         </div>
-      }
+        {card.tagline &&
+          <div className={styles._tagline}>
+            {card.tagline}
+          </div>
+        }
+      </div>
     </div>
   )
 }
