@@ -16,12 +16,12 @@ export type MoveCardBody = {
   // Move this card
   cardId: Card['id']
   // ...into this card
-  newParentId: Card['id']
+  newParentId: Card['id'] | null
 }
 
 const schema: Schema<MoveCardBody> = yup.object({
   cardId: yup.string().uuid().required(),
-  newParentId: yup.string().uuid().required(),
+  newParentId: yup.string().uuid().required().nullable(),
 })
 
 export type MoveCardData = Record<string, never>
@@ -36,25 +36,30 @@ export async function serverMoveCard(session: Session | null, body: MoveCardBody
   const card = await prisma.card.findUnique({
     where: { id: body.cardId },
   })
-  const newParent = await prisma.card.findUnique({
-    where: { id: body.newParentId },
-  })
-  if (!card || !newParent) return { success: false, error: { notFound: true } }
-  if (!canEditCard(userId, card) || !canEditCard(userId, newParent)) return { success: false, error: { unauthorized: true } }
-  return await prisma.$transaction(async prisma => {
-    // First we want to check if the new parent is a *child* of the card we're moving. For that we get all parents of
-    // the new parent and see if the "child" card is among them.
-    const parentChain = await getCardChain(prisma, body.newParentId)
-    if (parentChain.includes(card.id)) return { success: false, error: { parentIntoChild: true } }
+  if (!card) return { success: false, error: { notFound: true } }
+  if (!canEditCard(userId, card)) return { success: false, error: { unauthorized: true } }
 
-    // Ok. Now move the actual card.
+
+  return await prisma.$transaction(async prisma => {
+    // Extra checks only if we're moving into non-null
+    if (body.newParentId !== null) {
+      const newParent = await prisma.card.findUnique({ where: { id: body.newParentId } })
+      if (!newParent) return { success: false, error: { notFound: true } }
+      if (!canEditCard(userId, newParent)) return { success: false, error: { unauthorized: true } }
+      // Check if the new parent is a *child* of the card we're moving. For that we get all parents of
+      // the new parent and see if the "child" card is among them.
+      const parentChain = await getCardChain(prisma, body.newParentId)
+      if (parentChain.includes(card.id)) return { success: false, error: { parentIntoChild: true } }
+    }
+
+    // Now move the actual card
     await prisma.card.update({
       where: { id: body.cardId },
       data: { parentId: body.newParentId },
     })
 
-    // Delete the card from the old parent childrenOrder
-    if (card.parentId) {
+    // Delete the card from the old parent's childrenOrder
+    if (card.parentId !== null) {
       const { childrenOrder: childrenOrderFrom } = await prisma.card.findUnique({
         where: { id: card.parentId },
         select: { childrenOrder: true },
@@ -68,18 +73,20 @@ export async function serverMoveCard(session: Session | null, body: MoveCardBody
       })
     }
 
-    // Add the card to the new board childrenOrder
-    const { childrenOrder: childrenOrderTo } = await prisma.card.findUnique({
-      where: { id: body.newParentId },
-      select: { childrenOrder: true },
-      rejectOnNotFound: true,
-    })
-    await prisma.card.update({
-      where: { id: body.newParentId },
-      data: {
-        childrenOrder: [body.cardId, ...childrenOrderTo],
-      },
-    })
+    // Add the card to the new parent's childrenOrder
+    if (body.newParentId !== null) {
+      const { childrenOrder: childrenOrderTo } = await prisma.card.findUnique({
+        where: { id: body.newParentId },
+        select: { childrenOrder: true },
+        rejectOnNotFound: true,
+      })
+      await prisma.card.update({
+        where: { id: body.newParentId },
+        data: {
+          childrenOrder: [body.cardId, ...childrenOrderTo],
+        },
+      })
+    }
 
     return { success: true, data: {} }
   })
