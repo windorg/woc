@@ -1,6 +1,5 @@
 import { Card } from "@prisma/client"
 import { Formik } from "formik"
-import { cardSettings } from "lib/model-settings"
 import React from "react"
 import * as B from 'react-bootstrap'
 import { useMoveCard, useCards } from "lib/queries/cards"
@@ -40,17 +39,23 @@ export function MoveCardModal(props: {
       keyboard={false}
       show={props.show}
       onHide={hide}
-      onEntered={() => searchRef.current?.focus()}
     >
       <B.Modal.Header closeButton>
         <B.Modal.Title>Move card</B.Modal.Title>
       </B.Modal.Header>
       <B.Modal.Body>
         <Formik
-          initialValues={{ newParent: '' as Card | string }}
+          initialValues={{
+            newParent: '' as Card | string,
+            moveToTopLevel: false,
+          }}
           onSubmit={async (values, formik) => {
-            // We are allowed to use "as" because we disable the submit button unless the chosen value is an object
-            await moveCardMutation.mutateAsync({ cardId: card.id, newParentId: (values.newParent as Card).id })
+            if (values.moveToTopLevel) {
+              await moveCardMutation.mutateAsync({ cardId: card.id, newParentId: null })
+            } else {
+              // We are allowed to use "as" because we disable the submit button unless the chosen value is an object
+              await moveCardMutation.mutateAsync({ cardId: card.id, newParentId: (values.newParent as Card).id })
+            }
             if (props.afterMove) props.afterMove()
             searchRef.current?.clear()
             formik.resetForm()
@@ -67,6 +72,7 @@ export function MoveCardModal(props: {
                     <Typeahead
                       id="newParent"
                       labelKey="title"
+                      disabled={formik.values.moveToTopLevel}
                       options={deleteById(cardsQuery.data, [card.id, card.parentId])}
                       onChange={selected => formik.setFieldValue('newParent', selected.length > 0 ? selected[0] : "")}
                       onInputChange={text => formik.setFieldValue('newParent', text)}
@@ -74,14 +80,31 @@ export function MoveCardModal(props: {
                     />
                 }
               </B.Form.Group>
+
+              <B.Form.Check className="mb-3" name="moveToTopLevel" id="moveToTopLevel">
+                <B.Form.Check.Input
+                  name="moveToTopLevel" id="moveToTopLevel"
+                  checked={formik.values.moveToTopLevel}
+                  disabled={card.parentId === null}
+                  onChange={formik.handleChange} type="checkbox" />
+                <B.Form.Check.Label>
+                  Move the card to top-level
+                </B.Form.Check.Label>
+              </B.Form.Check>
+
               {moveCardMutation.error && <div className="text-danger mb-3">{(moveCardMutation.error as Error).message}</div>}
+
               <B.Button variant="primary" type="submit"
-                disabled={formik.isSubmitting || typeof formik.values.newParent !== 'object' || formik.values.newParent.id === card.parentId}
+                disabled={formik.isSubmitting ||
+                  (formik.values.moveToTopLevel === false && (typeof formik.values.newParent !== 'object' || formik.values.newParent.id === card.parentId)) ||
+                  (formik.values.moveToTopLevel === true && card.parentId === null)
+                }
               >
                 Move
                 {formik.isSubmitting &&
                   <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
               </B.Button>
+
               <B.Button className="ms-2" variant="secondary" type="button"
                 onClick={hide}>
                 Cancel
