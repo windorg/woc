@@ -6,17 +6,13 @@ import * as B from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, CardCrumb, CardCrumbFetch } from '../components/breadcrumbs'
 import React, { useEffect, useState } from 'react'
 import _ from 'lodash'
-import * as R from 'ramda'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
 import { getSession } from 'next-auth/react'
-import { CommentComponent, Comment_ } from 'components/commentComponent'
 import { EditCardModal } from 'components/editCardModal'
 import { CardActions } from 'components/cardActions'
 import { useRouter } from 'next/router'
-import { deleteById, filterSync, mapAsync, mergeById, sortByIdOrder, updateById } from 'lib/array'
 import { cardRoute, boardsRoute } from 'lib/routes'
-import { AddCommentForm } from '../components/addCommentForm'
 import { GetCardData, serverGetCard } from './api/cards/get'
 import { ListCommentsData, serverListComments } from './api/comments/list'
 import { ListRepliesData, serverListReplies } from './api/replies/list'
@@ -28,8 +24,8 @@ import { SocialTags } from 'components/socialTags'
 import { MoveCardModal } from 'components/moveCardModal'
 import { isNextExport } from 'lib/export'
 import { ListCardsData, serverListCards } from './api/cards/list'
-import styles from './card.module.scss'
 import { Subcards } from 'components/card/subcards'
+import { Comments } from 'components/card/comments'
 
 type Props = {
   cardId: Card['id']
@@ -104,37 +100,7 @@ const CardPage: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
   const comments = commentsQuery.data
   const replies = repliesQuery.data
 
-  const renderCommentList = (comments) => comments.map(comment => (
-    <CommentComponent key={comment.id}
-      card={card}
-      comment={{ ...comment, canEdit: card.canEdit }}
-      replies={filterSync(replies, reply => reply.commentId === comment.id)}
-    />
-  ))
-
-  const settings = cardSettings(card)
-  const isPrivate = settings.visibility === 'private'
-
-  const [pinnedComments, otherComments] =
-    _.partition(
-      _.orderBy(comments, ['createdAt'], ['desc']),
-      comment => commentSettings(comment).pinned)
-
-  const reverseOrderComments = () => (<>
-    <p className="text-muted small">Comment order: oldest to newest.</p>
-    <div className="mb-3">
-      {renderCommentList(_.concat(R.reverse(pinnedComments), R.reverse(otherComments)))}
-    </div>
-    {card.canEdit && <AddCommentForm cardId={card.id} />}
-  </>)
-  // Note: we only use autoFocus for 'normalOrderComments' because for 'reverseOrderComments' it's annoying that the focus always jumps to the end of
-  // the page after loading.
-  const normalOrderComments = () => (<>
-    {card.canEdit && <AddCommentForm cardId={card.id} autoFocus />}
-    <div className="mt-4">
-      {renderCommentList(_.concat(pinnedComments, otherComments))}
-    </div>
-  </>)
+  const isPrivate = cardSettings(card).visibility === 'private'
 
   return (
     <>
@@ -199,7 +165,7 @@ const CardPage: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
 
       <Subcards parent={card} cards={children} />
 
-      {settings.reverseOrder ? reverseOrderComments() : normalOrderComments()}
+      <Comments card={card} comments={comments} replies={replies} />
     </>
   )
 }

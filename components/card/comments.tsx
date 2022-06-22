@@ -1,0 +1,66 @@
+import { filterSync } from "@lib/array"
+import { cardSettings, commentSettings } from "@lib/model-settings"
+import { AddCommentForm } from "components/addCommentForm"
+import { CommentComponent } from "components/commentComponent"
+import _ from "lodash"
+import { GetCardData } from "pages/api/cards/get"
+import { ListCommentsData } from "pages/api/comments/list"
+import { ListRepliesData } from "pages/api/replies/list"
+import * as R from "ramda"
+import styles from "./shared.module.scss"
+
+export function Comments(props: {
+  card: GetCardData
+  comments: ListCommentsData
+  replies: ListRepliesData
+}) {
+  const { card, comments, replies } = props
+
+  const renderCommentList = (comments) => comments.map(comment => (
+    <CommentComponent key={comment.id}
+      card={card}
+      comment={{ ...comment, canEdit: card.canEdit }}
+      replies={filterSync(replies, reply => reply.commentId === comment.id)}
+    />))
+
+  const [pinnedComments, otherComments] =
+    _.partition(
+      _.orderBy(comments, ['createdAt'], ['desc']),
+      comment => commentSettings(comment).pinned)
+
+  // Note: we only use autoFocus for 'normalOrderComments' because for 'reverseOrderComments' it's annoying that the focus always jumps to the end of
+  // the page after loading.
+  const normalOrderComments = () => (<>
+    {card.canEdit && <AddCommentForm cardId={card.id} autoFocus />}
+    <div className="mt-4">
+      {renderCommentList(_.concat(pinnedComments, otherComments))}
+    </div>
+  </>)
+
+  const reverseOrderComments = () => (<>
+    <p className="text-muted small">Comment order: oldest to newest.</p>
+    <div className="mb-3">
+      {renderCommentList(_.concat(R.reverse(pinnedComments), R.reverse(otherComments)))}
+    </div>
+    {card.canEdit && <AddCommentForm cardId={card.id} />}
+  </>)
+
+  return (
+    <div className={styles.comments}>
+      <div className={styles.sectionHeader}>
+        <div className={styles._label}>
+          Comments ({comments.length})
+        </div>
+      </div>
+      <div className={styles._list}>
+        {cardSettings(card).reverseOrder ? reverseOrderComments() : normalOrderComments()}
+      </div>
+    </div>
+  )
+}
+
+
+
+
+
+

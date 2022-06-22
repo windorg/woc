@@ -1,12 +1,13 @@
 import _ from 'lodash'
 import * as R from 'ramda'
 
-// Delete an element based on the 'id' field
+// Delete an element or several elements based on the 'id' field
 export function deleteById<T, I>(
   xs: (T & { id: I })[],
-  id: I
+  id: I | I[]
 ) {
-  return filterSync(xs, x => x.id !== id)
+  const bad = Array.isArray(id) ? id : [id]
+  return filterSync(xs, x => !bad.includes(x.id))
 }
 
 // Find an element based on the 'id' field and update it
