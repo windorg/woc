@@ -18,9 +18,13 @@ export function MoveCardModal(props: {
   // See https://github.com/react-bootstrap/react-bootstrap/issues/5102
   const searchRef = React.useRef<React.ElementRef<typeof Typeahead>>(null)
   const session = useSession().data!  // assuming there's definitely a user
-  // WOC-24: for now we only allow moving into boards
-  const boardsQuery = useCards({ owners: [session.userId], onlyTopLevel: true })
+  const cardsQuery = useCards({ owners: [session.userId] })
   const moveCardMutation = useMoveCard()
+
+  const hide = () => {
+    moveCardMutation.reset()
+    props.onHide()
+  }
 
   // Note: here's how the search box works.
   //
@@ -35,7 +39,7 @@ export function MoveCardModal(props: {
       backdrop="static"
       keyboard={false}
       show={props.show}
-      onHide={props.onHide}
+      onHide={hide}
       onEntered={() => searchRef.current?.focus()}
     >
       <B.Modal.Header closeButton>
@@ -57,19 +61,20 @@ export function MoveCardModal(props: {
               <B.Form.Group className="mb-3">
                 <B.Form.Label>Card to move into</B.Form.Label>
                 {/* https://codesandbox.io/s/react-typeahead-formik-bootstrap-w3k7k?file=/src/App.js */}
-                {(boardsQuery.isLoading || boardsQuery.isIdle) ? <B.Spinner animation="border" role="status" /> :
-                  boardsQuery.isError ? <div className="text-danger">Could not fetch boards: {(boardsQuery.error as Error).message}</div> :
+                {(cardsQuery.isLoading || cardsQuery.isIdle) ? <B.Spinner animation="border" role="status" /> :
+                  cardsQuery.isError ? <div className="text-danger">Could not fetch boards: {(cardsQuery.error as Error).message}</div> :
                     /* TODO: try Typeahead.isLoading=true instead of blocking the whole search box */
                     <Typeahead
                       id="newParent"
                       labelKey="title"
-                      options={deleteById(boardsQuery.data, card.id)}
+                      options={deleteById(cardsQuery.data, [card.id, card.parentId])}
                       onChange={selected => formik.setFieldValue('newParent', selected.length > 0 ? selected[0] : "")}
                       onInputChange={text => formik.setFieldValue('newParent', text)}
                       ref={searchRef}
                     />
                 }
               </B.Form.Group>
+              {moveCardMutation.error && <div className="text-danger mb-3">{(moveCardMutation.error as Error).message}</div>}
               <B.Button variant="primary" type="submit"
                 disabled={formik.isSubmitting || typeof formik.values.newParent !== 'object' || formik.values.newParent.id === card.parentId}
               >
@@ -78,7 +83,7 @@ export function MoveCardModal(props: {
                   <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
               </B.Button>
               <B.Button className="ms-2" variant="secondary" type="button"
-                onClick={props.onHide}>
+                onClick={hide}>
                 Cancel
               </B.Button>
             </B.Form>

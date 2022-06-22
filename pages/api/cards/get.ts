@@ -9,6 +9,7 @@ import { getSession } from 'next-auth/react'
 import { canEditCard, canSeeCard } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
+import { getCardChain } from '@lib/parents'
 
 export type GetCardQuery = {
   cardId: Card['id']
@@ -39,21 +40,10 @@ export async function serverGetCard(session: Session | null, query: GetCardQuery
     success: false,
     error: { notFound: true }
   }
-
-  // Get the parent chain
-  let parentChain: Card['id'][] = []
-  let currentParent: Card['id'] | null = card.parentId
-  while (currentParent) {
-    parentChain = [currentParent, ...parentChain]
-    const parentCard = await prisma.card.findUnique({
-      where: { id: currentParent },
-      select: { parentId: true },
-      rejectOnNotFound: true,
-    })
-    currentParent = parentCard.parentId
-  }
-
-  // Return
+  const parentChain =
+    card.parentId
+      ? await prisma.$transaction(async prisma => getCardChain(prisma, card.parentId!))
+      : []
   return {
     success: true,
     data: {
