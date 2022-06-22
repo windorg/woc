@@ -10,11 +10,12 @@ import { canEditCard } from 'lib/access'
 import _ from 'lodash'
 import { Session } from 'next-auth'
 import { filterSync } from '@lib/array'
+import { getCardChain } from '@lib/parents'
 
 export type MoveCardBody = {
   // Move this card
   cardId: Card['id']
-  // ...into this parent
+  // ...into this card
   newParentId: Card['id']
 }
 
@@ -25,7 +26,7 @@ const schema: Schema<MoveCardBody> = yup.object({
 
 export type MoveCardData = Record<string, never>
 
-export type MoveCardResponse = Result<MoveCardData, { unauthorized: true } | { notFound: true }>
+export type MoveCardResponse = Result<MoveCardData, { unauthorized: true } | { notFound: true } | { parentIntoChild: true }>
 
 // NB: works for cards and for boards
 //
@@ -40,12 +41,18 @@ export async function serverMoveCard(session: Session | null, body: MoveCardBody
   })
   if (!card || !newParent) return { success: false, error: { notFound: true } }
   if (!canEditCard(userId, card) || !canEditCard(userId, newParent)) return { success: false, error: { unauthorized: true } }
-  await prisma.$transaction(async prisma => {
-    // Move the actual card
+  return await prisma.$transaction(async prisma => {
+    // First we want to check if the new parent is a *child* of the card we're moving. For that we get all parents of
+    // the new parent and see if the "child" card is among them.
+    const parentChain = await getCardChain(prisma, body.newParentId)
+    if (parentChain.includes(card.id)) return { success: false, error: { parentIntoChild: true } }
+
+    // Ok. Now move the actual card.
     await prisma.card.update({
       where: { id: body.cardId },
       data: { parentId: body.newParentId },
     })
+
     // Delete the card from the old parent childrenOrder
     if (card.parentId) {
       const { childrenOrder: childrenOrderFrom } = await prisma.card.findUnique({
@@ -60,6 +67,7 @@ export async function serverMoveCard(session: Session | null, body: MoveCardBody
         },
       })
     }
+
     // Add the card to the new board childrenOrder
     const { childrenOrder: childrenOrderTo } = await prisma.card.findUnique({
       where: { id: body.newParentId },
@@ -72,8 +80,9 @@ export async function serverMoveCard(session: Session | null, body: MoveCardBody
         childrenOrder: [body.cardId, ...childrenOrderTo],
       },
     })
+
+    return { success: true, data: {} }
   })
-  return { success: true, data: {} }
 }
 
 export default async function apiMoveCard(req: NextApiRequest, res: NextApiResponse<MoveCardResponse>) {
@@ -93,4 +102,5 @@ export async function callMoveCard(body: MoveCardBody, opts?) {
   if (result.success) return wocResponse(result.data)
   if (result.error.unauthorized) throw new ResponseError('Unauthorized', result.error)
   if (result.error.notFound) throw new ResponseError('Not found', result.error)
+  if (result.error.parentIntoChild) throw new ResponseError('Cannot move a card into its own child', result.error)
 }

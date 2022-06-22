@@ -23,8 +23,12 @@ export function Subcards(props: {
   const [showArchived, setShowArchived] = React.useState(false)
   return (
     <div className={styles.subcards}>
-      <div className={styles._header}>
-        <span className={styles._label}>Sub-cards {showArchived ? "— archived" : ""}</span>
+      <div className={styles.sectionHeader}>
+        <span className={styles._label}>
+          Sub-cards
+          {showArchived ? " — archived" : ""}
+          {showArchived ? ` (${archivedCards.length})` : ` (${normalCards.length})`}
+        </span>
         {showArchived
           ? <LinkButton icon={<BiArchive />} onClick={() => setShowArchived(false)}>Back</LinkButton>
           : <LinkButton icon={<BiArchive />} onClick={() => setShowArchived(true)}>Archived</LinkButton>
