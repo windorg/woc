@@ -10,6 +10,7 @@ import { LinkPreload } from "lib/link-preload"
 import { useHotkeys } from "react-hotkeys-hook"
 import { SwitcherModal } from "./switcherModal"
 import styles from "./layout.module.scss"
+import { BiSearch } from "react-icons/bi"
 
 function ChangelogButton() {
   const headwayConfig = {
@@ -119,11 +120,27 @@ function Switcher() {
   )
   return (
     session
-      ? <SwitcherModal
-        show={switcherShown}
-        onHide={() => setSwitcherShown(false)}
-      />
-      : null
+      ? <>
+        <SwitcherModal
+          show={switcherShown}
+          onHide={() => setSwitcherShown(false)}
+        />
+        {!switcherShown &&
+          <B.Button
+            onClick={() => setSwitcherShown(true)}
+            className={`${styles.switcherActionButton} rounded-circle`}
+          >
+            <BiSearch className={styles.icon} />
+          </B.Button>
+        }
+      </>
+      : (<B.Button
+        onClick={() => setSwitcherShown(true)}
+        className={`${styles.switcherActionButton} rounded-circle`}
+      >
+        <BiSearch className={styles.icon} />
+      </B.Button>)
+
   )
 }
 
