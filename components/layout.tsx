@@ -134,13 +134,7 @@ function Switcher() {
           </B.Button>
         }
       </>
-      : (<B.Button
-        onClick={() => setSwitcherShown(true)}
-        className={`${styles.switcherActionButton} rounded-circle`}
-      >
-        <BiSearch className={styles.icon} />
-      </B.Button>)
-
+      : null
   )
 }
 
