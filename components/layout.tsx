@@ -8,9 +8,9 @@ import { useInboxCount } from "lib/queries/inbox"
 import { accountRoute, boardsRoute, feedRoute, inboxRoute } from "lib/routes"
 import { LinkPreload } from "lib/link-preload"
 import { useHotkeys } from "react-hotkeys-hook"
-import { SwitcherModal } from "./switcherModal"
 import styles from "./layout.module.scss"
 import { BiSearch } from "react-icons/bi"
+import { useSwitcherModal } from "@components/switcherModal"
 
 function ChangelogButton() {
   const headwayConfig = {
@@ -104,13 +104,13 @@ function NavHeader() {
 }
 
 function Switcher() {
-  const [switcherShown, setSwitcherShown] = useState(false)
+  const switcherModal = useSwitcherModal()
   const session = useSession().data
   useHotkeys(
     'ctrl+k, command+k',
     () => {
-      if (!switcherShown) {
-        setSwitcherShown(true)
+      if (!switcherModal.isOpen) {
+        switcherModal.open()
       }
     },
     {
@@ -121,14 +121,13 @@ function Switcher() {
   return (
     session
       ? <>
-        <SwitcherModal
-          show={switcherShown}
-          onHide={() => setSwitcherShown(false)}
-        />
-        {!switcherShown &&
+        <switcherModal.Component />
+        {!switcherModal.isOpen &&
           <B.Button
-            onClick={() => setSwitcherShown(true)}
             className={`${styles.switcherActionButton} rounded-circle`}
+            onClick={() => {
+              switcherModal.open()
+            }}
           >
             <BiSearch className={styles.icon} />
           </B.Button>
