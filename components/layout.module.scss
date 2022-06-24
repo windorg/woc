@@ -8,3 +8,40 @@
     }
   }
 }
+
+.switcherActionButton {
+  padding: 0;
+  position: fixed;
+  width: 50px;
+  height: 50px;
+  bottom: 30px;
+  right: 30px;
+  .icon {
+    width: 25px;
+    height: 25px;
+    position: relative;
+    top: 1px;
+    left: 1px;
+  }
+  // Expand click area
+  &::before {
+    content: "";
+    position: absolute;
+    width: 90px;
+    height: 90px;
+    top: -15px;
+    left: -15px;
+    border-radius: 20px;
+  }
+  @media screen and (max-width: 480px) {
+    width: 40px;
+    height: 40px;
+    bottom: 40px;
+    right: 20px;
+    .icon {
+      width: 20px;
+      height: 20px;
+      top: -1px;
+    }
+  }
+}
