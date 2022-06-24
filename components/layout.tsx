@@ -127,6 +127,8 @@ function Switcher() {
             className={`${styles.switcherActionButton} rounded-circle`}
             onClick={() => {
               switcherModal.open()
+              // An attempt to explicitly ask Safari on iOS to show the on-screen keyboard
+              switcherModal.focus()
             }}
           >
             <BiSearch className={styles.icon} />

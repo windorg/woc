@@ -132,6 +132,9 @@ export function useSwitcherModal() {
   const close = React.useCallback(() => {
     setIsOpen(false)
   }, [setIsOpen])
+  const focus = () => {
+    searchInputRef.current?.focus()
+  }
 
   const Component = () => {
     return (
@@ -167,5 +170,5 @@ export function useSwitcherModal() {
     )
   }
 
-  return { Component, isOpen, open, close }
+  return { Component, isOpen, open, close, focus }
 }
