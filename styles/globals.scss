@@ -245,3 +245,11 @@ footer {
     padding: 1rem 1rem;
   }
 }
+
+// Replace all modal animations w/ snappier ones
+.modal {
+  transition: all 0s ease-in-out !important;
+  .modal-dialog {
+    transform: none !important;
+  }
+}

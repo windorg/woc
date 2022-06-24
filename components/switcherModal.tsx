@@ -1,4 +1,4 @@
-import React, { KeyboardEventHandler } from 'react'
+import * as React from 'react'
 import * as B from 'react-bootstrap'
 import { useSession } from 'next-auth/react'
 import { useCards } from 'lib/queries/cards'
@@ -39,7 +39,7 @@ function FilterBox<Item>(props: {
     }
   }
 
-  const handleKeyDown: KeyboardEventHandler = (event) => {
+  const handleKeyDown: React.KeyboardEventHandler = (event) => {
     const length = Math.max(1, filteredItems.length) // "max 1" because we can't divide by zero
     switch (event.key) {
       case Key.ArrowDown: {
@@ -115,10 +115,7 @@ function FilterBox<Item>(props: {
   </>)
 }
 
-export function SwitcherModal(props: {
-  show: boolean
-  onHide: () => void
-}) {
+export function useSwitcherModal() {
   // NB: autoFocus is broken inside modals so we use a ref and onEntered instead.
   // See https://github.com/react-bootstrap/react-bootstrap/issues/5102
   const searchInputRef: React.RefObject<HTMLInputElement> = React.useRef(null)
@@ -127,35 +124,48 @@ export function SwitcherModal(props: {
   const cardsQuery = useCards({ owners: [session.userId] })
   const router = useRouter()
 
-  return (
-    <B.Modal
-      size="lg"
-      show={props.show}
-      onHide={props.onHide}
-      onEntered={() => searchInputRef.current?.focus()}
-    >
-      <B.Modal.Header closeButton>
-        <B.Modal.Title>Find a card</B.Modal.Title>
-      </B.Modal.Header>
+  const [isOpen, setIsOpen] = React.useState(false)
+  const open = React.useCallback(() => {
+    setIsOpen(true)
+    searchInputRef.current?.focus()
+  }, [setIsOpen])
+  const close = React.useCallback(() => {
+    setIsOpen(false)
+  }, [setIsOpen])
 
-      <B.Modal.Body>
-        <FilterBox className={styles.filterBox}
-          items={
-            _.isUndefined(cardsQuery.data)
-              ? undefined
-              : _.orderBy(cardsQuery.data, ['createdAt'], ['desc'])
-          }
-          match={(text, card) => card.title.toLowerCase().includes(text.toLowerCase())}
-          renderItem={card => (
-            <span>{card.title}</span>
-          )}
-          onSelect={async card => {
-            props.onHide()
-            await router.push(cardRoute(card.id))
-          }}
-          searchInputRef={searchInputRef}
-        />
-      </B.Modal.Body>
-    </B.Modal>
-  )
+  const Component = () => {
+    return (
+      <B.Modal
+        className={styles.modal}
+        size="lg"
+        show={isOpen}
+        onHide={close}
+      >
+        <B.Modal.Header closeButton>
+          <B.Modal.Title>Find a card</B.Modal.Title>
+        </B.Modal.Header>
+
+        <B.Modal.Body>
+          <FilterBox className={styles.filterBox}
+            items={
+              _.isUndefined(cardsQuery.data)
+                ? undefined
+                : _.orderBy(cardsQuery.data, ['createdAt'], ['desc'])
+            }
+            match={(text, card) => card.title.toLowerCase().includes(text.toLowerCase())}
+            renderItem={card => (
+              <span>{card.title}</span>
+            )}
+            onSelect={async card => {
+              close()
+              await router.push(cardRoute(card.id))
+            }}
+            searchInputRef={searchInputRef}
+          />
+        </B.Modal.Body>
+      </B.Modal>
+    )
+  }
+
+  return { Component, isOpen, open, close }
 }

@@ -10,6 +10,7 @@
 }
 
 .switcherActionButton {
+  z-index: 500;
   padding: 0;
   position: fixed;
   width: 50px;
@@ -27,17 +28,17 @@
   &::before {
     content: "";
     position: absolute;
-    width: 90px;
-    height: 90px;
-    top: -15px;
-    left: -15px;
+    width: 100px;
+    height: 100px;
+    top: -20px;
+    left: -20px;
     border-radius: 20px;
   }
   @media screen and (max-width: 480px) {
     width: 40px;
     height: 40px;
-    bottom: 40px;
-    right: 20px;
+    bottom: 50px;
+    right: 30px;
     .icon {
       width: 20px;
       height: 20px;
