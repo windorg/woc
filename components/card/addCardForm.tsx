@@ -40,8 +40,11 @@ export function AddCardForm(props: {
             <B.Form.Control
               ref={inputRef}
               onFocus={() => setFocused(true)}
-              onKeyDown={e => {
-                if (e.key === 'Escape') onCancel()
+              onKeyDown={async event => {
+                if (event.key === 'Escape') onCancel()
+                if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                  await formik.submitForm()
+                }
               }}
               name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
               type="text" placeholder="New card..." />
