@@ -37,6 +37,11 @@ export function CreateBoardModal(props: {
                 <B.Form.Control
                   name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
                   type="text" placeholder="Board title"
+                  onKeyDown={async event => {
+                    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                      await formik.submitForm()
+                    }
+                  }}
                   ref={titleInputRef} />
               </B.Form.Group>
               <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>

@@ -59,14 +59,26 @@ export function EditCardModal(props: {
                     <B.Form.Label>Title</B.Form.Label>
                     <B.Form.Control
                       name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
-                      type="text" ref={titleInputRef} />
+                      type="text" ref={titleInputRef}
+                      onKeyDown={async event => {
+                        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                          await formik.submitForm()
+                        }
+                      }}
+                    />
                   </B.Form.Group>
 
                   <B.Form.Group className="mb-3">
                     <B.Form.Label>Tagline</B.Form.Label>
                     <B.Form.Control
                       name="tagline" id="tagline" value={formik.values.tagline} onChange={formik.handleChange}
-                      type="text" />
+                      type="text"
+                      onKeyDown={async event => {
+                        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                          await formik.submitForm()
+                        }
+                      }}
+                    />
                   </B.Form.Group>
 
                   <B.Form.Check name="reverseOrder" id="reverseOrder" className="mb-3">
@@ -91,7 +103,13 @@ export function EditCardModal(props: {
                     <B.Form.Label>Beeminder goal slug</B.Form.Label>
                     <B.Form.Control
                       name="beeminderGoal" id="beeminderGoal" value={formik.values.beeminderGoal} onChange={formik.handleChange}
-                      type="text" />
+                      type="text"
+                      onKeyDown={async event => {
+                        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                          await formik.submitForm()
+                        }
+                      }}
+                    />
                   </B.Form.Group>
                 </B.Tab>
               </B.Tabs>
