@@ -116,13 +116,14 @@ function FilterBox<Item>(props: {
 }
 
 export function useSwitcherModal() {
+  const router = useRouter()
+
   // NB: autoFocus is broken inside modals so we use a ref and onEntered instead.
   // See https://github.com/react-bootstrap/react-bootstrap/issues/5102
   const searchInputRef: React.RefObject<HTMLInputElement> = React.useRef(null)
-  const session = useSession().data!  // assuming there's definitely a user, otherwise we shouldn't allow the switcher
+  const session = useSession().data
   // This gets both boards and cards now
-  const cardsQuery = useCards({ owners: [session.userId] })
-  const router = useRouter()
+  const cardsQuery = useCards({ owners: session ? [session.userId] : [] }, { enabled: session !== null })
 
   const [isOpen, setIsOpen] = React.useState(false)
   const open = React.useCallback(() => {
@@ -138,6 +139,7 @@ export function useSwitcherModal() {
 
   const Component = () => {
     return (
+      session &&
       <B.Modal
         className={styles.modal}
         size="lg"
