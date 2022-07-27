@@ -1,16 +1,15 @@
-import { Card, Comment, Reply, User } from '@prisma/client'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from '../../../lib/db'
+import {Card, Comment, User} from '@prisma/client'
+import {NextApiRequest, NextApiResponse} from 'next'
+import {prisma} from '../../../lib/db'
 import * as yup from 'yup'
-import { Schema } from 'yup'
-import axios from 'axios'
-import { ResponseError, Result, wocQuery, wocResponse } from 'lib/http'
-import { getSession } from 'next-auth/react'
-import { canSeeComment } from 'lib/access'
+import {Schema} from 'yup'
+import {Result} from 'lib/http'
+import {getSession} from 'next-auth/react'
+import {canSeeComment} from 'lib/access'
 import _ from 'lodash'
-import { Session } from 'next-auth'
+import {Session} from 'next-auth'
 import moment from 'moment'
-import { filterAsync, filterSync } from 'lib/array'
+import {filterAsync} from 'lib/array'
 
 export type GetFeedQuery = {
   days: number
@@ -63,11 +62,3 @@ export default async function apiGetFeed(req: NextApiRequest, res: NextApiRespon
   }
 }
 
-export async function callGetFeed(query: GetFeedQuery): Promise<GetFeedData>
-export async function callGetFeed(query: GetFeedQuery, opts: { returnErrors: true }): Promise<GetFeedResponse>
-export async function callGetFeed(query: GetFeedQuery, opts?) {
-  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/feed/get`, { params: wocQuery(query) })
-  if (opts?.returnErrors) return wocResponse(result)
-  if (result.success) return wocResponse(result.data)
-  if (result.error.unauthorized) throw new ResponseError('Unauthorized', result.error)
-}

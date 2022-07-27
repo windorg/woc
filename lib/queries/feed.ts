@@ -1,5 +1,6 @@
-import { callGetFeed, GetFeedData, GetFeedQuery } from "pages/api/feed/get"
+import { GetFeedData, GetFeedQuery } from "pages/api/feed/get"
 import { QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
+import {callGetFeed} from "@lib/api";
 
 // Keys
 

@@ -1,8 +1,6 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import axios from 'axios'
-import { getSession } from 'next-auth/react'
-import _ from 'lodash'
-import { getInboxItemsCount } from 'lib/inbox'
+import {NextApiRequest, NextApiResponse} from 'next'
+import {getSession} from 'next-auth/react'
+import {getInboxItemsCount} from 'lib/inbox'
 
 export type InboxCountResponse = {
   itemCount: number
@@ -19,7 +17,3 @@ export default async function apiInboxCount(req: NextApiRequest, res: NextApiRes
   }
 }
 
-export async function callInboxCount(): Promise<InboxCountResponse> {
-  const { data } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/inbox/count`)
-  return data
-}

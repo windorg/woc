@@ -1,16 +1,14 @@
-import { Card } from '@prisma/client'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from '../../../lib/db'
+import {Card} from '@prisma/client'
+import {NextApiRequest, NextApiResponse} from 'next'
+import {prisma} from '../../../lib/db'
 import * as yup from 'yup'
-import { Schema } from 'yup'
-import axios from 'axios'
-import { ResponseError, Result, wocResponse } from 'lib/http'
-import { getSession } from 'next-auth/react'
-import { canEditCard } from 'lib/access'
-import _ from 'lodash'
-import { Session } from 'next-auth'
-import { filterSync } from '@lib/array'
-import { getCardChain } from '@lib/parents'
+import {Schema} from 'yup'
+import {Result} from 'lib/http'
+import {getSession} from 'next-auth/react'
+import {canEditCard} from 'lib/access'
+import {Session} from 'next-auth'
+import {filterSync} from '@lib/array'
+import {getCardChain} from '@lib/parents'
 
 export type MoveCardBody = {
   // Move this card
@@ -101,13 +99,3 @@ export default async function apiMoveCard(req: NextApiRequest, res: NextApiRespo
   }
 }
 
-export async function callMoveCard(body: MoveCardBody): Promise<MoveCardData>
-export async function callMoveCard(body: MoveCardBody, opts: { returnErrors: true }): Promise<MoveCardResponse>
-export async function callMoveCard(body: MoveCardBody, opts?) {
-  const { data: result } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/move`, body)
-  if (opts?.returnErrors) return wocResponse(result)
-  if (result.success) return wocResponse(result.data)
-  if (result.error.unauthorized) throw new ResponseError('Unauthorized', result.error)
-  if (result.error.notFound) throw new ResponseError('Not found', result.error)
-  if (result.error.parentIntoChild) throw new ResponseError('Cannot move a card into its own child', result.error)
-}

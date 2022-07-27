@@ -1,8 +1,9 @@
-import { callFollowUser, FollowUserBody } from "pages/api/users/follow"
-import { callGetUser, GetUserData, GetUserQuery } from "pages/api/users/get"
-import { callUnfollowUser, UnfollowUserBody } from "pages/api/users/unfollow"
+import { FollowUserBody } from "pages/api/users/follow"
+import { GetUserData, GetUserQuery } from "pages/api/users/get"
+import { UnfollowUserBody } from "pages/api/users/unfollow"
 import { Query, QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
 import { keyPredicate, updateQueriesData } from "./util"
+import {callFollowUser, callGetUser, callUnfollowUser} from "@lib/api";
 
 // Keys
 

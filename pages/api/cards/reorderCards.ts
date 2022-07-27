@@ -1,15 +1,13 @@
-import { Card } from '@prisma/client'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from '../../../lib/db'
+import {Card} from '@prisma/client'
+import {NextApiRequest, NextApiResponse} from 'next'
+import {prisma} from '../../../lib/db'
 import * as yup from 'yup'
-import { Schema } from 'yup'
-import axios from 'axios'
-import { ResponseError, Result, wocResponse } from 'lib/http'
-import { getSession } from 'next-auth/react'
-import { canEditCard } from 'lib/access'
-import _ from 'lodash'
-import { Session } from 'next-auth'
-import { filterSync, insertAfter, insertBefore, insertPosition } from 'lib/array'
+import {Schema} from 'yup'
+import {Result} from 'lib/http'
+import {getSession} from 'next-auth/react'
+import {canEditCard} from 'lib/access'
+import {Session} from 'next-auth'
+import {filterSync, insertAfter, insertBefore, insertPosition} from 'lib/array'
 
 export type ReorderCardsBody = {
   parentId: Card['id']
@@ -89,12 +87,3 @@ export default async function apiReorderCards(req: NextApiRequest, res: NextApiR
   }
 }
 
-export async function callReorderCards(body: ReorderCardsBody): Promise<ReorderCardsData>
-export async function callReorderCards(body: ReorderCardsBody, opts: { returnErrors: true }): Promise<ReorderCardsResponse>
-export async function callReorderCards(body: ReorderCardsBody, opts?) {
-  const { data: result } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/reorderCards`, body)
-  if (opts?.returnErrors) return wocResponse(result)
-  if (result.success) return wocResponse(result.data)
-  if (result.error.unauthorized) throw new ResponseError('Unauthorized', result.error)
-  if (result.error.notFound) throw new ResponseError('Not found', result.error)
-}

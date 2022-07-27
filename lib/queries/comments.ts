@@ -1,9 +1,9 @@
 import { deleteById, mergeById } from "lib/array"
 import { CreateCommentBody } from "pages/api/comments/create"
 import { DeleteCommentBody } from "pages/api/comments/delete"
-import { callListComments, ListCommentsData, ListCommentsQuery } from "pages/api/comments/list"
-import { callUpdateComment, UpdateCommentBody } from "pages/api/comments/update"
-import { callCreateComment, callDeleteComment } from '@lib/api'
+import { ListCommentsData, ListCommentsQuery } from "pages/api/comments/list"
+import { UpdateCommentBody } from "pages/api/comments/update"
+import {callCreateComment, callDeleteComment, callListComments, callUpdateComment} from '@lib/api'
 import { Query, QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
 import { keyPredicate, updateQueriesData } from "./util"
 

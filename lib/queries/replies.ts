@@ -1,10 +1,11 @@
 import { deleteById, mergeById } from "lib/array"
-import { callCreateReply, CreateReplyBody } from "pages/api/replies/create"
-import { callDeleteReply, DeleteReplyBody } from "pages/api/replies/delete"
-import { callListReplies, ListRepliesData, ListRepliesQuery } from "pages/api/replies/list"
-import { callUpdateReply, UpdateReplyBody } from "pages/api/replies/update"
+import { CreateReplyBody } from "pages/api/replies/create"
+import { DeleteReplyBody } from "pages/api/replies/delete"
+import { ListRepliesData, ListRepliesQuery } from "pages/api/replies/list"
+import { UpdateReplyBody } from "pages/api/replies/update"
 import { Query, QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
 import { keyPredicate, updateQueriesData } from "./util"
+import {callCreateReply, callDeleteReply, callListReplies, callUpdateReply} from "@lib/api";
 
 // Keys
 
