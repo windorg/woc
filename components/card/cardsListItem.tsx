@@ -17,7 +17,8 @@ export function CardsListItem(props: {
   const dragged = props?.dragged ?? false
   const isPrivate = cardSettings(card).visibility === 'private'
   return (
-    <div className={`${styles.cardsListItem} woc-card ${dragged ? styles._dragged : ""}`}>
+    // NB: .position-relative is needed for .stretched-link to work properly
+    <div className={`${styles.cardsListItem} woc-card position-relative ${dragged ? styles._dragged : ""}`}>
       <div className={styles._counter}>
         {card._count.comments || "−"}
       </div>
