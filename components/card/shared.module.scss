@@ -23,10 +23,12 @@
 
 .addCardForm {
   [name="title"] {
-    display: inline-block;
+    display: block;
     font-weight: 500;
     border: 0;
     padding: 0;
+    min-height: 0;
+    resize: none;
   }
   padding: 0.5rem 0.75rem;
   ._controls {
@@ -36,9 +38,10 @@
     box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
     border-radius: 3px;
     margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
     [name="title"] {
       box-shadow: none;
-      padding-bottom: 0.5rem;
+      margin-bottom: 0.5rem;
     }
     ._controls {
       display: flex;

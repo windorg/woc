@@ -1,5 +1,6 @@
 import { Card } from '@prisma/client'
 import * as B from 'react-bootstrap'
+import TextareaAutosize from 'react-textarea-autosize'
 import React, { useRef } from 'react'
 import { Formik } from 'formik'
 import { useCreateCard } from 'lib/queries/cards'
@@ -10,7 +11,7 @@ export function AddCardForm(props: {
 }) {
   const createCardMutation = useCreateCard()
   const [focused, setFocused] = React.useState(false)
-  const inputRef: React.RefObject<HTMLInputElement> = useRef(null)
+  const inputRef: React.RefObject<HTMLTextAreaElement> = useRef(null)
   return (
     <Formik
       initialValues={{
@@ -42,11 +43,12 @@ export function AddCardForm(props: {
               onFocus={() => setFocused(true)}
               onKeyDown={async event => {
                 if (event.key === 'Escape') onCancel()
-                if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !formik.isSubmitting) {
+                if (event.key === 'Enter' && !formik.isSubmitting) {
                   event.preventDefault()
                   await formik.submitForm()
                 }
               }}
+              as={TextareaAutosize}
               name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
               type="text" placeholder="New card..." />
             <div className={styles._controls}>
