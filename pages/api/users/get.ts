@@ -1,13 +1,11 @@
-import { Card, User } from '@prisma/client'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from '../../../lib/db'
+import {User} from '@prisma/client'
+import {NextApiRequest, NextApiResponse} from 'next'
+import {prisma} from '../../../lib/db'
 import * as yup from 'yup'
-import { Schema } from 'yup'
-import axios from 'axios'
-import { ResponseError, Result, wocQuery, wocResponse } from 'lib/http'
-import { getSession } from 'next-auth/react'
-import _ from 'lodash'
-import { Session } from 'next-auth'
+import {Schema} from 'yup'
+import {Result} from 'lib/http'
+import {getSession} from 'next-auth/react'
+import {Session} from 'next-auth'
 
 export type GetUserQuery = {
   userId: User['id']
@@ -64,11 +62,3 @@ export default async function apiGetUser(req: NextApiRequest, res: NextApiRespon
   }
 }
 
-export async function callGetUser(query: GetUserQuery): Promise<GetUserData>
-export async function callGetUser(query: GetUserQuery, opts: { returnErrors: true }): Promise<GetUserResponse>
-export async function callGetUser(query, opts?) {
-  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/users/get`, { params: wocQuery(query) })
-  if (opts?.returnErrors) return wocResponse(result)
-  if (result.success) return wocResponse(result.data)
-  if (result.error.notFound) throw new ResponseError('User not found', result.error)
-}

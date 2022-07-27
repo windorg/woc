@@ -1,12 +1,10 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import {NextApiRequest, NextApiResponse} from 'next'
 import * as yup from 'yup'
-import { Schema } from 'yup'
-import axios from 'axios'
-import { ResponseError, Result, wocQuery, wocResponse } from 'lib/http'
-import { getSession } from 'next-auth/react'
-import _ from 'lodash'
-import { Session } from 'next-auth'
-import { getInboxItems, InboxItem } from 'lib/inbox'
+import {Schema} from 'yup'
+import {Result} from 'lib/http'
+import {getSession} from 'next-auth/react'
+import {Session} from 'next-auth'
+import {getInboxItems, InboxItem} from 'lib/inbox'
 
 export type GetInboxQuery = Record<string, never>
 
@@ -31,11 +29,3 @@ export default async function apiGetInbox(req: NextApiRequest, res: NextApiRespo
   }
 }
 
-export async function callGetInbox(query: GetInboxQuery): Promise<GetInboxData>
-export async function callGetInbox(query: GetInboxQuery, opts: { returnErrors: true }): Promise<GetInboxResponse>
-export async function callGetInbox(query: GetInboxQuery, opts?) {
-  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/inbox/get`, { params: wocQuery(query) })
-  if (opts?.returnErrors) return wocResponse(result)
-  if (result.success) return wocResponse(result.data)
-  if (result.error.unauthorized) throw new ResponseError('Unauthorized', result.error)
-}

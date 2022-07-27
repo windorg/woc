@@ -11,8 +11,21 @@ git submodule update --init --recursive   # pull submodules
 volta install dotenv-cli                  # install dotenv
 brew install postgres                     # install psql
 docker-compose up -d                      # run services
+ln -s .env.development .env               # for convenience
 
 # Initialize the DB if it's empty
-dotenv -e .env.development -- psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
-dotenv -e .env.development -- npx prisma db push
+dotenv -- psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
+npx prisma db push
+```
+
+## Running tests locally
+
+```
+npx playwright install  # install browsers; only needed once
+```
+
+To run:
+
+```
+dotenv -- npx playwright test
 ```

@@ -1,16 +1,14 @@
-import { Reply, User, Comment, subscription_update_kind } from '@prisma/client'
-import type { Prisma } from '@prisma/client'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from 'lib/db'
+import type {Prisma} from '@prisma/client'
+import {Comment, Reply, subscription_update_kind, User} from '@prisma/client'
+import {NextApiRequest, NextApiResponse} from 'next'
+import {prisma} from 'lib/db'
 import * as yup from 'yup'
-import { Schema } from 'yup'
-import axios from 'axios'
-import { wocResponse } from 'lib/http'
-import { getSession } from 'next-auth/react'
-import { canDeleteReply, canEditReply, canReplyToComment } from 'lib/access'
-import { CommentSettings, commentSettings, ReplySettings } from 'lib/model-settings'
+import {Schema} from 'yup'
+import {getSession} from 'next-auth/react'
+import {canDeleteReply, canEditReply, canReplyToComment} from 'lib/access'
+import {CommentSettings, commentSettings} from 'lib/model-settings'
 import * as R from 'ramda'
-import { filterSync } from 'lib/array'
+import {filterSync} from 'lib/array'
 
 interface CreateReplyRequest extends NextApiRequest {
   body: {
@@ -153,7 +151,3 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
   }
 }
 
-export async function callCreateReply(body: CreateReplyBody): Promise<ReplyResponse> {
-  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/replies/create`, body)
-  return wocResponse(data)
-}

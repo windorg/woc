@@ -1,11 +1,10 @@
-import { Reply } from '@prisma/client'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from '../../../lib/db'
+import {Reply} from '@prisma/client'
+import {NextApiRequest, NextApiResponse} from 'next'
+import {prisma} from '../../../lib/db'
 import * as yup from 'yup'
-import { Schema } from 'yup'
-import axios from 'axios'
-import { getSession } from 'next-auth/react'
-import { canDeleteReply } from 'lib/access'
+import {Schema} from 'yup'
+import {getSession} from 'next-auth/react'
+import {canDeleteReply} from 'lib/access'
 
 interface DeleteReplyRequest extends NextApiRequest {
   body: {
@@ -49,6 +48,3 @@ export default async function deleteReply(req: DeleteReplyRequest, res: NextApiR
   }
 }
 
-export async function callDeleteReply(body: DeleteReplyBody): Promise<void> {
-  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/replies/delete`, body)
-}

@@ -1,12 +1,11 @@
-import { Card } from '@prisma/client'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from '../../../lib/db'
+import {Card} from '@prisma/client'
+import {NextApiRequest, NextApiResponse} from 'next'
+import {prisma} from '../../../lib/db'
 import * as yup from 'yup'
-import { Schema } from 'yup'
-import axios from 'axios'
-import { getSession } from 'next-auth/react'
-import { canEditCard } from 'lib/access'
-import { filterSync } from 'lib/array'
+import {Schema} from 'yup'
+import {getSession} from 'next-auth/react'
+import {canEditCard} from 'lib/access'
+import {filterSync} from 'lib/array'
 
 interface DeleteCardRequest extends NextApiRequest {
   body: {
@@ -54,6 +53,3 @@ export default async function deleteCard(req: DeleteCardRequest, res: NextApiRes
   return res.status(204).send()
 }
 
-export async function callDeleteCard(body: DeleteCardBody): Promise<void> {
-  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/delete`, body)
-}

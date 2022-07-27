@@ -1,15 +1,14 @@
-import { Card, Reply, Comment, User } from '@prisma/client'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from 'lib/db'
+import {Card, Comment, Reply, User} from '@prisma/client'
+import {NextApiRequest, NextApiResponse} from 'next'
+import {prisma} from 'lib/db'
 import * as yup from 'yup'
-import { Schema } from 'yup'
-import axios from 'axios'
-import { getSession } from 'next-auth/react'
-import { canDeleteReply, canEditReply, canSeeReply } from 'lib/access'
+import {Schema} from 'yup'
+import {getSession} from 'next-auth/react'
+import {canDeleteReply, canEditReply, canSeeReply} from 'lib/access'
 import _ from 'lodash'
-import { Session } from 'next-auth'
-import { filterAsync, filterSync, mapAsync } from 'lib/array'
-import { Result, wocQuery, wocResponse } from 'lib/http'
+import {Session} from 'next-auth'
+import {filterAsync} from 'lib/array'
+import {Result} from 'lib/http'
 
 export type ListRepliesQuery = {
   // List all replies for one or several cards
@@ -61,10 +60,3 @@ export default async function apiListReplies(req: NextApiRequest, res: NextApiRe
   }
 }
 
-export async function callListReplies(query: ListRepliesQuery): Promise<ListRepliesData>
-export async function callListReplies(query: ListRepliesQuery, opts: { returnErrors: true }): Promise<ListRepliesResponse>
-export async function callListReplies(query, opts?) {
-  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/replies/list`, { params: wocQuery(query) })
-  if (opts?.returnErrors) return wocResponse(result)
-  if (result.success) return wocResponse(result.data)
-}

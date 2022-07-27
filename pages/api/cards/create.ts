@@ -1,13 +1,11 @@
-import { Card } from '@prisma/client'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from '../../../lib/db'
+import {Card} from '@prisma/client'
+import {NextApiRequest, NextApiResponse} from 'next'
+import {prisma} from '../../../lib/db'
 import * as yup from 'yup'
-import { Schema } from 'yup'
-import axios from 'axios'
-import { wocResponse } from 'lib/http'
-import { canEditCard } from 'lib/access'
-import { getSession } from 'next-auth/react'
-import { CardSettings } from 'lib/model-settings'
+import {Schema} from 'yup'
+import {canEditCard} from 'lib/access'
+import {getSession} from 'next-auth/react'
+import {CardSettings} from 'lib/model-settings'
 
 interface CreateCardRequest extends NextApiRequest {
   body: {
@@ -68,7 +66,3 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
   }
 }
 
-export async function callCreateCard(body: CreateCardBody): Promise<Card & { parentId: string }> {
-  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/create`, body)
-  return wocResponse(data)
-}

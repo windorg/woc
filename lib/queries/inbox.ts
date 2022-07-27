@@ -1,9 +1,10 @@
 import { deleteById } from "lib/array"
-import { callInboxCount, InboxCountResponse } from "pages/api/inbox/count"
-import { callGetInbox, GetInboxData, GetInboxQuery } from "pages/api/inbox/get"
-import { callMarkAsRead, MarkAsReadBody } from "pages/api/inbox/mark-as-read"
+import { InboxCountResponse } from "pages/api/inbox/count"
+import { GetInboxData, GetInboxQuery } from "pages/api/inbox/get"
+import { MarkAsReadBody } from "pages/api/inbox/mark-as-read"
 import { QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
 import { keyPredicate, updateQueriesData } from "./util"
+import {callGetInbox, callInboxCount, callMarkAsRead} from "@lib/api";
 
 // Keys
 

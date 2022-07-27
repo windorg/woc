@@ -7,8 +7,8 @@ import { signIn, signOut, useSession } from 'next-auth/react'
 import { SuperJSONResult } from 'superjson/dist/types'
 import _ from 'lodash'
 import { Formik } from 'formik'
-import { callSignup } from './api/auth/signup'
 import { boardsRoute } from 'lib/routes'
+import {callSignup} from "@lib/api";
 
 function SignupForm(props) {
   return (

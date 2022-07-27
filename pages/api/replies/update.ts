@@ -1,15 +1,12 @@
-import { Reply } from '@prisma/client'
-import type { Prisma } from '@prisma/client'
-import { NextApiRequest, NextApiResponse } from 'next'
-import { prisma } from '../../../lib/db'
+import type {Prisma} from '@prisma/client'
+import {Reply} from '@prisma/client'
+import {NextApiRequest, NextApiResponse} from 'next'
+import {prisma} from '../../../lib/db'
 import * as yup from 'yup'
-import { Schema } from 'yup'
-import axios from 'axios'
-import { wocResponse } from 'lib/http'
-import { getSession } from 'next-auth/react'
-import { canEditReply } from 'lib/access'
-import { ReplySettings } from 'lib/model-settings'
-import _ from 'lodash'
+import {Schema} from 'yup'
+import {getSession} from 'next-auth/react'
+import {canEditReply} from 'lib/access'
+import {ReplySettings} from 'lib/model-settings'
 
 interface UpdateReplyRequest extends NextApiRequest {
   body: {
@@ -73,7 +70,3 @@ export default async function updateReply(req: UpdateReplyRequest, res: NextApiR
   }
 }
 
-export async function callUpdateReply(body: UpdateReplyBody): Promise<Partial<Reply>> {
-  const { data } = await axios.put(`${process.env.NEXT_PUBLIC_APP_URL!}/api/replies/update`, body)
-  return wocResponse(data)
-}
