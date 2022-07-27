@@ -6,14 +6,24 @@ import { filterSync } from '../lib/array'
 
 // A helper for Bootstrap modals. Waits for the modal to appear & disappear fully. Should help w/ flaky tests.
 export async function withBootstrapModal(page: Page, open: () => Promise<void>, action: () => Promise<void>) {
-  await Promise.all([
-    page.waitForSelector('div[role="dialog"].show', { state: 'visible' }),
-    open()
-  ])
-  await Promise.all([
-    page.waitForSelector('div[role="dialog"]', { state: 'hidden' }),
-    action()
-  ])
+  // Unfortunately this is still flaky, so I'm using a timeout instead
+
+  // await Promise.all([
+  //   page.waitForSelector('div[role="dialog"].show', { state: 'visible' }),
+  //   open()
+  // ])
+  // await Promise.all([
+  //   page.waitForSelector('div[role="dialog"]', { state: 'hidden' }),
+  //   action()
+  // ])
+
+  await open()
+  await page.waitForTimeout(500)
+  await page.waitForSelector('div[role="dialog"].show', { state: 'visible' })
+
+  await action()
+  await page.waitForTimeout(500)
+  await page.waitForSelector('div[role="dialog"]', { state: 'hidden' })
 }
 
 // Create a user (must be logged out) and save state to test-tmp/${handle}.storageState.json
