@@ -4,6 +4,18 @@ import randomWords from 'random-words'
 import { hashPassword } from '../lib/password'
 import { filterSync } from '../lib/array'
 
+// A helper for Bootstrap modals. Waits for the modal to appear & disappear fully. Should help w/ flaky tests.
+export async function withBootstrapModal(page: Page, open: () => Promise<void>, action: () => Promise<void>) {
+  await Promise.all([
+    page.waitForSelector('div[role="dialog"].show', { state: 'visible' }),
+    open()
+  ])
+  await Promise.all([
+    page.waitForSelector('div[role="dialog"]', { state: 'hidden' }),
+    action()
+  ])
+}
+
 // Create a user (must be logged out) and save state to test-tmp/${handle}.storageState.json
 //
 // Returns the handle
@@ -53,12 +65,17 @@ export async function createBoard(
 ): Promise<string> {
   const name = randomWords(3).join('-')
   await page.goto('/Boards')
-  await page.click('text=+ New')
-  await page.fill('[placeholder="Board title"]', name)
-  if (options?.private) {
-    await page.check('input[name="private"]')
-  }
-  await page.click('button:has-text("Create a board")')
+  await withBootstrapModal(
+    page,
+    async () => await page.click('text=+ New'),
+    async () => {
+      await page.fill('[placeholder="Board title"]', name)
+      if (options?.private) {
+        await page.check('input[name="private"]')
+      }
+      await page.click('button:has-text("Create a board")')
+    }
+  )
   if (options?.navigate) {
     await Promise.all([
       page.waitForNavigation(),
