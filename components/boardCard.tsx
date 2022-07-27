@@ -16,7 +16,7 @@ export function BoardCard(props: { board: Board_, kind: Kind }) {
   const ownerQuery = useUser({ userId: props.board.ownerId })
 
   return (
-    <B.Card className={`woc-board mt-3 mb-3 ${isPrivate ? "woc-board-private" : ""}`}>
+    <B.Card className={`position-relative woc-board mt-3 mb-3 ${isPrivate ? "woc-board-private" : ""}`}>
       <B.Card.Body>
         <h3>
           {isPrivate && "🔒 "}
