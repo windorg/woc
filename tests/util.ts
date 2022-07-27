@@ -60,8 +60,10 @@ export async function createBoard(
   }
   await page.click('button:has-text("Create a board")')
   if (options?.navigate) {
-    await page.click(`text=${name}`)
-    await page.waitForURL('**/card*')
+    await Promise.all([
+      page.waitForNavigation(),
+      page.click(`a:text("${name}")`)
+    ])
   }
   return name
 }
@@ -83,8 +85,10 @@ export async function createCard(
   }
   await page.press('[placeholder="New card..."]', 'Enter')
   if (options?.navigate) {
-    await page.click(`text=${name}`)
-    await page.waitForURL('**/card*')
+    await Promise.all([
+      page.waitForNavigation(),
+      page.click(`a:text("${name}")`)
+    ])
   }
   return name
 }
