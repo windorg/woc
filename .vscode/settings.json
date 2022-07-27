@@ -4,5 +4,8 @@
   "typescript.format.semicolons": "remove",
   "editor.formatOnSave": true,
   "editor.wordWrapColumn": 120,
-  "evenBetterToml.formatter.columnWidth": 120
+  "evenBetterToml.formatter.columnWidth": 120,
+  "search.exclude": {
+    "tiptap/": true
+  }
 }
