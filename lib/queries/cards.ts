@@ -1,13 +1,13 @@
-import { GetCardData, GetCardQuery } from "pages/api/cards/get"
+import { GetCardData, GetCardQuery, GetCardResponse } from "pages/api/cards/get"
 import { UpdateCardBody } from "pages/api/cards/update"
 import {
-    callCreateCard,
-    callDeleteCard,
-    callGetCard,
-    callListCards,
-    callMoveCard,
-    callReorderCards,
-    callUpdateCard
+  callCreateCard,
+  callDeleteCard,
+  callGetCard,
+  callListCards,
+  callMoveCard,
+  callReorderCards,
+  callUpdateCard
 } from '@lib/api'
 import { CreateCardBody } from "pages/api/cards/create"
 import { QueryClient, QueryKey, useMutation, useQuery, useQueryClient } from "react-query"
@@ -55,6 +55,11 @@ export function useCard(
       cacheTime: Infinity,
       staleTime: Infinity,
       initialData: options?.initialData,
+      retry(failureCount, error) {
+        if (failureCount > 3) return false
+        if (((error as any)?.data as Extract<GetCardResponse, { success: false }>['error'])?.notFound) return false
+        return true
+      },
     }
   )
 }
