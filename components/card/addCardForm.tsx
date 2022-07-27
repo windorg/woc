@@ -42,7 +42,8 @@ export function AddCardForm(props: {
               onFocus={() => setFocused(true)}
               onKeyDown={async event => {
                 if (event.key === 'Escape') onCancel()
-                if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && !formik.isSubmitting) {
+                  event.preventDefault()
                   await formik.submitForm()
                 }
               }}
