@@ -59,7 +59,7 @@ export function AddCardForm(props: {
                 >
                   Cancel
                 </B.Button>
-                <B.Button size="sm" className="me-2" variant="primary" type="submit" disabled={formik.isSubmitting}>
+                <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
                   Add a card
                   {formik.isSubmitting &&
                     <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
