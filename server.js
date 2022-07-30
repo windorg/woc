@@ -2,7 +2,6 @@
 
 const { default: axios } = require('axios')
 const express = require('express')
-const cors = require('cors')
 const next = require('next')
 
 const port = parseInt(process.env.PORT, 10) || 3000
@@ -10,16 +9,9 @@ const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
-// See docs at https://www.npmjs.com/package/cors#configuring-cors-w-dynamic-origin
-const corsWhitelist = ['tauri://localhost', process.env.NEXT_PUBLIC_APP_URL]
-const corsOptions = {
-  origin: function (origin, callback) {
-    if (corsWhitelist.indexOf(origin) !== -1 || !origin) {
-      callback(null, true)
-    } else {
-      callback(new Error('Not allowed by CORS'))
-    }
-  }
+const cors = {
+  origin: ['http://localhost:3000', 'https://windofchange.me', 'tauri://localhost'],
+  default: "https://windofchange.me"
 }
 
 app.prepare().then(() => {
@@ -27,7 +19,15 @@ app.prepare().then(() => {
 
   let initialized = false
 
-  server.all('*', cors(corsOptions), (req, res) => {
+  server.all('*', (req, res) => {
+    // I tried using the 'cors' package but it didn't work for me with an array of origins.
+    const origin = req.header('Origin') || `${req.protocol}://${req.header('Host')}`
+    const goodOrigin = origin && cors.origin.includes(origin.toLowerCase()) ? origin : cors.default
+    res.setHeader("Access-Control-Allow-Origin", goodOrigin)
+    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+    res.setHeader('Access-Control-Allow-Credentials', true)
+    res.setHeader("Vary", "Origin")
+
     if (initialized || req.url === '/api/health') {
       return handle(req, res)
     } else {
