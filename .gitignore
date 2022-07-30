@@ -31,9 +31,6 @@ yarn-error.log*
 .env.production.local
 .env
 
-# prod secrets
-.env.production
-
 # vercel
 .vercel
 
