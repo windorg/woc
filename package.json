@@ -21,6 +21,7 @@
     "bullmq": "^1.81.4",
     "commonmark": "^0.30.0",
     "copy-to-clipboard": "^3.3.1",
+    "cors": "^2.8.5",
     "deep-map": "^2.0.0",
     "es6-weak-map": "^2.0.3",
     "express": "^4.18.1",
