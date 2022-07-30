@@ -37,7 +37,10 @@ jobs:
         node-version: '16.x' # Same as in package.json
 
     - name: Use .env.development
-      run: ln -s .env.development .env
+      run: |
+        ln -s .env.development .env
+        # Kill .env.production because the server likes grabbing it when using 'npm next build'
+        rm .env.production
 
     - name: Run databases
       run: |
