@@ -146,10 +146,15 @@ export async function createReply(
   expect(page.url().includes('/card'))
   const content = randomWords(4).join('-')
   const commentHandle = await page.locator('.woc-comment', { hasText: comment }).elementHandle()
-  await (await commentHandle!.$('text=Reply'))?.click()
-  await page.click('.woc-reply-form .tiptap')
-  await page.keyboard.type(content)
-  await page.click('button:has-text("Post a reply")')
+  await withBootstrapModal(
+    page,
+    async () => await (await commentHandle!.$('text=Reply'))?.click(),
+    async () => {
+      await page.click('.woc-reply-form .tiptap')
+      await page.keyboard.type(content)
+      await page.click('button:has-text("Post a reply")')
+    }
+  )
   return content
 }
 
