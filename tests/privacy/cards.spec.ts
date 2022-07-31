@@ -1,59 +1,44 @@
 import { test, expect } from '@playwright/test'
-import { createBoard, createCard, expectNoLeakage, interceptResponses } from '../util'
+import { apiCreateBoard, apiCreateCard, apiGetCard, apiListCards } from '../util/api'
 
 test.use({ storageState: 'test-tmp/alice.storageState.json' })
 
-test('Private cards should not be visible to others', async ({ page, browser }) => {
+test('Private cards should not be visible to others', async ({ page, browser, request }) => {
   const bobContext = await browser.newContext({ storageState: 'test-tmp/bob.storageState.json' })
-  const bobPage = await bobContext.newPage()
+  const bobRequest = (await bobContext.newPage()).request
 
   const anonContext = await browser.newContext({ storageState: { cookies: [], origins: [] } })
-  const anonPage = await anonContext.newPage()
+  const anonRequest = (await anonContext.newPage()).request
 
-  const boardName = await createBoard(page, { navigate: true })
-  const boardUrl = page.url()
-  const cardName = await createCard(page, { private: true, navigate: true })
-  const cardUrl = page.url()
+  const board = await apiCreateBoard(request)
+  const card = await apiCreateCard(request, { parentId: board.id, private: true })
 
   // Check that Alice can see the card
-  await expect(page.locator('body')).toContainText(cardName)
+  expect((await apiGetCard(request, { id: card.id }))['data'].title).toBe(card.title)
 
-  const { responses } = await interceptResponses([bobPage, anonPage], async () => {
-    for (const somebodyPage of [bobPage, anonPage]) {
-      // Expect that others can't access the card by the direct link
-      await somebodyPage.goto(cardUrl)
-      await somebodyPage.waitForSelector('text=Card not found')
-      await expect(somebodyPage.locator('body')).not.toContainText(cardName)
-      // Expect that others can't see the card in the board
-      await somebodyPage.goto(boardUrl)
-      await expect(somebodyPage.locator('body')).not.toContainText(cardName)
-    }
-  })
-  expectNoLeakage(responses, [cardName])
+  // Expect that others can't access the card
+  expect(await apiGetCard(bobRequest, { id: card.id })).toStrictEqual({ success: false, error: { notFound: true } })
+  expect(await apiGetCard(anonRequest, { id: card.id })).toStrictEqual({ success: false, error: { notFound: true } })
+
+  // Expect that others can't see the card in the board
+  expect(await apiListCards(bobRequest, { parents: [board.id] })).toEqual({ success: true, data: [] })
+  expect(await apiListCards(anonRequest, { parents: [board.id] })).toEqual({ success: true, data: [] })
 })
 
-test('Cards in private boards should not be visible to others', async ({ page, browser }) => {
+test('Cards in private boards should not be visible to others', async ({ page, browser, request }) => {
   const bobContext = await browser.newContext({ storageState: 'test-tmp/bob.storageState.json' })
-  const bobPage = await bobContext.newPage()
+  const bobRequest = (await bobContext.newPage()).request
 
   const anonContext = await browser.newContext({ storageState: { cookies: [], origins: [] } })
-  const anonPage = await anonContext.newPage()
+  const anonRequest = (await anonContext.newPage()).request
 
-  const boardName = await createBoard(page, { private: true, navigate: true })
-  const boardUrl = page.url()
-  const cardName = await createCard(page, { navigate: true })
-  const cardUrl = page.url()
+  const board = await apiCreateBoard(request, { private: true })
+  const card = await apiCreateCard(request, { parentId: board.id })
 
   // Check that Alice can see the card
-  await expect(page.locator('body')).toContainText(cardName)
+  expect((await apiGetCard(request, { id: card.id }))['data'].title).toBe(card.title)
 
-  const { responses } = await interceptResponses([bobPage, anonPage], async () => {
-    for (const somebodyPage of [bobPage, anonPage]) {
-      // Expect that others can't access the card by the direct link
-      await somebodyPage.goto(cardUrl)
-      await somebodyPage.waitForSelector('text=Card not found')
-      await expect(somebodyPage.locator('body')).not.toContainText(cardName)
-    }
-  })
-  expectNoLeakage(responses, [cardName])
+  // Expect that others can't access the card
+  expect(await apiGetCard(bobRequest, { id: card.id })).toStrictEqual({ success: false, error: { notFound: true } })
+  expect(await apiGetCard(anonRequest, { id: card.id })).toStrictEqual({ success: false, error: { notFound: true } })
 })
