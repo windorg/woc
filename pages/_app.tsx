@@ -25,7 +25,11 @@ function MyApp(props) {
       {/* If props.session isn't provided, MyApp is being rendered client-side. In this case
           we make sure to not provide any session at all so that the session cache maintained
           by the SessionProvider would be reused. */}
-      <SessionProvider {...(props.session !== undefined) ? { session: props.session } : {}}>
+      <SessionProvider
+        // https://github.com/nextauthjs/next-auth/issues/4434
+        basePath={process.env.NEXTAUTH_URL}
+        {...(props.session !== undefined) ? { session: props.session } : {}}
+      >
         <QueryClientProvider client={queryClient}>
           <Layout>
             <Component {...pageProps} />

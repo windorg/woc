@@ -2,6 +2,13 @@
 
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 
+const webpack = require('webpack')
+
+// Embed NEXTAUTH_URL into the frontend — otherwise next-auth won't work. See https://github.com/nextauthjs/next-auth/issues/4434
+const nextauthPlugin = new webpack.DefinePlugin({
+  "process.env.NEXTAUTH_URL": JSON.stringify(process.env.NEXTAUTH_URL),
+})
+
 module.exports = {
   reactStrictMode: true,
 
@@ -18,6 +25,7 @@ module.exports = {
     if (dev && isServer) {
       config.plugins.push(new ForkTsCheckerWebpackPlugin())
     }
+    config.plugins.push(nextauthPlugin)
     return config
   },
 

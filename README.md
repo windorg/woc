@@ -20,6 +20,8 @@ npx prisma db push
 
 ## Local development - Tauri
 
+Set up Rust:
+
 ```
 curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
 ```
@@ -27,10 +29,10 @@ curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
 Building the prod app:
 
 ```
-rm .env
+rm .env   # TODO how to get rid of this line?
 DATABASE_URL="postgresql://user:password@localhost:3999/db_dev" NODE_ENV=production npm run build
 DATABASE_URL="postgresql://user:password@localhost:3999/db_dev" NODE_ENV=production npx next export
-npx tauri build --debug                # --debug for the web inspector to work
+npx tauri build --debug
 ```
 
 ## Running tests locally
