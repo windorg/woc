@@ -10,7 +10,12 @@ const app = next({ dev })
 const handle = app.getRequestHandler()
 
 const cors = {
-  origin: ['http://localhost:3000', 'https://windofchange.me', 'tauri://localhost'],
+  origin: [
+    'http://localhost:3000',
+    'https://windofchange.me',
+    'tauri://localhost',       // macOS
+    'https://tauri.localhost'  // Windows
+  ],
   default: "https://windofchange.me"
 }
 
