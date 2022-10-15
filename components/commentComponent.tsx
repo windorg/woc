@@ -16,7 +16,7 @@ import { CreateReplyModal } from './createReplyModal'
 import { commentRoute } from 'lib/routes'
 import { Formik } from 'formik'
 import { useUpdateComment } from 'lib/queries/comments'
-import { LinkPreload } from 'lib/link-preload'
+import LinkPreload from 'lib/link-preload'
 
 export type Comment_ = Comment & {
   canEdit: boolean

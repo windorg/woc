@@ -32,7 +32,7 @@
     "lodash": "^4.17.21",
     "module-alias": "^2.2.2",
     "moment": "^2.29.1",
-    "next": "12.0.10",
+    "next": "^12.3.1",
     "next-auth": "^0.0.0-pr.3217.87a21677",
     "prosemirror-commands": "^1.1.12",
     "prosemirror-dropcursor": "^1.4.0",
@@ -68,7 +68,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^3.4.3",
-    "@next/eslint-plugin-next": "12.0.10",
+    "@next/eslint-plugin-next": "^12.3.1",
     "@playwright/test": "^1.24.1",
     "@tauri-apps/cli": "^1.0.5",
     "@types/commonmark": "^0.27.5",
@@ -86,7 +86,7 @@
     "@types/validator": "^13.7.1",
     "@typescript-eslint/eslint-plugin": "^5.8.1",
     "eslint": "7.32.0",
-    "eslint-config-next": "12.0.10",
+    "eslint-config-next": "^12.3.1",
     "eslint-plugin-ban": "^1.6.0",
     "eslint-plugin-compat": "^4.0.0",
     "fork-ts-checker-webpack-plugin": "^7.2.11",
@@ -96,14 +96,13 @@
   },
   "browserslist": [
     "defaults",
-    "not IE 11",
     "not op_mini all",
-    "current node"
+    "maintained node versions"
   ],
   "engines": {
     "node": "16.x"
   },
   "volta": {
-    "node": "16.14.2"
+    "node": "16.18.0"
   }
 }

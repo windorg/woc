@@ -2,7 +2,7 @@ import { cardSettings } from "../lib/model-settings"
 import Link from 'next/link'
 import { Card, User } from "@prisma/client"
 import { cardRoute, userRoute } from "lib/routes"
-import { LinkPreload } from "lib/link-preload"
+import LinkPreload from "lib/link-preload"
 import * as B from 'react-bootstrap'
 import { useUser } from "@lib/queries/user"
 
