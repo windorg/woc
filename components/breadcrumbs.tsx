@@ -4,7 +4,7 @@ import * as B from 'react-bootstrap'
 import { cardSettings } from "../lib/model-settings"
 import Link from 'next/link'
 import { boardsRoute, cardRoute, feedRoute, inboxRoute, userRoute, accountRoute } from "lib/routes"
-import { LinkPreload } from "lib/link-preload"
+import LinkPreload from "lib/link-preload"
 import { useCard } from "@lib/queries/cards"
 
 function LinkItem(props: { href: string, children: React.ReactNode, active?: boolean, preload?: boolean }) {

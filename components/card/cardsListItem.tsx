@@ -2,7 +2,7 @@ import { cardSettings } from "../../lib/model-settings"
 import * as B from 'react-bootstrap'
 import { Card } from "@prisma/client"
 import { cardRoute } from "lib/routes"
-import { LinkPreload } from "lib/link-preload"
+import LinkPreload from "lib/link-preload"
 import styles from './shared.module.scss'
 
 type Card_ = Pick<Card, "id" | "title" | "tagline" | "settings"> & { _count: { comments: number } }

@@ -1,5 +1,5 @@
 import type { Card, Comment, User } from '@prisma/client'
-import { LinkPreload } from 'lib/link-preload'
+import LinkPreload from 'lib/link-preload'
 import { RenderedMarkdown } from 'lib/markdown'
 import { commentRoute, userRoute } from 'lib/routes'
 import Link from 'next/link'

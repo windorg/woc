@@ -28,7 +28,7 @@ Building the prod app:
 
 ```
 rm .env
-DATABASE_URL="postgresql://user:password@localhost:3999/db_dev" NODE_ENV=production npm run build
+NODE_ENV=production npm run build
 DATABASE_URL="postgresql://user:password@localhost:3999/db_dev" NODE_ENV=production npx next export
 npx tauri build --debug                # --debug for the web inspector to work
 ```

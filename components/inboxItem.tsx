@@ -1,6 +1,6 @@
 import { Comment, Reply, User } from '@prisma/client'
 import { InboxItem } from 'lib/inbox'
-import { LinkPreload } from 'lib/link-preload'
+import LinkPreload from 'lib/link-preload'
 import { RenderedMarkdown } from 'lib/markdown'
 import { replyRoute, userRoute } from 'lib/routes'
 import Link from 'next/link'

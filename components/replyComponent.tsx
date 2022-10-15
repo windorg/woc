@@ -12,7 +12,7 @@ import { LinkButton } from './linkButton'
 import { ReplyMenu } from './replyMenu'
 import { replyRoute, userRoute } from 'lib/routes'
 import { Formik } from 'formik'
-import { LinkPreload } from 'lib/link-preload'
+import LinkPreload from 'lib/link-preload'
 import { useUpdateReply } from 'lib/queries/replies'
 
 export type Reply_ = Reply & {
