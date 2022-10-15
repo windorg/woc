@@ -96,6 +96,7 @@
   },
   "browserslist": [
     "defaults",
+    "not IE 11",
     "not op_mini all",
     "maintained node versions"
   ],
