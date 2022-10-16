@@ -26,6 +26,8 @@ app.prepare().then(() => {
 
   server.all('*', (req, res) => {
     // I tried using the 'cors' package but it didn't work for me with an array of origins.
+
+    // TODO: we also need to handle OPTIONS (preflight requests) here because otherwise it only works for GET requests.
     const origin = req.header('Origin') || `${req.protocol}://${req.header('Host')}`
     const goodOrigin = origin && cors.origin.includes(origin.toLowerCase()) ? origin : cors.default
     res.setHeader("Access-Control-Allow-Origin", goodOrigin)
