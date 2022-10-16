@@ -35,6 +35,22 @@ Building the prod app:
 npx tauri build --debug                # --debug for the web inspector to work
 ```
 
+Upgrading Tauri:
+
+```bash
+npm i -S -D @tauri-apps/cli@latest
+
+cd src-tauri
+cargo install cargo-edit  # provides cargo upgrade, needed only once
+cargo upgrade
+```
+
+Generating icons:
+
+```bash
+npm run tauri icon public/icon-macos.png
+```
+
 ## Running tests locally
 
 ```

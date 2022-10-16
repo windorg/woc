@@ -6,7 +6,8 @@
     "build": "prisma generate && next build",
     "start": "NODE_ENV=production node server.js",
     "lint": "next lint",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "tauri": "tauri"
   },
   "dependencies": {
     "@capacitor/core": "^3.4.3",
@@ -70,7 +71,7 @@
     "@capacitor/cli": "^3.4.3",
     "@next/eslint-plugin-next": "^12.3.1",
     "@playwright/test": "^1.24.1",
-    "@tauri-apps/cli": "^1.0.5",
+    "@tauri-apps/cli": "^1.1.1",
     "@types/commonmark": "^0.27.5",
     "@types/gravatar": "^1.8.3",
     "@types/ioredis": "^4.28.10",
