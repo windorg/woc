@@ -1,7 +1,7 @@
 // Based on https://github.com/ueberdosis/tiptap/issues/2305#issuecomment-1020665146
 
 import Popper from '@mui/base/PopperUnstyled'
-import { Editor, isNodeSelection, posToDOMRect } from "@tiptap/core"
+import { Editor, isNodeSelection, posToDOMRect } from '@tiptap/core'
 
 type Props = {
   editor: Editor
@@ -9,12 +9,7 @@ type Props = {
   className?: string
 }
 
-export function TiptapBubbleMenu({
-  editor,
-  open,
-  children,
-  className,
-}: React.PropsWithChildren<Props>) {
+export function TiptapBubbleMenu({ editor, open, children, className }: React.PropsWithChildren<Props>) {
   // NB: without disablePortal it doesn't work in modals
   return (
     <Popper
@@ -24,27 +19,21 @@ export function TiptapBubbleMenu({
       disablePortal={true}
       modifiers={[
         {
-          name: "offset",
+          name: 'offset',
           options: {
             // Add a slight vertical offset for the popper from the current selection
             offset: [0, 4],
           },
         },
         {
-          name: "flip",
+          name: 'flip',
           enabled: true,
           options: {
             // We'll reposition (to one of the below fallback placements) whenever our Popper goes
             // outside of the editor. (This is necessary since our children aren't actually rendered
             // here, but instead with a portal, so the editor DOM node isn't a parent.)
             boundary: editor.options.element,
-            fallbackPlacements: [
-              "bottom",
-              "top-start",
-              "bottom-start",
-              "top-end",
-              "bottom-end",
-            ],
+            fallbackPlacements: ['bottom', 'top-start', 'bottom-start', 'top-end', 'bottom-end'],
             padding: 8,
           },
         },

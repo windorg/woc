@@ -1,12 +1,12 @@
-import type {Prisma} from '@prisma/client'
-import {Reply} from '@prisma/client'
-import {NextApiRequest, NextApiResponse} from 'next'
-import {prisma} from '../../../lib/db'
+import type { Prisma } from '@prisma/client'
+import { Reply } from '@prisma/client'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import {Schema} from 'yup'
-import {getSession} from 'next-auth/react'
-import {canEditReply} from 'lib/access'
-import {ReplySettings} from 'lib/model-settings'
+import { Schema } from 'yup'
+import { getSession } from 'next-auth/react'
+import { canEditReply } from 'lib/access'
+import { ReplySettings } from 'lib/model-settings'
 
 interface UpdateReplyRequest extends NextApiRequest {
   body: {
@@ -37,36 +37,37 @@ export default async function updateReply(req: UpdateReplyRequest, res: NextApiR
       include: {
         comment: {
           select: {
-            ownerId: true, settings: true,
+            ownerId: true,
+            settings: true,
             card: {
               select: {
-                ownerId: true, settings: true,
-              }
-            }
-          }
-        }
+                ownerId: true,
+                settings: true,
+              },
+            },
+          },
+        },
       },
       rejectOnNotFound: true,
     })
     if (!canEditReply(session?.userId ?? null, reply)) return res.status(403)
 
     let diff: Partial<Reply> & { settings: Partial<ReplySettings> } = {
-      settings: reply.settings ?? {}
+      settings: reply.settings ?? {},
     }
     if (body.content !== undefined) {
       diff.content = body.content
     }
     if (body.private !== undefined) {
-      diff.settings.visibility = (body.private ? "private" : "public")
+      diff.settings.visibility = body.private ? 'private' : 'public'
     }
     await prisma.reply.update({
       where: { id: body.replyId },
       // See https://github.com/prisma/prisma/issues/9247
-      data: (diff as unknown) as Prisma.InputJsonObject
+      data: diff as unknown as Prisma.InputJsonObject,
     })
     // If we ever have "updatedAt", we should also return it here
 
     return res.status(200).json(diff)
   }
 }
-

@@ -4,9 +4,9 @@ expect.extend({
   fail(_: null, msg: string) {
     return {
       message: () => msg,
-      pass: false
+      pass: false,
     }
-  }
+  },
 })
 
 const config: PlaywrightTestConfig = {
@@ -18,7 +18,7 @@ const config: PlaywrightTestConfig = {
     reuseExistingServer: true,
   },
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: 'http://localhost:3000',
     trace: 'retain-on-failure',
   },
   testDir: './tests',

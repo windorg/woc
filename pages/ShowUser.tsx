@@ -28,10 +28,12 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   if (typeof window === 'undefined') {
     if (!isNextExport(context)) {
       const session = await getSession(context)
-      await serverGetUser(session, { userId })
-        .then(result => { if (result.success) props.user = result.data })
-      await serverListCards(session, { owners: [userId], onlyTopLevel: true })
-        .then(result => { if (result.success) props.boards = result.data })
+      await serverGetUser(session, { userId }).then((result) => {
+        if (result.success) props.user = result.data
+      })
+      await serverListCards(session, { owners: [userId], onlyTopLevel: true }).then((result) => {
+        if (result.success) props.boards = result.data
+      })
     }
   }
   return serialize(props)
@@ -40,26 +42,30 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
 function FollowButton(props: { user }) {
   const followUserMutation = useFollowUser()
   const unfollowUserMutation = useUnfollowUser()
-  return (
-    props.user.followed
-      ?
-      <B.Button size="sm" variant="outline-secondary"
-        disabled={unfollowUserMutation.isLoading}
-        onClick={async () => {
-          await unfollowUserMutation.mutateAsync({ userId: props.user.id })
-        }}>
-        Unfollow
-        {unfollowUserMutation.isLoading && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
-      </B.Button>
-      :
-      <B.Button size="sm" variant="outline-primary"
-        disabled={followUserMutation.isLoading}
-        onClick={async () => {
-          await followUserMutation.mutateAsync({ userId: props.user.id })
-        }}>
-        Follow
-        {followUserMutation.isLoading && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
-      </B.Button>
+  return props.user.followed ? (
+    <B.Button
+      size="sm"
+      variant="outline-secondary"
+      disabled={unfollowUserMutation.isLoading}
+      onClick={async () => {
+        await unfollowUserMutation.mutateAsync({ userId: props.user.id })
+      }}
+    >
+      Unfollow
+      {unfollowUserMutation.isLoading && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+    </B.Button>
+  ) : (
+    <B.Button
+      size="sm"
+      variant="outline-primary"
+      disabled={followUserMutation.isLoading}
+      onClick={async () => {
+        await followUserMutation.mutateAsync({ userId: props.user.id })
+      }}
+    >
+      Follow
+      {followUserMutation.isLoading && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+    </B.Button>
   )
 }
 
@@ -72,11 +78,19 @@ const ShowUser: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   const boardsQuery = useCards({ owners: [userId], onlyTopLevel: true }, { initialData: initialProps?.boards })
 
   if (userQuery.status === 'loading' || userQuery.status === 'idle')
-    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+    return (
+      <div className="d-flex mt-5 justify-content-center">
+        <B.Spinner animation="border" />
+      </div>
+    )
   if (userQuery.status === 'error') return <B.Alert variant="danger">{(userQuery.error as Error).message}</B.Alert>
 
   if (boardsQuery.status === 'loading' || boardsQuery.status === 'idle')
-    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+    return (
+      <div className="d-flex mt-5 justify-content-center">
+        <B.Spinner animation="border" />
+      </div>
+    )
   if (boardsQuery.status === 'error') return <B.Alert variant="danger">{(boardsQuery.error as Error).message}</B.Alert>
 
   const user = userQuery.data
@@ -85,7 +99,9 @@ const ShowUser: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   return (
     <>
       <Head>
-        <title>{user.displayName} @{user.handle} / WOC</title>
+        <title>
+          {user.displayName} @{user.handle} / WOC
+        </title>
       </Head>
       <SocialTags title={`${user.displayName} @${user.handle}`} />
 
@@ -98,19 +114,20 @@ const ShowUser: NextPage<SuperJSONResult> = (serializedInitialProps) => {
         <span className="me-3">{user.displayName}</span>
         <em>@{user.handle}</em>
         {/* TODO should show up even when the user isn't logged in */}
-        {(user.followed !== null) &&
+        {user.followed !== null && (
           <>
             <span className="ms-4" />
             <FollowButton user={user} />
           </>
-        }
+        )}
       </h1>
 
       <BoardsList
         allowNewBoard={(session?.userId ?? null) === user.id}
         heading="Boards"
         boards={boards}
-        kind="own-board" />
+        kind="own-board"
+      />
     </>
   )
 }

@@ -1,11 +1,11 @@
-import {SubscriptionUpdate} from '@prisma/client'
-import {NextApiRequest, NextApiResponse} from 'next'
-import {prisma} from '../../../lib/db'
+import { SubscriptionUpdate } from '@prisma/client'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import {Schema} from 'yup'
-import {Result} from 'lib/http'
-import {getSession} from 'next-auth/react'
-import {Session} from 'next-auth'
+import { Schema } from 'yup'
+import { Result } from 'lib/http'
+import { getSession } from 'next-auth/react'
+import { Session } from 'next-auth'
 
 export type MarkAsReadBody = {
   subscriptionUpdateId: SubscriptionUpdate['id']
@@ -39,4 +39,3 @@ export default async function apiMarkAsRead(req: NextApiRequest, res: NextApiRes
     return res.status(200).json(response)
   }
 }
-

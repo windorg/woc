@@ -2,29 +2,19 @@ import _ from 'lodash'
 import * as R from 'ramda'
 
 // Delete an element or several elements based on the 'id' field
-export function deleteById<T, I>(
-  xs: (T & { id: I })[],
-  id: I | I[]
-) {
+export function deleteById<T, I>(xs: (T & { id: I })[], id: I | I[]) {
   const bad = Array.isArray(id) ? id : [id]
-  return filterSync(xs, x => !bad.includes(x.id))
+  return filterSync(xs, (x) => !bad.includes(x.id))
 }
 
 // Find an element based on the 'id' field and update it
-export function updateById<T, I>(
-  xs: (T & { id: I })[],
-  id: I,
-  update: ((x: T & { id: I }) => T & { id: I })
-) {
-  return xs.map(x => x.id === id ? update(x) : x)
+export function updateById<T, I>(xs: (T & { id: I })[], id: I, update: (x: T & { id: I }) => T & { id: I }) {
+  return xs.map((x) => (x.id === id ? update(x) : x))
 }
 
 // Find an element based on the 'id' field and merge into it
-export function mergeById<T, I>(
-  xs: (T & { id: I })[],
-  patch: Partial<T> & { id: I }
-) {
-  return updateById(xs, patch.id, (x => ({ ...x, ...patch })))
+export function mergeById<T, I>(xs: (T & { id: I })[], patch: Partial<T> & { id: I }) {
+  return updateById(xs, patch.id, (x) => ({ ...x, ...patch }))
 }
 
 export async function filterAsync<T>(
@@ -45,18 +35,9 @@ export async function mapAsync<T, O>(
   return Promise.all(array.map((value, index) => callback(value, index)))
 }
 
-export function filterSync<T, S extends T>(
-  array: readonly T[],
-  predicate: (value: T, index: number) => value is S
-): S[]
-export function filterSync<T>(
-  array: readonly T[],
-  predicate: (value: T, index: number) => boolean
-): T[]
-export function filterSync<T>(
-  array: readonly T[],
-  predicate: (value: T, index: number) => boolean
-): T[] {
+export function filterSync<T, S extends T>(array: readonly T[], predicate: (value: T, index: number) => value is S): S[]
+export function filterSync<T>(array: readonly T[], predicate: (value: T, index: number) => boolean): T[]
+export function filterSync<T>(array: readonly T[], predicate: (value: T, index: number) => boolean): T[] {
   // eslint-disable-next-line no-restricted-syntax
   return array.filter(predicate)
 }
@@ -65,11 +46,11 @@ export function filterSync<T>(
 export function sortByIdOrder<T, I>(
   xs: (T & { id: I })[],
   ids: I[],
-  options: { onMissingElement: 'error' | 'skip' },
+  options: { onMissingElement: 'error' | 'skip' }
 ): (T & { id: I })[] {
   const result: (T & { id: I })[] = []
   for (const id of ids) {
-    const val = xs.find(x => x.id === id)
+    const val = xs.find((x) => x.id === id)
     if (val === undefined) {
       // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
       if (options.onMissingElement === 'error') throw new Error(`sortByIdOrder: could not find element with id ${id}`)
@@ -86,11 +67,11 @@ export const insertPosition = <T>(val: T, order: T[], position: number) => {
 }
 
 export const insertBefore = <T>(val: T, order: T[], before: T) => {
-  const anchorIndex = _.findIndex(order, x => x === before)
-  return insertPosition(val, order, (anchorIndex === -1) ? 0 : anchorIndex)
+  const anchorIndex = _.findIndex(order, (x) => x === before)
+  return insertPosition(val, order, anchorIndex === -1 ? 0 : anchorIndex)
 }
 
 export const insertAfter = <T>(val: T, order: T[], after: T) => {
-  const anchorIndex = _.findIndex(order, x => x === after)
-  return insertPosition(val, order, (anchorIndex === -1) ? order.length : (anchorIndex + 1))
+  const anchorIndex = _.findIndex(order, (x) => x === after)
+  return insertPosition(val, order, anchorIndex === -1 ? order.length : anchorIndex + 1)
 }

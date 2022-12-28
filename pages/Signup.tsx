@@ -8,7 +8,7 @@ import { SuperJSONResult } from 'superjson/dist/types'
 import _ from 'lodash'
 import { Formik } from 'formik'
 import { boardsRoute } from 'lib/routes'
-import {callSignup} from "@lib/api";
+import { callSignup } from '@lib/api'
 
 function SignupForm(props) {
   return (
@@ -24,24 +24,30 @@ function SignupForm(props) {
       onSubmit={async (values, actions) => {
         const result = await callSignup(values, { returnErrors: true })
         if (result.success) {
-          await signIn("credentials", {
-            email: values.email, password: values.password,
-            callbackUrl: boardsRoute()
+          await signIn('credentials', {
+            email: values.email,
+            password: values.password,
+            callbackUrl: boardsRoute(),
           })
         } else {
           actions.setErrors(result.error.fields)
         }
       }}
     >
-      {formik => (
+      {(formik) => (
         <B.Form onSubmit={formik.handleSubmit} className="mt-5" id="signup_panel">
           <B.Form.Group className="mb-3">
             <B.Form.Label>Email</B.Form.Label>
             <B.InputGroup hasValidation>
               <B.Form.Control
-                name="email" id="email" value={formik.values.email} onChange={formik.handleChange}
-                type="email" placeholder="alice@example.com"
-                isInvalid={!!formik.errors.email} />
+                name="email"
+                id="email"
+                value={formik.values.email}
+                onChange={formik.handleChange}
+                type="email"
+                placeholder="alice@example.com"
+                isInvalid={!!formik.errors.email}
+              />
               <B.Form.Control.Feedback type="invalid">{formik.errors.email}</B.Form.Control.Feedback>
             </B.InputGroup>
           </B.Form.Group>
@@ -51,9 +57,14 @@ function SignupForm(props) {
             <B.InputGroup hasValidation>
               <B.InputGroup.Text>@</B.InputGroup.Text>
               <B.Form.Control
-                name="handle" id="handle" value={formik.values.handle} onChange={formik.handleChange}
-                type="text" placeholder="alice"
-                isInvalid={!!formik.errors.handle} />
+                name="handle"
+                id="handle"
+                value={formik.values.handle}
+                onChange={formik.handleChange}
+                type="text"
+                placeholder="alice"
+                isInvalid={!!formik.errors.handle}
+              />
               <B.Form.Control.Feedback type="invalid">{formik.errors.handle}</B.Form.Control.Feedback>
             </B.InputGroup>
           </B.Form.Group>
@@ -62,9 +73,14 @@ function SignupForm(props) {
             <B.Form.Label>Name (can be anything)</B.Form.Label>
             <B.InputGroup hasValidation>
               <B.Form.Control
-                name="displayName" id="displayName" value={formik.values.displayName} onChange={formik.handleChange}
-                type="text" placeholder="Alice"
-                isInvalid={!!formik.errors.displayName} />
+                name="displayName"
+                id="displayName"
+                value={formik.values.displayName}
+                onChange={formik.handleChange}
+                type="text"
+                placeholder="Alice"
+                isInvalid={!!formik.errors.displayName}
+              />
               <B.Form.Control.Feedback type="invalid">{formik.errors.displayName}</B.Form.Control.Feedback>
             </B.InputGroup>
           </B.Form.Group>
@@ -73,9 +89,13 @@ function SignupForm(props) {
             <B.Form.Label>Password</B.Form.Label>
             <B.InputGroup hasValidation>
               <B.Form.Control
-                name="password" id="password" value={formik.values.password} onChange={formik.handleChange}
+                name="password"
+                id="password"
+                value={formik.values.password}
+                onChange={formik.handleChange}
                 type="password"
-                isInvalid={!!formik.errors.password} />
+                isInvalid={!!formik.errors.password}
+              />
               <B.Form.Control.Feedback type="invalid">{formik.errors.password}</B.Form.Control.Feedback>
             </B.InputGroup>
           </B.Form.Group>
@@ -83,8 +103,7 @@ function SignupForm(props) {
           <div className="d-grid mt-4">
             <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>
               Sign up
-              {formik.isSubmitting &&
-                <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+              {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
             </B.Button>
           </div>
         </B.Form>
@@ -109,14 +128,17 @@ const Signup: NextPage<SuperJSONResult> = (props) => {
 
       <h1>Sign up</h1>
 
-      {session
-        ?
+      {session ? (
         <p>
-          To create a new account, please <a href="#" onClick={async () => signOut()}>log out</a> first.
+          To create a new account, please{' '}
+          <a href="#" onClick={async () => signOut()}>
+            log out
+          </a>{' '}
+          first.
         </p>
-        :
+      ) : (
         <SignupForm />
-      }
+      )}
     </>
   )
 }

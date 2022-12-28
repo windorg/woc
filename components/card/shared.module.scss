@@ -22,7 +22,7 @@
 }
 
 .addCardForm {
-  [name="title"] {
+  [name='title'] {
     display: block;
     font-weight: 500;
     border: 0;
@@ -39,7 +39,7 @@
     border-radius: 3px;
     margin-bottom: 0.5rem;
     padding-bottom: 0.5rem;
-    [name="title"] {
+    [name='title'] {
       box-shadow: none;
       margin-bottom: 0.5rem;
     }

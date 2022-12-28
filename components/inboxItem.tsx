@@ -9,14 +9,14 @@ import { Gravatar } from './gravatar'
 import { InboxItemActions } from './inboxItemActions'
 
 function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
-  return (
-    props.author
-      ?
-      <Link href={userRoute(props.author.id)}>
-        <a><Gravatar email={props.author.email} size="small" /></a>
-      </Link>
-      :
-      <Gravatar email="" size="small" />
+  return props.author ? (
+    <Link href={userRoute(props.author.id)}>
+      <a>
+        <Gravatar email={props.author.email} size="small" />
+      </a>
+    </Link>
+  ) : (
+    <Gravatar email="" size="small" />
   )
 }
 
@@ -30,15 +30,14 @@ export function InboxItemComponent(props: { item: InboxItem }) {
       </div>
       <div className="flex-grow-1 ms-2">
         <strong>
-          {author
-            ?
+          {author ? (
             <Link href={userRoute(author.id)}>
               <a>{author.displayName}</a>
             </Link>
-            :
-            "[deleted]"
-          }
-          {" "}replied at ‘{item.reply.comment.card.title}’
+          ) : (
+            '[deleted]'
+          )}{' '}
+          replied at ‘{item.reply.comment.card.title}’
         </strong>
         <div>
           <span className="text-muted small">
@@ -52,7 +51,7 @@ export function InboxItemComponent(props: { item: InboxItem }) {
           {/* TODO when private lockIcon */}
         </div>
         <RenderedMarkdown className="rendered-content mt-1" markdown={item.reply.content} />
-        <div className='small'>
+        <div className="small">
           <InboxItemActions inboxItem={item} />
         </div>
       </div>

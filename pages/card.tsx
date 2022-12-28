@@ -40,14 +40,18 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   if (typeof window === 'undefined') {
     if (!isNextExport(context)) {
       const session = await getSession(context)
-      await serverGetCard(session, { cardId })
-        .then(result => { if (result.success) props.card = result.data })
-      await serverListCards(session, { parents: [cardId] })
-        .then(result => { if (result.success) props.children = result.data })
-      await serverListComments(session, { cards: [cardId] })
-        .then(result => { if (result.success) props.comments = result.data })
-      await serverListReplies(session, { cards: [cardId] })
-        .then(result => { if (result.success) props.replies = result.data })
+      await serverGetCard(session, { cardId }).then((result) => {
+        if (result.success) props.card = result.data
+      })
+      await serverListCards(session, { parents: [cardId] }).then((result) => {
+        if (result.success) props.children = result.data
+      })
+      await serverListComments(session, { cards: [cardId] }).then((result) => {
+        if (result.success) props.comments = result.data
+      })
+      await serverListReplies(session, { cards: [cardId] }).then((result) => {
+        if (result.success) props.replies = result.data
+      })
     }
   }
   return serialize(props)
@@ -68,21 +72,40 @@ const CardPage: NextPage<SuperJSONResult> = (serializedInitialProps) => {
 
   // TODO all of this is boilerplate
   if (cardQuery.status === 'loading' || cardQuery.status === 'idle')
-    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+    return (
+      <div className="d-flex mt-5 justify-content-center">
+        <B.Spinner animation="border" />
+      </div>
+    )
   if (cardQuery.status === 'error') return <B.Alert variant="danger">{(cardQuery.error as Error).message}</B.Alert>
 
   if (childrenQuery.status === 'loading' || childrenQuery.status === 'idle')
-    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
-  if (childrenQuery.status === 'error') return <B.Alert variant="danger">{(childrenQuery.error as Error).message}</B.Alert>
+    return (
+      <div className="d-flex mt-5 justify-content-center">
+        <B.Spinner animation="border" />
+      </div>
+    )
+  if (childrenQuery.status === 'error')
+    return <B.Alert variant="danger">{(childrenQuery.error as Error).message}</B.Alert>
 
   if (commentsQuery.status === 'loading' || commentsQuery.status === 'idle')
-    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
-  if (commentsQuery.status === 'error') return <B.Alert variant="danger">{(commentsQuery.error as Error).message}</B.Alert>
+    return (
+      <div className="d-flex mt-5 justify-content-center">
+        <B.Spinner animation="border" />
+      </div>
+    )
+  if (commentsQuery.status === 'error')
+    return <B.Alert variant="danger">{(commentsQuery.error as Error).message}</B.Alert>
 
   // TODO we can show the comments before loading the replies
   if (repliesQuery.status === 'loading' || repliesQuery.status === 'idle')
-    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
-  if (repliesQuery.status === 'error') return <B.Alert variant="danger">{(repliesQuery.error as Error).message}</B.Alert>
+    return (
+      <div className="d-flex mt-5 justify-content-center">
+        <B.Spinner animation="border" />
+      </div>
+    )
+  if (repliesQuery.status === 'error')
+    return <B.Alert variant="danger">{(repliesQuery.error as Error).message}</B.Alert>
 
   const card = cardQuery.data
   const children = childrenQuery.data
@@ -98,56 +121,57 @@ const CardPage: NextPage<SuperJSONResult> = (serializedInitialProps) => {
       </Head>
       <SocialTags
         title={card.title}
-        description={
-          card.tagline
-            ? `${card.tagline}\n\n— by @${card.owner.handle}`
-            : `— by @${card.owner.handle}`
-        }
+        description={card.tagline ? `${card.tagline}\n\n— by @${card.owner.handle}` : `— by @${card.owner.handle}`}
       />
 
       <B.Breadcrumb>
         <BoardsCrumb />
         <UserCrumb user={card.owner} />
-        {card.parentChain.map(id => <CardCrumbFetch key={id} cardId={id} />)}
+        {card.parentChain.map((id) => (
+          <CardCrumbFetch key={id} cardId={id} />
+        ))}
         <CardCrumb card={card} active />
       </B.Breadcrumb>
 
-      {card.canEdit && <>
-        <EditCardModal
-          card={card}
-          show={editing}
-          onHide={() => setEditing(false)}
-          afterSave={() => setEditing(false)}
-        />
-        <MoveCardModal
-          card={card}
-          show={moving}
-          onHide={() => setMoving(false)}
-          afterMove={() => setMoving(false)}
-        />
-      </>
-      }
+      {card.canEdit && (
+        <>
+          <EditCardModal
+            card={card}
+            show={editing}
+            onHide={() => setEditing(false)}
+            afterSave={() => setEditing(false)}
+          />
+          <MoveCardModal card={card} show={moving} onHide={() => setMoving(false)} afterMove={() => setMoving(false)} />
+        </>
+      )}
 
       <h1>
-        {cardSettings(card).archived && <B.Badge bg="secondary" className="me-2">Archived</B.Badge>}
-        {isPrivate && "🔒 "}
+        {cardSettings(card).archived && (
+          <B.Badge bg="secondary" className="me-2">
+            Archived
+          </B.Badge>
+        )}
+        {isPrivate && '🔒 '}
         {card.title}
       </h1>
 
-      {card.tagline &&
+      {card.tagline && (
         <div>
           <span className="text-muted">{card.tagline}</span>
         </div>
-      }
+      )}
 
-      <div className="mb-5" style={{ marginTop: "calc(0.9rem + 0.3vw)", fontSize: "calc(0.9rem + 0.3vw)" }}>
+      <div className="mb-5" style={{ marginTop: 'calc(0.9rem + 0.3vw)', fontSize: 'calc(0.9rem + 0.3vw)' }}>
         <CardActions
           card={card}
           onEdit={() => setEditing(true)}
           onMove={() => setMoving(true)}
           afterDelete={async () => {
-            if (card.parentId) { await router.replace(cardRoute(card.parentId)) }
-            else { await router.replace(boardsRoute()) }
+            if (card.parentId) {
+              await router.replace(cardRoute(card.parentId))
+            } else {
+              await router.replace(boardsRoute())
+            }
           }}
         />
       </div>

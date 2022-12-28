@@ -3,7 +3,7 @@ import { createBoard, createCard } from './util'
 
 test.use({ storageState: 'test-tmp/alice.storageState.json' })
 
-test("Moving a card works", async ({ page }) => {
+test('Moving a card works', async ({ page }) => {
   const board1Name = await createBoard(page, { navigate: true })
   const board1Url = page.url()
   const board2Name = await createBoard(page, { navigate: true })

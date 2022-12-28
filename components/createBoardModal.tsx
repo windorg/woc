@@ -3,11 +3,7 @@ import * as B from 'react-bootstrap'
 import { Formik } from 'formik'
 import { useCreateCard } from '@lib/queries/cards'
 
-export function CreateBoardModal(props: {
-  show: boolean
-  onHide: () => void
-  afterCreate?: () => void
-}) {
+export function CreateBoardModal(props: { show: boolean; onHide: () => void; afterCreate?: () => void }) {
   const titleInputRef: React.RefObject<HTMLInputElement> = useRef(null)
   const createBoardMutation = useCreateCard()
   return (
@@ -24,34 +20,45 @@ export function CreateBoardModal(props: {
       </B.Modal.Header>
       <B.Modal.Body>
         <Formik
-          initialValues={{ private: false, title: "" }}
+          initialValues={{ private: false, title: '' }}
           onSubmit={async (values, formik) => {
             await createBoardMutation.mutateAsync({ ...values, parentId: null })
             if (props.afterCreate) props.afterCreate()
             formik.resetForm()
           }}
         >
-          {formik => (
+          {(formik) => (
             <B.Form onSubmit={formik.handleSubmit}>
               <B.Form.Group className="mb-3">
                 <B.Form.Control
-                  name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
-                  type="text" placeholder="Board title"
-                  onKeyDown={async event => {
+                  name="title"
+                  id="title"
+                  value={formik.values.title}
+                  onChange={formik.handleChange}
+                  type="text"
+                  placeholder="Board title"
+                  onKeyDown={async (event) => {
                     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
                       await formik.submitForm()
                     }
                   }}
-                  ref={titleInputRef} />
+                  ref={titleInputRef}
+                />
               </B.Form.Group>
               <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>
                 Create a board
-                {formik.isSubmitting &&
-                  <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+                {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
               </B.Button>
               <B.Form.Check
-                name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
-                type="checkbox" className="ms-4" inline label="🔒 Private board" />
+                name="private"
+                id="private"
+                checked={formik.values.private}
+                onChange={formik.handleChange}
+                type="checkbox"
+                className="ms-4"
+                inline
+                label="🔒 Private board"
+              />
             </B.Form>
           )}
         </Formik>

@@ -19,8 +19,7 @@ export function hashPassword(password: string): string {
 // Checks password stored in pwstore-fast format
 export function checkPassword(password: string, pwstring: string): boolean {
   const [algo, strength, salt, hash] = pwstring.split('|')
-  if (algo !== 'sha256')
-    return false
+  if (algo !== 'sha256') return false
   // NB: pwstore-fast doesn't decode the salt from base64 before doing the hashing
   const res = pwstore_pbkdf1(Buffer.from(password, 'utf8'), salt, Math.pow(2, parseInt(strength)))
   return timingSafeEqual(Buffer.from(hash, 'base64'), res)

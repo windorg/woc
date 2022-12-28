@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.css'
 import type { AppContext } from 'next/app'
 import App from 'next/app'
 import Layout from '../components/layout'
-import { getSession, SessionProvider } from "next-auth/react"
+import { getSession, SessionProvider } from 'next-auth/react'
 import TimeAgo from 'javascript-time-ago'
 import en from 'javascript-time-ago/locale/en.json'
 import SSRProvider from 'react-bootstrap/SSRProvider'
@@ -25,7 +25,7 @@ function MyApp(props) {
       {/* If props.session isn't provided, MyApp is being rendered client-side. In this case
           we make sure to not provide any session at all so that the session cache maintained
           by the SessionProvider would be reused. */}
-      <SessionProvider {...(props.session !== undefined) ? { session: props.session } : {}}>
+      <SessionProvider {...(props.session !== undefined ? { session: props.session } : {})}>
         <QueryClientProvider client={queryClient}>
           <Layout>
             <Component {...pageProps} />
@@ -45,7 +45,7 @@ MyApp.getInitialProps = async (appContext: AppContext) => {
     if (!isNextExport(appContext.ctx)) session = await getSession(appContext.ctx)
   }
   const appProps = await App.getInitialProps(appContext)
-  return { ...appProps, ...((session !== undefined) ? { session } : {}) }
+  return { ...appProps, ...(session !== undefined ? { session } : {}) }
 }
 
 export default MyApp
