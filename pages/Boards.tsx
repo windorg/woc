@@ -11,7 +11,7 @@ import { BoardsList } from 'components/boardsList'
 import * as B from 'react-bootstrap'
 import { isNextExport } from 'lib/export'
 import { ListCardsData, serverListCards } from './api/cards/list'
-import { prefetchCards, useCards } from '@lib/queries/cards'
+import { useCards } from '@lib/queries/cards'
 
 type Props = {
   boards?: ListCardsData

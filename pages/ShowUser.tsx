@@ -9,12 +9,12 @@ import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
 import * as B from 'react-bootstrap'
-import { prefetchUser, useFollowUser, useUnfollowUser, useUser } from 'lib/queries/user'
+import { useFollowUser, useUnfollowUser, useUser } from 'lib/queries/user'
 import { GetUserData, serverGetUser } from './api/users/get'
 import { SocialTags } from 'components/socialTags'
 import { isNextExport } from 'lib/export'
 import { ListCardsData, serverListCards } from './api/cards/list'
-import { prefetchCards, useCards } from '@lib/queries/cards'
+import { useCards } from '@lib/queries/cards'
 
 type Props = {
   userId: User['id']

@@ -12,7 +12,7 @@ import { FeedItemComponent } from 'components/feedItem'
 import styles from './ShowFeed.module.scss'
 import { signIn } from "next-auth/react"
 import { FeedItem, serverGetFeed } from './api/feed/get'
-import { prefetchFeed, useFeed } from 'lib/queries/feed'
+import { useFeed } from 'lib/queries/feed'
 import { isNextExport } from 'lib/export'
 
 type Props = {
