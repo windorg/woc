@@ -12,28 +12,37 @@ import { QueryClient, QueryClientProvider } from 'react-query'
 import { ReactQueryDevtools } from 'react-query/devtools'
 import React from 'react'
 import { isNextExport } from '../lib/export'
+import SuperTokensReact, { SuperTokensWrapper } from 'supertokens-auth-react'
+import { frontendConfig } from '../config/frontendConfig'
 
 TimeAgo.setDefaultLocale(en.locale)
 TimeAgo.addLocale(en)
+
+if (typeof window !== 'undefined') {
+  // we only want to call this init function on the frontend, so we check typeof window !== 'undefined'
+  SuperTokensReact.init(frontendConfig())
+}
 
 function MyApp(props) {
   const [queryClient] = React.useState(() => new QueryClient())
 
   const { Component, pageProps } = props
   return (
-    <SSRProvider>
-      {/* If props.session isn't provided, MyApp is being rendered client-side. In this case
+    <SuperTokensWrapper>
+      <SSRProvider>
+        {/* If props.session isn't provided, MyApp is being rendered client-side. In this case
           we make sure to not provide any session at all so that the session cache maintained
           by the SessionProvider would be reused. */}
-      <SessionProvider {...(props.session !== undefined) ? { session: props.session } : {}}>
-        <QueryClientProvider client={queryClient}>
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
-          <ReactQueryDevtools />
-        </QueryClientProvider>
-      </SessionProvider>
-    </SSRProvider>
+        <SessionProvider {...(props.session !== undefined) ? { session: props.session } : {}}>
+          <QueryClientProvider client={queryClient}>
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+            <ReactQueryDevtools />
+          </QueryClientProvider>
+        </SessionProvider>
+      </SSRProvider>
+    </SuperTokensWrapper>
   )
 }
 

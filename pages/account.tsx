@@ -3,7 +3,6 @@ import Head from 'next/head'
 import React from 'react'
 import { AccountCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
-import { getSession, signIn, useSession } from 'next-auth/react'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
@@ -13,6 +12,7 @@ import { userSettings } from '@lib/model-settings'
 import { useUser } from '@lib/queries/user'
 import { GetUserData } from './api/users/get'
 import { User } from '@prisma/client'
+import { RequireAuth, useUserId } from '@lib/session'
 
 type Props = Record<string, never>
 
@@ -21,46 +21,41 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   return serialize(props)
 }
 
-const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
-  const { data: session } = useSession()
-  const userId = session?.userId ?? null
-  const initialProps = deserialize<Props>(serializedInitialProps)
-
-  const userQuery = useUser({ userId: userId! })
+// If we are logged in
+const AccountInner = (initialProps: Props) => {
+  const userId = useUserId()!
+  const userQuery = useUser({ userId })
   const user = userQuery.data ? (userQuery.data as GetUserData & { settings: User['settings'] }) : null
 
+  return <>
+    <Head>
+      <title>Your account / WOC</title>
+    </Head>
+
+    <B.Breadcrumb>
+      <AccountCrumb active />
+    </B.Breadcrumb>
+
+    <ul>
+      <li>
+        <Link href={beeminderAuthUrl()}><a>Connect to Beeminder</a></Link>
+        {user
+          ? (userSettings(user).beeminderUsername
+            ? ` (connected as ${userSettings(user).beeminderUsername!})` : '')
+          : ' (...)'
+        }
+      </li>
+    </ul>
+  </>
+}
+
+const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
+  const initialProps = deserialize<Props>(serializedInitialProps)
+
   return (
-    <>
-      <Head>
-        <title>Your account / WOC</title>
-      </Head>
-
-      <B.Breadcrumb>
-        <AccountCrumb active />
-      </B.Breadcrumb>
-
-      {userId
-        ?
-        <>
-          <ul>
-            <li>
-              <Link href={beeminderAuthUrl()}><a>Connect to Beeminder</a></Link>
-              {user
-                ? (userSettings(user).beeminderUsername
-                  ? ` (connected as ${userSettings(user).beeminderUsername!})` : '')
-                : ' (...)'
-              }
-            </li>
-          </ul>
-        </>
-        :
-        <>
-          <p>
-            Please log in.
-          </p>
-        </>
-      }
-    </>
+    <RequireAuth>
+      <AccountInner {...initialProps} />
+    </RequireAuth>
   )
 }
 

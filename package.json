@@ -59,6 +59,8 @@
     "scroll-into-view-if-needed": "^2.2.29",
     "sharp": "^0.29.3",
     "superjson": "^1.8.0",
+    "supertokens-auth-react": "^0.28.1",
+    "supertokens-node": "^12.1.4",
     "taghiro": "^0.3.5",
     "tippy.js": "^6.3.7",
     "ts-key-enum": "^2.0.11",
