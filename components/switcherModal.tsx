@@ -25,9 +25,9 @@ function FilterBox<Item>(props: {
   searchInputRef?: React.RefObject<HTMLInputElement>
 }) {
   const [searchText, setSearchText] = React.useState('')
-  const filteredItems =
-    (!(_.isUndefined(props.items)) ? filterSync(props.items, item => props.match(searchText, item)) : [])
-      .map(item => ({ ...item, ref: React.createRef<HTMLAnchorElement>() }))
+  const filteredItems = (
+    !_.isUndefined(props.items) ? filterSync(props.items, (item) => props.match(searchText, item)) : []
+  ).map((item) => ({ ...item, ref: React.createRef<HTMLAnchorElement>() }))
   const [activeItemIndex, setActiveItemIndex] = React.useState(0)
   // Don't allow mouse events when we are navigating with the keyboard
   const [isNavigating, setIsNavigating] = React.useState(false)
@@ -48,10 +48,11 @@ function FilterBox<Item>(props: {
         const newIndex = (activeItemIndex + length + 1) % length
         setActiveItemIndex(newIndex)
         if (filteredItems[newIndex]) {
-          scrollIntoView(
-            filteredItems[newIndex].ref.current!,
-            { scrollMode: 'if-needed', block: 'nearest', inline: 'nearest' },
-          )
+          scrollIntoView(filteredItems[newIndex].ref.current!, {
+            scrollMode: 'if-needed',
+            block: 'nearest',
+            inline: 'nearest',
+          })
         }
         if (latestTimeout) clearTimeout(latestTimeout)
         setLatestTimeout(setTimeout(() => setIsNavigating(false), 100))
@@ -63,10 +64,11 @@ function FilterBox<Item>(props: {
         const newIndex = (activeItemIndex + length - 1) % length
         setActiveItemIndex(newIndex)
         if (filteredItems[newIndex]) {
-          scrollIntoView(
-            filteredItems[newIndex].ref.current!,
-            { scrollMode: 'if-needed', block: 'nearest', inline: 'nearest' },
-          )
+          scrollIntoView(filteredItems[newIndex].ref.current!, {
+            scrollMode: 'if-needed',
+            block: 'nearest',
+            inline: 'nearest',
+          })
         }
         if (latestTimeout) clearTimeout(latestTimeout)
         setLatestTimeout(setTimeout(() => setIsNavigating(false), 100))
@@ -77,7 +79,8 @@ function FilterBox<Item>(props: {
         if (activeItemIndex < filteredItems.length) props.onSelect(filteredItems[activeItemIndex])
         break
       }
-      default: break
+      default:
+        break
     }
   }
 
@@ -86,33 +89,42 @@ function FilterBox<Item>(props: {
     setActiveItemIndex(0)
   }
 
-  return (<>
-    <B.Form onSubmit={event => event.preventDefault()} className={props.className || ""}>
-      <B.Form.Control
-        type="text" name="search" id="search" autoComplete="off"
-        value={searchText} onChange={handleChange} onKeyDown={handleKeyDown}
-        ref={props.searchInputRef} />
-      <div className={`mt-3 ${styles.results}`}>
-        {props.items
-          ? <B.ListGroup className={styles.listGroup}>
-            {filteredItems.map((item, index) => (
-              <B.ListGroupItem
-                className={styles.itemWrapper}
-                key={index}
-                active={index === activeItemIndex}
-                onMouseEnter={handleMouseEnter(index)}
-                onClick={() => props.onSelect(item)}
-                ref={item.ref}
-              >
-                {props.renderItem(item)}
-              </B.ListGroupItem>
-            ))}
-          </B.ListGroup>
-          : <B.Spinner animation="border" role="status" />
-        }
-      </div>
-    </B.Form>
-  </>)
+  return (
+    <>
+      <B.Form onSubmit={(event) => event.preventDefault()} className={props.className || ''}>
+        <B.Form.Control
+          type="text"
+          name="search"
+          id="search"
+          autoComplete="off"
+          value={searchText}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          ref={props.searchInputRef}
+        />
+        <div className={`mt-3 ${styles.results}`}>
+          {props.items ? (
+            <B.ListGroup className={styles.listGroup}>
+              {filteredItems.map((item, index) => (
+                <B.ListGroupItem
+                  className={styles.itemWrapper}
+                  key={index}
+                  active={index === activeItemIndex}
+                  onMouseEnter={handleMouseEnter(index)}
+                  onClick={() => props.onSelect(item)}
+                  ref={item.ref}
+                >
+                  {props.renderItem(item)}
+                </B.ListGroupItem>
+              ))}
+            </B.ListGroup>
+          ) : (
+            <B.Spinner animation="border" role="status" />
+          )}
+        </div>
+      </B.Form>
+    </>
+  )
 }
 
 export function useSwitcherModal() {
@@ -139,36 +151,27 @@ export function useSwitcherModal() {
 
   const Component = () => {
     return (
-      session &&
-      <B.Modal
-        className={styles.modal}
-        size="lg"
-        show={isOpen}
-        onHide={close}
-      >
-        <B.Modal.Header closeButton>
-          <B.Modal.Title>Find a card</B.Modal.Title>
-        </B.Modal.Header>
+      session && (
+        <B.Modal className={styles.modal} size="lg" show={isOpen} onHide={close}>
+          <B.Modal.Header closeButton>
+            <B.Modal.Title>Find a card</B.Modal.Title>
+          </B.Modal.Header>
 
-        <B.Modal.Body>
-          <FilterBox className={styles.filterBox}
-            items={
-              _.isUndefined(cardsQuery.data)
-                ? undefined
-                : _.orderBy(cardsQuery.data, ['createdAt'], ['desc'])
-            }
-            match={(text, card) => card.title.toLowerCase().includes(text.toLowerCase())}
-            renderItem={card => (
-              <span>{card.title}</span>
-            )}
-            onSelect={async card => {
-              close()
-              await router.push(cardRoute(card.id))
-            }}
-            searchInputRef={searchInputRef}
-          />
-        </B.Modal.Body>
-      </B.Modal>
+          <B.Modal.Body>
+            <FilterBox
+              className={styles.filterBox}
+              items={_.isUndefined(cardsQuery.data) ? undefined : _.orderBy(cardsQuery.data, ['createdAt'], ['desc'])}
+              match={(text, card) => card.title.toLowerCase().includes(text.toLowerCase())}
+              renderItem={(card) => <span>{card.title}</span>}
+              onSelect={async (card) => {
+                close()
+                await router.push(cardRoute(card.id))
+              }}
+              searchInputRef={searchInputRef}
+            />
+          </B.Modal.Body>
+        </B.Modal>
+      )
     )
   }
 

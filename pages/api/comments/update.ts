@@ -1,12 +1,12 @@
-import type {Prisma} from '@prisma/client'
-import {Comment} from '@prisma/client'
-import {NextApiRequest, NextApiResponse} from 'next'
-import {prisma} from '../../../lib/db'
+import type { Prisma } from '@prisma/client'
+import { Comment } from '@prisma/client'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import {Schema} from 'yup'
-import {getSession} from 'next-auth/react'
-import {canEditComment} from 'lib/access'
-import {CommentSettings} from 'lib/model-settings'
+import { Schema } from 'yup'
+import { getSession } from 'next-auth/react'
+import { canEditComment } from 'lib/access'
+import { CommentSettings } from 'lib/model-settings'
 
 interface UpdateCommentRequest extends NextApiRequest {
   body: {
@@ -23,7 +23,7 @@ const schema: Schema<UpdateCommentBody> = yup.object({
   commentId: yup.string().uuid().required(),
   content: yup.string(),
   private: yup.boolean(),
-  pinned: yup.boolean()
+  pinned: yup.boolean(),
 })
 
 // Returns only the updated fields (the 'settings' field is always returned in full)
@@ -39,16 +39,17 @@ export default async function updateComment(req: UpdateCommentRequest, res: Next
       include: {
         card: {
           select: {
-            ownerId: true, settings: true,
-          }
-        }
+            ownerId: true,
+            settings: true,
+          },
+        },
       },
       rejectOnNotFound: true,
     })
     if (!canEditComment(session?.userId ?? null, comment)) return res.status(403)
 
     let diff: Partial<Comment> & { settings: Partial<CommentSettings> } = {
-      settings: comment.settings ?? {}
+      settings: comment.settings ?? {},
     }
     if (body.content !== undefined) {
       diff.content = body.content
@@ -57,16 +58,15 @@ export default async function updateComment(req: UpdateCommentRequest, res: Next
       diff.settings.pinned = body.pinned
     }
     if (body.private !== undefined) {
-      diff.settings.visibility = (body.private ? "private" : "public")
+      diff.settings.visibility = body.private ? 'private' : 'public'
     }
     await prisma.comment.update({
       where: { id: body.commentId },
       // See https://github.com/prisma/prisma/issues/9247
-      data: (diff as unknown) as Prisma.InputJsonObject
+      data: diff as unknown as Prisma.InputJsonObject,
     })
     // If we ever have "updatedAt", we should also return it here
 
     return res.status(200).json(diff)
   }
 }
-

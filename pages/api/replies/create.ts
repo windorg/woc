@@ -1,14 +1,14 @@
-import type {Prisma} from '@prisma/client'
-import {Comment, Reply, subscription_update_kind, User} from '@prisma/client'
-import {NextApiRequest, NextApiResponse} from 'next'
-import {prisma} from 'lib/db'
+import type { Prisma } from '@prisma/client'
+import { Comment, Reply, subscription_update_kind, User } from '@prisma/client'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from 'lib/db'
 import * as yup from 'yup'
-import {Schema} from 'yup'
-import {getSession} from 'next-auth/react'
-import {canDeleteReply, canEditReply, canReplyToComment} from 'lib/access'
-import {CommentSettings, commentSettings} from 'lib/model-settings'
+import { Schema } from 'yup'
+import { getSession } from 'next-auth/react'
+import { canDeleteReply, canEditReply, canReplyToComment } from 'lib/access'
+import { CommentSettings, commentSettings } from 'lib/model-settings'
 import * as R from 'ramda'
-import {filterSync} from 'lib/array'
+import { filterSync } from 'lib/array'
 
 interface CreateReplyRequest extends NextApiRequest {
   body: {
@@ -40,31 +40,30 @@ async function setUserSubscription(
   commentId: Comment['id'],
   action: 'subscribe' | 'unsubscribe'
 ): Promise<User['id'][]> {
-  return await prisma.$transaction(async prisma => {
+  return await prisma.$transaction(async (prisma) => {
     const settings = commentSettings(
       await prisma.comment.findUnique({
         where: { id: commentId },
         select: { settings: true },
         rejectOnNotFound: true,
-      }))
+      })
+    )
     const needsUpdate: boolean =
-      action === 'subscribe'
-        ? !R.includes(userId, settings.subscribers)
-        : R.includes(userId, settings.subscribers)
+      action === 'subscribe' ? !R.includes(userId, settings.subscribers) : R.includes(userId, settings.subscribers)
     if (!needsUpdate) {
       return settings.subscribers
     } else {
       const newSubscribers =
         action === 'subscribe'
           ? settings.subscribers.concat([userId])
-          : filterSync(settings.subscribers, x => x !== userId)
+          : filterSync(settings.subscribers, (x) => x !== userId)
       const newSettings: CommentSettings = {
         ...settings,
-        subscribers: newSubscribers
+        subscribers: newSubscribers,
       }
       await prisma.comment.update({
         where: { id: commentId },
-        data: { settings: (newSettings as unknown) as Prisma.InputJsonValue }
+        data: { settings: newSettings as unknown as Prisma.InputJsonValue },
       })
       return newSubscribers
     }
@@ -78,17 +77,20 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
     const comment = await prisma.comment.findUnique({
       where: { id: body.commentId },
       select: {
-        id: true, ownerId: true, settings: true,
+        id: true,
+        ownerId: true,
+        settings: true,
         card: {
           select: {
-            ownerId: true, settings: true,
-          }
-        }
+            ownerId: true,
+            settings: true,
+          },
+        },
       },
       rejectOnNotFound: true,
     })
     if (!session) return res.status(403)
-    if (!await canReplyToComment(session.userId, comment)) return res.status(403)
+    if (!(await canReplyToComment(session.userId, comment))) return res.status(403)
 
     // Create the reply
     const reply = await prisma.reply.create({
@@ -97,7 +99,7 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
         commentId: body.commentId,
         settings: {},
         authorId: session.userId,
-      }
+      },
     })
 
     const replyAugmented = {
@@ -105,15 +107,15 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
       author: await prisma.user.findUnique({
         where: { id: session.userId },
         select: { id: true, handle: true, displayName: true, email: true },
-        rejectOnNotFound: true
+        rejectOnNotFound: true,
       }),
       comment: await prisma.comment.findUnique({
         where: { id: reply.commentId },
         select: { cardId: true },
-        rejectOnNotFound: true
+        rejectOnNotFound: true,
       }),
       canEdit: canEditReply(session.userId, { ...reply, comment }),
-      canDelete: canDeleteReply(session.userId, { ...reply, comment })
+      canDelete: canDeleteReply(session.userId, { ...reply, comment }),
     }
 
     // Subscribe the replier to the thread
@@ -141,7 +143,7 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
               // TODO: not sure why we fill both cardUpdateId and replyId
               commentId: body.commentId,
               replyId: reply.id,
-            }
+            },
           })
         }
       }
@@ -150,4 +152,3 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
     return res.status(201).json(replyAugmented)
   }
 }
-

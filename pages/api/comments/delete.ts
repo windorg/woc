@@ -18,7 +18,7 @@ interface DeleteCommentRequest extends NextApiRequest {
 export type DeleteCommentBody = DeleteCommentRequest['body']
 
 const schema: Schema<DeleteCommentBody> = yup.object({
-  commentId: yup.string().uuid().required()
+  commentId: yup.string().uuid().required(),
 })
 
 export default async function deleteComment(req: DeleteCommentRequest, res: NextApiResponse<void>) {
@@ -30,17 +30,19 @@ export default async function deleteComment(req: DeleteCommentRequest, res: Next
       include: {
         card: {
           select: {
-            id: true, ownerId: true, settings: true,
-            _count: { select: { comments: true } }
-          }
-        }
+            id: true,
+            ownerId: true,
+            settings: true,
+            _count: { select: { comments: true } },
+          },
+        },
       },
       rejectOnNotFound: true,
     })
     if (!canEditComment(session?.userId ?? null, comment)) return res.status(403)
 
     await prisma.comment.delete({
-      where: { id: body.commentId }
+      where: { id: body.commentId },
     })
 
     if (cardSettings(comment.card).beeminderGoal) {

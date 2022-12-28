@@ -6,9 +6,7 @@ import { Formik } from 'formik'
 import { useCreateCard } from 'lib/queries/cards'
 import styles from './shared.module.scss'
 
-export function AddCardForm(props: {
-  parentId: Card['id']
-}) {
+export function AddCardForm(props: { parentId: Card['id'] }) {
   const createCardMutation = useCreateCard()
   const [focused, setFocused] = React.useState(false)
   const inputRef: React.RefObject<HTMLTextAreaElement> = useRef(null)
@@ -26,7 +24,7 @@ export function AddCardForm(props: {
         setFocused(false)
       }}
     >
-      {formik => {
+      {(formik) => {
         const onCancel = () => {
           formik.resetForm()
           inputRef.current!.blur()
@@ -41,7 +39,7 @@ export function AddCardForm(props: {
             <B.Form.Control
               ref={inputRef}
               onFocus={() => setFocused(true)}
-              onKeyDown={async event => {
+              onKeyDown={async (event) => {
                 if (event.key === 'Escape') onCancel()
                 if (event.key === 'Enter' && !formik.isSubmitting) {
                   event.preventDefault()
@@ -49,28 +47,36 @@ export function AddCardForm(props: {
                 }
               }}
               as={TextareaAutosize}
-              name="title" id="title" value={formik.values.title} onChange={formik.handleChange}
-              type="text" placeholder="New card..." />
+              name="title"
+              id="title"
+              value={formik.values.title}
+              onChange={formik.handleChange}
+              type="text"
+              placeholder="New card..."
+            />
             <div className={styles._controls}>
               <B.Form.Check
-                name="private" id="private" checked={formik.values.private} onChange={formik.handleChange}
-                type="checkbox" inline label="🔒 Private card" />
+                name="private"
+                id="private"
+                checked={formik.values.private}
+                onChange={formik.handleChange}
+                type="checkbox"
+                inline
+                label="🔒 Private card"
+              />
               <span>
-                <B.Button size="sm" className="me-2" variant="secondary"
-                  onClick={onCancel}
-                >
+                <B.Button size="sm" className="me-2" variant="secondary" onClick={onCancel}>
                   Cancel
                 </B.Button>
                 <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
                   Add a card
-                  {formik.isSubmitting &&
-                    <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+                  {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
                 </B.Button>
               </span>
             </div>
           </B.Form>
         )
       }}
-    </Formik >
+    </Formik>
   )
 }

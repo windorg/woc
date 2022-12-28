@@ -10,7 +10,7 @@ import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
 import { FeedItemComponent } from 'components/feedItem'
 import styles from './ShowFeed.module.scss'
-import { signIn } from "next-auth/react"
+import { signIn } from 'next-auth/react'
 import { FeedItem, serverGetFeed } from './api/feed/get'
 import { useFeed } from 'lib/queries/feed'
 import { isNextExport } from 'lib/export'
@@ -24,8 +24,9 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   if (typeof window === 'undefined') {
     if (!isNextExport(context)) {
       const session = await getSession(context)
-      await serverGetFeed(session, { days: 3 })
-        .then(result => { if (result.success) props.feedItems = result.data })
+      await serverGetFeed(session, { days: 3 }).then((result) => {
+        if (result.success) props.feedItems = result.data
+      })
     }
   }
   return serialize(props)
@@ -38,7 +39,11 @@ const ShowFeed: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   const feedQuery = useFeed({ days: 3 }, { initialData: initialProps?.feedItems })
 
   if (feedQuery.status === 'loading' || feedQuery.status === 'idle')
-    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+    return (
+      <div className="d-flex mt-5 justify-content-center">
+        <B.Spinner animation="border" />
+      </div>
+    )
   if (feedQuery.status === 'error') return <B.Alert variant="danger">{(feedQuery.error as Error).message}</B.Alert>
 
   const feedItems = feedQuery.data
@@ -56,20 +61,23 @@ const ShowFeed: NextPage<SuperJSONResult> = (serializedInitialProps) => {
 
       <h1>Feed</h1>
 
-      {session
-        ?
+      {session ? (
         <div className={`${styles.feedItems} mb-5`}>
-          {_.orderBy(feedItems, ['createdAt'], ['desc'])
-            .map(x => <FeedItemComponent key={x.id} item={x} />)
-          }
+          {_.orderBy(feedItems, ['createdAt'], ['desc']).map((x) => (
+            <FeedItemComponent key={x.id} item={x} />
+          ))}
         </div>
-        :
+      ) : (
         <>
           <p>
-            Please <a href="#" onClick={async () => signIn()}>log in</a> to see your feed.
+            Please{' '}
+            <a href="#" onClick={async () => signIn()}>
+              log in
+            </a>{' '}
+            to see your feed.
           </p>
         </>
-      }
+      )}
     </>
   )
 }

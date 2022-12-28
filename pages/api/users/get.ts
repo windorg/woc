@@ -1,11 +1,11 @@
-import {User} from '@prisma/client'
-import {NextApiRequest, NextApiResponse} from 'next'
-import {prisma} from '../../../lib/db'
+import { User } from '@prisma/client'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import {Schema} from 'yup'
-import {Result} from 'lib/http'
-import {getSession} from 'next-auth/react'
-import {Session} from 'next-auth'
+import { Schema } from 'yup'
+import { Result } from 'lib/http'
+import { getSession } from 'next-auth/react'
+import { Session } from 'next-auth'
 
 export type GetUserQuery = {
   userId: User['id']
@@ -34,19 +34,21 @@ export async function serverGetUser(session: Session | null, query: GetUserQuery
       settings: (session?.userId ?? null) === query.userId,
     },
   })
-  if (!user) return {
-    success: false,
-    error: { notFound: true }
-  }
-  const followed: boolean | null =
-    session
-      ? await prisma.followedUser.count({
-        where: {
-          subscriberId: session.userId,
-          followedUserId: user.id,
-        }
-      }).then(Boolean)
-      : null
+  if (!user)
+    return {
+      success: false,
+      error: { notFound: true },
+    }
+  const followed: boolean | null = session
+    ? await prisma.followedUser
+        .count({
+          where: {
+            subscriberId: session.userId,
+            followedUserId: user.id,
+          },
+        })
+        .then(Boolean)
+    : null
   return {
     success: true,
     data: { ...user, followed },
@@ -61,4 +63,3 @@ export default async function apiGetUser(req: NextApiRequest, res: NextApiRespon
     return res.status(200).json(response)
   }
 }
-

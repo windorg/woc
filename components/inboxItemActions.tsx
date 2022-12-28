@@ -6,12 +6,14 @@ import { InboxItem } from 'lib/inbox'
 import { useMarkAsRead } from 'lib/queries/inbox'
 
 function ButtonMarkAsRead(props: { onMarkAsRead }) {
-  return <LinkButton onClick={props.onMarkAsRead} icon={<BiCheck />}>Mark as read</LinkButton>
+  return (
+    <LinkButton onClick={props.onMarkAsRead} icon={<BiCheck />}>
+      Mark as read
+    </LinkButton>
+  )
 }
 
-export function InboxItemActions(props: {
-  inboxItem: InboxItem
-}) {
+export function InboxItemActions(props: { inboxItem: InboxItem }) {
   const { inboxItem } = props
 
   const markAsReadMutation = useMarkAsRead()

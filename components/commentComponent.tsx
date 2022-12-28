@@ -22,7 +22,7 @@ export type Comment_ = Comment & {
 }
 
 // Timestamp & the little lock
-function InfoHeader(props: { card: Card, comment: Comment_ }) {
+function InfoHeader(props: { card: Card; comment: Comment_ }) {
   const settings = commentSettings(props.comment)
   const isPrivate = settings.visibility === 'private'
   return (
@@ -52,15 +52,21 @@ function ShowCommentBody(props: {
 
   return (
     <>
-      <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
+      <div className="d-flex justify-content-between" style={{ marginBottom: '.3em' }}>
         <InfoHeader {...props} />
-        <div className="d-inline-flex small text-muted" style={{ marginTop: "3px" }}>
-          <LinkButton onClick={props.openReplyModal} icon={<BiCommentDetail />}>Reply</LinkButton>
+        <div className="d-inline-flex small text-muted" style={{ marginTop: '3px' }}>
+          <LinkButton onClick={props.openReplyModal} icon={<BiCommentDetail />}>
+            Reply
+          </LinkButton>
           <span className="me-3" />
-          {comment.canEdit && <>
-            <LinkButton onClick={props.startEditing} icon={<BiPencil />}>Edit</LinkButton>
-            <span className="me-3" />
-          </>}
+          {comment.canEdit && (
+            <>
+              <LinkButton onClick={props.startEditing} icon={<BiPencil />}>
+                Edit
+              </LinkButton>
+              <span className="me-3" />
+            </>
+          )}
           <CommentMenu {...props} />
         </div>
       </div>
@@ -70,46 +76,41 @@ function ShowCommentBody(props: {
 }
 
 // Comment in "edit" mode
-function EditCommentBody(props: {
-  card: Card
-  comment: Comment_
-  stopEditing: () => void
-}) {
+function EditCommentBody(props: { card: Card; comment: Comment_; stopEditing: () => void }) {
   const { comment } = props
   const editorRef: RefObject<TiptapMethods> = React.useRef(null)
   const updateCommentMutation = useUpdateComment()
   return (
     <>
-      <div className="d-flex justify-content-between" style={{ marginBottom: ".3em" }}>
+      <div className="d-flex justify-content-between" style={{ marginBottom: '.3em' }}>
         <InfoHeader {...props} />
       </div>
       <Formik
         initialValues={{}}
         onSubmit={async () => {
-          if (!editorRef.current) throw Error("Editor is not initialized")
+          if (!editorRef.current) throw Error('Editor is not initialized')
           await updateCommentMutation.mutateAsync({
             commentId: comment.id,
-            content: editorRef.current.getMarkdown()
+            content: editorRef.current.getMarkdown(),
           })
           props.stopEditing()
         }}
       >
-        {formik => (
-          <B.Form onSubmit={formik.handleSubmit} >
+        {(formik) => (
+          <B.Form onSubmit={formik.handleSubmit}>
             <div className="mb-2">
               <Tiptap
                 content={markdownToHtml(props.comment.content)}
                 autoFocus
                 onSubmit={formik.handleSubmit}
-                ref={editorRef} />
+                ref={editorRef}
+              />
             </div>
             <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
               Save
-              {formik.isSubmitting &&
-                <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+              {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
             </B.Button>
-            <B.Button size="sm" variant="secondary" type="button" className="ms-2"
-              onClick={props.stopEditing}>
+            <B.Button size="sm" variant="secondary" type="button" className="ms-2" onClick={props.stopEditing}>
               Cancel
             </B.Button>
           </B.Form>
@@ -119,29 +120,25 @@ function EditCommentBody(props: {
   )
 }
 
-function Replies(props: {
-  card
-  replies
-  afterDelete?: (id: Reply['id']) => void
-}) {
-  const replies =
-    _.orderBy(props.replies, ['createdAt'], ['asc'])
+function Replies(props: { card; replies; afterDelete?: (id: Reply['id']) => void }) {
+  const replies = _.orderBy(props.replies, ['createdAt'], ['asc'])
   return (
     <div className="woc-comment-replies">
-      {replies.map(reply => (
-        <ReplyComponent key={reply.id} card={props.card} reply={reply}
-          afterDelete={() => { if (props.afterDelete) props.afterDelete(reply.id) }}
+      {replies.map((reply) => (
+        <ReplyComponent
+          key={reply.id}
+          card={props.card}
+          reply={reply}
+          afterDelete={() => {
+            if (props.afterDelete) props.afterDelete(reply.id)
+          }}
         />
       ))}
     </div>
   )
 }
 
-export function CommentComponent(props: {
-  card: Card
-  comment: Comment_
-  replies: Reply_[]
-}) {
+export function CommentComponent(props: { card: Card; comment: Comment_; replies: Reply_[] }) {
   const { comment } = props
 
   const settings = commentSettings(comment)
@@ -149,8 +146,8 @@ export function CommentComponent(props: {
   const classes = `
     woc-comment
     ${styles.comment}
-    ${isPrivate ? styles.commentPrivate : ""}
-    ${settings.pinned ? styles.commentPinned : ""}
+    ${isPrivate ? styles.commentPrivate : ''}
+    ${settings.pinned ? styles.commentPinned : ''}
     `
 
   // Is the comment itself (not the replies) in the editing mode now?
@@ -165,21 +162,20 @@ export function CommentComponent(props: {
         show={replyModalShown}
         comment={props.comment}
         onHide={() => setReplyModalShown(false)}
-        afterCreate={() => { setReplyModalShown(false) }}
+        afterCreate={() => {
+          setReplyModalShown(false)
+        }}
       />
-      {editing
-        ?
+      {editing ? (
         <EditCommentBody {...props} stopEditing={() => setEditing(false)} />
-        :
+      ) : (
         <ShowCommentBody
           {...props}
           startEditing={() => setEditing(true)}
           openReplyModal={() => setReplyModalShown(true)}
         />
-      }
+      )}
       <Replies {...props} />
     </div>
   )
 }
-
-

@@ -30,7 +30,7 @@ export function CreateReplyModal(props: {
         <Formik
           initialValues={{}}
           onSubmit={async (values, formik) => {
-            if (!editorRef.current) throw Error("Editor is not initialized")
+            if (!editorRef.current) throw Error('Editor is not initialized')
             await createReplyMutation.mutateAsync({
               ...values,
               commentId: props.comment.id,
@@ -40,21 +40,16 @@ export function CreateReplyModal(props: {
             formik.resetForm()
           }}
         >
-          {formik => (
+          {(formik) => (
             <B.Form onSubmit={formik.handleSubmit} className="woc-reply-form">
               <div className="mb-3">
-                <Tiptap
-                  autoFocus
-                  onSubmit={formik.handleSubmit}
-                  ref={editorRef} />
+                <Tiptap autoFocus onSubmit={formik.handleSubmit} ref={editorRef} />
               </div>
               <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>
                 Post a reply
-                {formik.isSubmitting &&
-                  <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+                {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
               </B.Button>
-              <B.Button variant="secondary" type="button" className="ms-2"
-                onClick={props.onHide}>
+              <B.Button variant="secondary" type="button" className="ms-2" onClick={props.onHide}>
                 Cancel
               </B.Button>
               {/* <Form.Check

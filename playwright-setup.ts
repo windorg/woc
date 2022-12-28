@@ -20,20 +20,22 @@ async function globalSetup(config: FullConfig) {
   // just happened and should ideally be fixed.
   const browser = await chromium.launch()
   const page = await browser.newPage({ baseURL: config.projects[0].use.baseURL })
-  await createAndSaveUser(page,
+  await createAndSaveUser(
+    page,
     { logout: true },
     {
       email: 'alice@woc.test',
       handle: 'alice',
-      displayName: 'Alice T.'
+      displayName: 'Alice T.',
     }
   )
-  await createAndSaveUser(page,
+  await createAndSaveUser(
+    page,
     { logout: true },
     {
       email: 'bob@woc.test',
       handle: 'bob',
-      displayName: 'Bob T.'
+      displayName: 'Bob T.',
     }
   )
   await browser.close()

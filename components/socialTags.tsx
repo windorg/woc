@@ -1,6 +1,6 @@
-import Head from "next/head"
+import Head from 'next/head'
 
-export function SocialTags(props: { title: string, description?: string }) {
+export function SocialTags(props: { title: string; description?: string }) {
   return (
     <Head>
       <meta property="og:title" content={props.title} />

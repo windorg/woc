@@ -23,7 +23,7 @@ export type CreateCommentBody = CreateCommentRequest['body']
 const schema: Schema<CreateCommentBody> = yup.object({
   cardId: yup.string().uuid().required(),
   content: yup.string().required(),
-  private: yup.boolean()
+  private: yup.boolean(),
 })
 
 export type Comment_ = Comment & { canEdit: boolean }
@@ -38,13 +38,13 @@ export default async function createComment(req: CreateCommentRequest, res: Next
         id: true,
         ownerId: true,
         settings: true,
-        _count: { select: { comments: true } }
+        _count: { select: { comments: true } },
       },
       rejectOnNotFound: true,
     })
     if (!canEditCard(session?.userId ?? null, card)) return res.status(403)
     const settings: Partial<CommentSettings> = {
-      visibility: body.private ? 'private' : 'public'
+      visibility: body.private ? 'private' : 'public',
     }
     const comment = await prisma.comment.create({
       data: {
@@ -52,7 +52,7 @@ export default async function createComment(req: CreateCommentRequest, res: Next
         cardId: body.cardId,
         settings,
         ownerId: card.ownerId,
-      }
+      },
     })
     if (cardSettings(card).beeminderGoal) {
       await addJob('beeminder-sync-card', {
@@ -64,4 +64,3 @@ export default async function createComment(req: CreateCommentRequest, res: Next
     return res.status(201).json({ ...comment, canEdit: true })
   }
 }
-

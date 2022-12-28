@@ -1,0 +1,7 @@
+/tiptap/
+/.next/
+/src-tauri/
+/test-tmp/
+*.yml
+*.yaml
+*.json

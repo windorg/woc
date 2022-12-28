@@ -1,4 +1,4 @@
-import { Card, User, Comment } from "@prisma/client"
+import { Card, User, Comment } from '@prisma/client'
 
 export function accountRoute() {
   return `/account`
@@ -16,11 +16,11 @@ export function cardRoute(cardId: Card['id']) {
   return `/card?id=${cardId}`
 }
 
-export function commentRoute(args: { cardId: Card['id'], commentId: Comment['id'] }) {
+export function commentRoute(args: { cardId: Card['id']; commentId: Comment['id'] }) {
   return `/card?id=${args.cardId}#comment-${args.commentId}`
 }
 
-export function replyRoute(args: { cardId: Card['id'], replyId: Comment['id'] }) {
+export function replyRoute(args: { cardId: Card['id']; replyId: Comment['id'] }) {
   return `/card?id=${args.cardId}#reply-${args.replyId}`
 }
 

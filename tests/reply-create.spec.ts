@@ -3,7 +3,7 @@ import { createBoard, createCard, createComment, createReply, expectReplyGone } 
 
 test.use({ storageState: 'test-tmp/alice.storageState.json' })
 
-test("You can reply to your own comments", async ({ page }) => {
+test('You can reply to your own comments', async ({ page }) => {
   const boardName = await createBoard(page, { navigate: true })
   await createCard(page, { navigate: true })
   const commentContent = await createComment(page)
@@ -30,8 +30,8 @@ test("When you reply to someone else's comment, it shows your name", async ({ pa
     const bobPage = await bobContext.newPage()
     await bobPage.goto(cardUrl)
     const replyContent = await createReply(bobPage, commentContent)
-    await expect(bobPage.locator('.woc-reply', { hasText: replyContent })).not.toContainText("Alice T.")
-    await expect(bobPage.locator('.woc-reply', { hasText: replyContent })).toContainText("Bob T.")
+    await expect(bobPage.locator('.woc-reply', { hasText: replyContent })).not.toContainText('Alice T.')
+    await expect(bobPage.locator('.woc-reply', { hasText: replyContent })).toContainText('Bob T.')
   }
 })
 

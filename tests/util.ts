@@ -32,25 +32,24 @@ export async function withBootstrapModal(page: Page, open: () => Promise<void>, 
 export async function createAndSaveUser(
   page: Page,
   options?: { logout?: boolean },
-  data?: { email: string, handle: string, displayName: string },
+  data?: { email: string; handle: string; displayName: string }
 ): Promise<string> {
   const randomHandle = randomWords(2).join('-')
-  const { email, handle, displayName } =
-    data ?? {
-      email: `${randomHandle}@woc.test`,
-      handle: randomHandle,
-      displayName: randomHandle,
-    }
+  const { email, handle, displayName } = data ?? {
+    email: `${randomHandle}@woc.test`,
+    handle: randomHandle,
+    displayName: randomHandle,
+  }
   await prisma.user.deleteMany({
-    where: { handle }
+    where: { handle },
   })
   await prisma.user.create({
     data: {
       email,
       handle,
       displayName,
-      passwordHash: hashPassword('test')
-    }
+      passwordHash: hashPassword('test'),
+    },
   })
   await page.goto('/Boards')
   await page.click('text=Log in')
@@ -87,10 +86,7 @@ export async function createBoard(
     }
   )
   if (options?.navigate) {
-    await Promise.all([
-      page.waitForNavigation(),
-      page.click(`a:text("${name}")`)
-    ])
+    await Promise.all([page.waitForNavigation(), page.click(`a:text("${name}")`)])
   }
   return name
 }
@@ -112,10 +108,7 @@ export async function createCard(
   }
   await page.press('[placeholder="New card..."]', 'Enter')
   if (options?.navigate) {
-    await Promise.all([
-      page.waitForNavigation(),
-      page.click(`a:text("${name}")`)
-    ])
+    await Promise.all([page.waitForNavigation(), page.click(`a:text("${name}")`)])
   }
   return name
 }
@@ -139,10 +132,7 @@ export async function createComment(
 }
 
 // Create a reply for a comment with given content. Assumes we are at the card page
-export async function createReply(
-  page: Page,
-  comment: string
-): Promise<string> {
+export async function createReply(page: Page, comment: string): Promise<string> {
   expect(page.url().includes('/card'))
   const content = randomWords(4).join('-')
   const commentHandle = await page.locator('.woc-comment', { hasText: comment }).elementHandle()
@@ -164,8 +154,8 @@ export async function expectReplyGone(page: Page, replyContent: string) {
   await expect(page.locator('#layout')).not.toContainText(replyContent)
   const reply = await prisma.reply.findFirst({
     where: {
-      content: { contains: replyContent }
-    }
+      content: { contains: replyContent },
+    },
   })
   expect(reply === null)
 }
@@ -173,7 +163,7 @@ export async function expectReplyGone(page: Page, replyContent: string) {
 export async function interceptResponses<T>(
   pages: Page[],
   action: () => Promise<T>
-): Promise<{ responses: [Request, string][], result: T }> {
+): Promise<{ responses: [Request, string][]; result: T }> {
   let responses: [Request, string][] = []
   const handler = async (route: Route, request: Request) => {
     try {
@@ -182,9 +172,11 @@ export async function interceptResponses<T>(
       responses.push([route.request(), body])
       await route.fulfill({ response })
     } catch (error) {
-      const re = /(Response has been disposed|Request context disposed|Failed to find browser context|browser has been closed)/g
+      const re =
+        /(Response has been disposed|Request context disposed|Failed to find browser context|browser has been closed)/g
       // @ts-ignore
-      if (error.message.match(re)) return; else throw error
+      if (error.message.match(re)) return
+      else throw error
     }
   }
   for (const page of pages) {
@@ -199,12 +191,9 @@ export async function interceptResponses<T>(
   return { responses, result }
 }
 
-export function expectNoLeakage(
-  responses: [Request, string][],
-  blacklist: string[]
-) {
+export function expectNoLeakage(responses: [Request, string][], blacklist: string[]) {
   for (const [request, response] of responses) {
-    const matches = filterSync(blacklist, word => response.includes(word))
+    const matches = filterSync(blacklist, (word) => response.includes(word))
     if (matches.length > 0) {
       // @ts-ignore
       expect(null).fail(`The response for ${request.url()} leaks data: ${JSON.stringify(matches)}`)
