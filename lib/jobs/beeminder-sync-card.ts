@@ -33,11 +33,11 @@ export async function beeminderSyncCard(payload: BeeminderSyncCardPayload) {
     })
     .catch((error) => {
       if (error.response) {
-        // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         throw new Error(
-          `Beeminder error: status = ${error.response.status}, data = ${JSON.stringify(
-            error.response.data
-          )}, headers = ${JSON.stringify(error.response.headers)}`
+          // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
+          `Beeminder error: status = ${error.response.status}, ` +
+            `data = ${JSON.stringify(error.response.data)}, ` +
+            `headers = ${JSON.stringify(error.response.headers)}`
         )
       } else {
         throw new Error(`Beeminder error: ${JSON.stringify(error)}`)
