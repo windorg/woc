@@ -19,18 +19,24 @@ export async function addJob(job: string, payload: any) {
 }
 
 export async function startJobQueueProcessing() {
-  const worker = new Worker('jobs',
-    async job => {
+  const worker = new Worker(
+    'jobs',
+    async (job) => {
       switch (job.name) {
-        case 'beeminder-sync-card': { await beeminderSyncCard(job.data); break }
-        default: { console.log(`Unknown job ${job.name}`) }
+        case 'beeminder-sync-card': {
+          await beeminderSyncCard(job.data)
+          break
+        }
+        default: {
+          console.log(`Unknown job ${job.name}`)
+        }
       }
     },
     {
       connection: redisConnection,
     }
   )
-  worker.on('error', err => {
+  worker.on('error', (err) => {
     console.error(`job-queue worker failed: ${err.message}`)
   })
   worker.on('failed', (job, err) => {

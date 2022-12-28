@@ -3,7 +3,7 @@ import { createBoard, createCard, createComment, createReply, expectReplyGone } 
 
 test.use({ storageState: 'test-tmp/alice.storageState.json' })
 
-test("You can delete your own replies", async ({ page }) => {
+test('You can delete your own replies', async ({ page }) => {
   const boardName = await createBoard(page, { navigate: true })
   await createCard(page, { navigate: true })
   const commentContent = await createComment(page)

@@ -1,9 +1,9 @@
-import {User} from '@prisma/client'
-import {NextApiRequest, NextApiResponse} from 'next'
-import {prisma} from '../../../lib/db'
+import { User } from '@prisma/client'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import {Schema} from 'yup'
-import {getSession} from 'next-auth/react'
+import { Schema } from 'yup'
+import { getSession } from 'next-auth/react'
 
 interface UnfollowUserRequest extends NextApiRequest {
   body: {
@@ -27,10 +27,9 @@ export default async function unfollowUser(req: UnfollowUserRequest, res: NextAp
       where: {
         subscriberId: session.userId,
         followedUserId: body.userId,
-      }
+      },
     })
 
     return res.status(200).send()
   }
 }
-

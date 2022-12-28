@@ -4,7 +4,7 @@ const config: CapacitorConfig = {
   appId: 'me.windofchange',
   appName: 'WOC',
   webDir: 'out',
-  bundledWebRuntime: false
+  bundledWebRuntime: false,
 }
 
 export default config

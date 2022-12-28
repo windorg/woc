@@ -1,15 +1,15 @@
 {
-    "name": "wind of change",
-    "short_name": "wind of change",
-    "start_url": "/",
-    "icons": [
-      {
-        "src": "icon-macos.png",
-        "sizes": "512x512",
-        "purpose": "maskable"
-      }
-    ],
-    "background_color": "#ffffff",
-    "theme_color": "#ffffff",
-    "display": "standalone"
+  "name": "wind of change",
+  "short_name": "wind of change",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "icon-macos.png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ],
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "display": "standalone"
 }

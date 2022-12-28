@@ -1,12 +1,12 @@
-import {NextApiRequest, NextApiResponse} from 'next'
-import {User} from '@prisma/client'
-import {prisma} from '../../../lib/db'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { User } from '@prisma/client'
+import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import {Schema} from 'yup'
-import {getSession} from 'next-auth/react'
+import { Schema } from 'yup'
+import { getSession } from 'next-auth/react'
 import _ from 'lodash'
-import {hashPassword} from 'lib/password'
-import {Result} from 'lib/http'
+import { hashPassword } from 'lib/password'
+import { Result } from 'lib/http'
 
 interface SignupRequest extends NextApiRequest {
   body: {
@@ -20,10 +20,14 @@ interface SignupRequest extends NextApiRequest {
 export type SignupBody = SignupRequest['body']
 
 const schema: Schema<SignupBody> = yup.object({
-  email: yup.string().email().label("Email").required(),
-  handle: yup.string().matches(/^[a-zA-Z0-9_-]{1,64}/).label("Handle").required(),
-  displayName: yup.string().label("Name").required(),
-  password: yup.string().min(1).max(64).label("Password").required()
+  email: yup.string().email().label('Email').required(),
+  handle: yup
+    .string()
+    .matches(/^[a-zA-Z0-9_-]{1,64}/)
+    .label('Handle')
+    .required(),
+  displayName: yup.string().label('Name').required(),
+  password: yup.string().min(1).max(64).label('Password').required(),
 })
 
 export type SignupData = Record<string, never>
@@ -36,12 +40,13 @@ export default async function signup(req: SignupRequest, res: NextApiResponse<Si
     if (session) return res.status(403)
 
     const fieldErrors: Record<string, string> = {}
-    const body = await schema.validate(req.body, { abortEarly: false })
-      .catch((err: yup.ValidationError) => {
-        err.inner.forEach(e => { fieldErrors[e.path!] = e.message })
-        res.status(200).json({ success: false, error: { fields: fieldErrors } })
-        return null
+    const body = await schema.validate(req.body, { abortEarly: false }).catch((err: yup.ValidationError) => {
+      err.inner.forEach((e) => {
+        fieldErrors[e.path!] = e.message
       })
+      res.status(200).json({ success: false, error: { fields: fieldErrors } })
+      return null
+    })
     if (!body) return
 
     const handleExists = (await prisma.user.count({ where: { handle: body.handle } })) > 0
@@ -56,9 +61,8 @@ export default async function signup(req: SignupRequest, res: NextApiResponse<Si
         handle: body.handle,
         displayName: body.displayName,
         passwordHash: hashPassword(body.password),
-      }
+      },
     })
     return res.status(201).send({ success: true, data: {} })
   }
 }
-

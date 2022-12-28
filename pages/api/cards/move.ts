@@ -1,14 +1,14 @@
-import {Card} from '@prisma/client'
-import {NextApiRequest, NextApiResponse} from 'next'
-import {prisma} from '../../../lib/db'
+import { Card } from '@prisma/client'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import {Schema} from 'yup'
-import {Result} from 'lib/http'
-import {getSession} from 'next-auth/react'
-import {canEditCard} from 'lib/access'
-import {Session} from 'next-auth'
-import {filterSync} from '@lib/array'
-import {getCardChain} from '@lib/parents'
+import { Schema } from 'yup'
+import { Result } from 'lib/http'
+import { getSession } from 'next-auth/react'
+import { canEditCard } from 'lib/access'
+import { Session } from 'next-auth'
+import { filterSync } from '@lib/array'
+import { getCardChain } from '@lib/parents'
 
 export type MoveCardBody = {
   // Move this card
@@ -24,7 +24,10 @@ const schema: Schema<MoveCardBody> = yup.object({
 
 export type MoveCardData = Record<string, never>
 
-export type MoveCardResponse = Result<MoveCardData, { unauthorized: true } | { notFound: true } | { parentIntoChild: true }>
+export type MoveCardResponse = Result<
+  MoveCardData,
+  { unauthorized: true } | { notFound: true } | { parentIntoChild: true }
+>
 
 // NB: works for cards and for boards
 //
@@ -37,8 +40,7 @@ export async function serverMoveCard(session: Session | null, body: MoveCardBody
   if (!card) return { success: false, error: { notFound: true } }
   if (!canEditCard(userId, card)) return { success: false, error: { unauthorized: true } }
 
-
-  return await prisma.$transaction(async prisma => {
+  return await prisma.$transaction(async (prisma) => {
     // Extra checks only if we're moving into non-null
     if (body.newParentId !== null) {
       const newParent = await prisma.card.findUnique({ where: { id: body.newParentId } })
@@ -66,7 +68,7 @@ export async function serverMoveCard(session: Session | null, body: MoveCardBody
       await prisma.card.update({
         where: { id: card.parentId },
         data: {
-          childrenOrder: filterSync(childrenOrderFrom, id => id !== body.cardId),
+          childrenOrder: filterSync(childrenOrderFrom, (id) => id !== body.cardId),
         },
       })
     }
@@ -98,4 +100,3 @@ export default async function apiMoveCard(req: NextApiRequest, res: NextApiRespo
     return res.status(200).json(response)
   }
 }
-

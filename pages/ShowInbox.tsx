@@ -1,6 +1,6 @@
 import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
-import { signIn } from "next-auth/react"
+import { signIn } from 'next-auth/react'
 import React from 'react'
 import * as B from 'react-bootstrap'
 import { BoardsCrumb, InboxCrumb } from '../components/breadcrumbs'
@@ -25,8 +25,9 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   if (typeof window === 'undefined') {
     if (!isNextExport(context)) {
       const session = await getSession(context)
-      await serverGetInbox(session, {})
-        .then(result => { if (result.success) props.inboxItems = result.data })
+      await serverGetInbox(session, {}).then((result) => {
+        if (result.success) props.inboxItems = result.data
+      })
     }
   }
   return serialize(props)
@@ -39,7 +40,11 @@ const ShowInbox: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   const inboxQuery = useInbox({}, { initialData: initialProps?.inboxItems })
 
   if (inboxQuery.status === 'loading' || inboxQuery.status === 'idle')
-    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
+    return (
+      <div className="d-flex mt-5 justify-content-center">
+        <B.Spinner animation="border" />
+      </div>
+    )
   if (inboxQuery.status === 'error') return <B.Alert variant="danger">{(inboxQuery.error as Error).message}</B.Alert>
 
   const inboxItems = inboxQuery.data
@@ -57,20 +62,23 @@ const ShowInbox: NextPage<SuperJSONResult> = (serializedInitialProps) => {
 
       <h1>Inbox</h1>
 
-      {session
-        ?
+      {session ? (
         <div className={`${styles.inboxItems} mb-5`}>
-          {_.orderBy(inboxItems, ['createdAt'], ['desc'])
-            .map(x => <InboxItemComponent key={x.id} item={x} />)
-          }
+          {_.orderBy(inboxItems, ['createdAt'], ['desc']).map((x) => (
+            <InboxItemComponent key={x.id} item={x} />
+          ))}
         </div>
-        :
+      ) : (
         <>
           <p>
-            Please <a href="#" onClick={async () => signIn()}>log in</a> to see your inbox.
+            Please{' '}
+            <a href="#" onClick={async () => signIn()}>
+              log in
+            </a>{' '}
+            to see your inbox.
           </p>
         </>
-      }
+      )}
     </>
   )
 }

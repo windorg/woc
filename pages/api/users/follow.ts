@@ -1,9 +1,9 @@
-import {User} from '@prisma/client'
-import {NextApiRequest, NextApiResponse} from 'next'
-import {prisma} from '../../../lib/db'
+import { User } from '@prisma/client'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import {Schema} from 'yup'
-import {getSession} from 'next-auth/react'
+import { Schema } from 'yup'
+import { getSession } from 'next-auth/react'
 
 interface FollowUserRequest extends NextApiRequest {
   body: {
@@ -24,23 +24,24 @@ export default async function followUser(req: FollowUserRequest, res: NextApiRes
     if (!session) return res.status(403)
 
     // Apparently Prisma doesn't have "exists": https://github.com/prisma/prisma/issues/5022
-    const follows: boolean = await prisma.followedUser.count({
-      where: {
-        subscriberId: session.userId,
-        followedUserId: body.userId,
-      }
-    }).then(Boolean)
+    const follows: boolean = await prisma.followedUser
+      .count({
+        where: {
+          subscriberId: session.userId,
+          followedUserId: body.userId,
+        },
+      })
+      .then(Boolean)
 
     if (!follows) {
       await prisma.followedUser.create({
         data: {
           subscriberId: session.userId,
           followedUserId: body.userId,
-        }
+        },
       })
     }
 
     return res.status(200).send()
   }
 }
-

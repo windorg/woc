@@ -26,16 +26,16 @@ module.exports = {
     return [
       {
         source: '/ShowBoard',
-        has: [{type: 'query', key: 'boardId', value: '(?<boardId>[a-z0-9-]+)'}],
+        has: [{ type: 'query', key: 'boardId', value: '(?<boardId>[a-z0-9-]+)' }],
         permanent: true,
-        destination: '/card?id=:boardId'
+        destination: '/card?id=:boardId',
       },
       {
         source: '/ShowCard',
-        has: [{type: 'query', key: 'cardId', value: '(?<cardId>[a-z0-9-]+)'}],
+        has: [{ type: 'query', key: 'cardId', value: '(?<cardId>[a-z0-9-]+)' }],
         permanent: true,
-        destination: '/card?id=:cardId'
+        destination: '/card?id=:cardId',
       },
     ]
-  }
+  },
 }
