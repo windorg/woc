@@ -24,8 +24,9 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   if (typeof window === 'undefined') {
     if (!isNextExport(context)) {
       const session = await getSession(context)
-      await serverListCards(session, { onlyTopLevel: true })
-        .then(result => { if (result.success) props.boards = result.data })
+      await serverListCards(session, { onlyTopLevel: true }).then((result) => {
+        if (result.success) props.boards = result.data
+      })
     }
   }
   return serialize(props)
@@ -39,16 +40,16 @@ const Boards: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   const boardsQuery = useCards({ onlyTopLevel: true }, { initialData: initialProps?.boards })
 
   if (boardsQuery.status === 'loading' || boardsQuery.status === 'idle')
-    return <div className="d-flex mt-5 justify-content-center"><B.Spinner animation="border" /></div>
-  if (boardsQuery.status === 'error')
-    return <B.Alert variant="danger">{(boardsQuery.error as Error).message}</B.Alert>
+    return (
+      <div className="d-flex mt-5 justify-content-center">
+        <B.Spinner animation="border" />
+      </div>
+    )
+  if (boardsQuery.status === 'error') return <B.Alert variant="danger">{(boardsQuery.error as Error).message}</B.Alert>
 
   const boards = boardsQuery.data
 
-  const [userBoards, otherBoards] =
-    userId
-      ? _.partition(boards, board => board.ownerId === userId)
-      : [[], boards]
+  const [userBoards, otherBoards] = userId ? _.partition(boards, (board) => board.ownerId === userId) : [[], boards]
 
   return (
     <>
@@ -60,32 +61,27 @@ const Boards: NextPage<SuperJSONResult> = (serializedInitialProps) => {
         <BoardsCrumb active />
       </B.Breadcrumb>
 
-      {userId
-        ?
+      {userId ? (
         <>
-          <BoardsList
-            allowNewBoard={true}
-            heading="Your boards"
-            boards={userBoards}
-            kind="own-board" />
-          <BoardsList
-            allowNewBoard={false}
-            heading="Others' public boards"
-            boards={otherBoards}
-            kind="other-board" />
+          <BoardsList allowNewBoard={true} heading="Your boards" boards={userBoards} kind="own-board" />
+          <BoardsList allowNewBoard={false} heading="Others' public boards" boards={otherBoards} kind="other-board" />
         </>
-        :
+      ) : (
         <>
           <p>
-            To create your own boards, please <a href="#" onClick={async () => signIn()}>log in</a> or <Link href="/Signup"><a>sign up</a></Link>.
+            To create your own boards, please{' '}
+            <a href="#" onClick={async () => signIn()}>
+              log in
+            </a>{' '}
+            or{' '}
+            <Link href="/Signup">
+              <a>sign up</a>
+            </Link>
+            .
           </p>
-          <BoardsList
-            allowNewBoard={false}
-            heading="Public boards"
-            boards={otherBoards}
-            kind="other-board" />
+          <BoardsList allowNewBoard={false} heading="Public boards" boards={otherBoards} kind="other-board" />
         </>
-      }
+      )}
     </>
   )
 }

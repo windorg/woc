@@ -13,10 +13,10 @@ const cors = {
   origin: [
     'http://localhost:3000',
     'https://windofchange.me',
-    'tauri://localhost',       // macOS
-    'https://tauri.localhost'  // Windows
+    'tauri://localhost', // macOS
+    'https://tauri.localhost', // Windows
   ],
-  default: "https://windofchange.me"
+  default: 'https://windofchange.me',
 }
 
 app.prepare().then(() => {
@@ -30,10 +30,10 @@ app.prepare().then(() => {
     // TODO: we also need to handle OPTIONS (preflight requests) here because otherwise it only works for GET requests.
     const origin = req.header('Origin') || `${req.protocol}://${req.header('Host')}`
     const goodOrigin = origin && cors.origin.includes(origin.toLowerCase()) ? origin : cors.default
-    res.setHeader("Access-Control-Allow-Origin", goodOrigin)
-    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+    res.setHeader('Access-Control-Allow-Origin', goodOrigin)
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
     res.setHeader('Access-Control-Allow-Credentials', true)
-    res.setHeader("Vary", "Origin")
+    res.setHeader('Vary', 'Origin')
 
     if (initialized || req.url === '/api/health') {
       return handle(req, res)
@@ -48,12 +48,13 @@ app.prepare().then(() => {
   })
 
   // Ask the server to initialize itself.
-  axios.get(`http://localhost:${port}/api/health`)
-    .then(res => {
+  axios
+    .get(`http://localhost:${port}/api/health`)
+    .then((res) => {
       initialized = true
       console.log('Server is ready.')
     })
-    .catch(err => {
+    .catch((err) => {
       throw new Error(`Could not initialize the server. Error: ${err.message}`)
     })
 })

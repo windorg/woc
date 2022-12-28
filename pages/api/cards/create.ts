@@ -1,11 +1,11 @@
-import {Card} from '@prisma/client'
-import {NextApiRequest, NextApiResponse} from 'next'
-import {prisma} from '../../../lib/db'
+import { Card } from '@prisma/client'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from '../../../lib/db'
 import * as yup from 'yup'
-import {Schema} from 'yup'
-import {canEditCard} from 'lib/access'
-import {getSession} from 'next-auth/react'
-import {CardSettings} from 'lib/model-settings'
+import { Schema } from 'yup'
+import { canEditCard } from 'lib/access'
+import { getSession } from 'next-auth/react'
+import { CardSettings } from 'lib/model-settings'
 
 interface CreateCardRequest extends NextApiRequest {
   body: {
@@ -20,7 +20,7 @@ export type CreateCardBody = CreateCardRequest['body']
 const schema: Schema<CreateCardBody> = yup.object({
   parentId: yup.string().uuid().required().nullable(),
   title: yup.string().required(),
-  private: yup.boolean()
+  private: yup.boolean(),
 })
 
 export default async function createCard(req: CreateCardRequest, res: NextApiResponse<Card>) {
@@ -29,17 +29,16 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
     const session = await getSession({ req })
     // TODO all 403s etc must end with send() otherwise they aren't sent
     if (!session) return res.status(403)
-    const parent =
-      body.parentId
-        ? await prisma.card.findUnique({
+    const parent = body.parentId
+      ? await prisma.card.findUnique({
           where: { id: body.parentId },
           select: { id: true, ownerId: true, settings: true },
           rejectOnNotFound: true,
         })
-        : null
+      : null
     if (parent && !canEditCard(session?.userId ?? null, parent)) return res.status(403)
     const settings: Partial<CardSettings> = {
-      visibility: body.private ? 'private' : 'public'
+      visibility: body.private ? 'private' : 'public',
     }
     const card = await prisma.card.create({
       data: {
@@ -47,9 +46,9 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
         parentId: body.parentId,
         settings,
         ownerId: parent ? parent.ownerId : session?.userId,
-      }
+      },
     })
-    await prisma.$transaction(async prisma => {
+    await prisma.$transaction(async (prisma) => {
       if (body.parentId) {
         const { childrenOrder } = await prisma.card.findUnique({
           where: { id: body.parentId },
@@ -65,4 +64,3 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
     return res.status(201).json(card)
   }
 }
-

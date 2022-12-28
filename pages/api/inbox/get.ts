@@ -1,10 +1,10 @@
-import {NextApiRequest, NextApiResponse} from 'next'
+import { NextApiRequest, NextApiResponse } from 'next'
 import * as yup from 'yup'
-import {Schema} from 'yup'
-import {Result} from 'lib/http'
-import {getSession} from 'next-auth/react'
-import {Session} from 'next-auth'
-import {getInboxItems, InboxItem} from 'lib/inbox'
+import { Schema } from 'yup'
+import { Result } from 'lib/http'
+import { getSession } from 'next-auth/react'
+import { Session } from 'next-auth'
+import { getInboxItems, InboxItem } from 'lib/inbox'
 
 export type GetInboxQuery = Record<string, never>
 
@@ -28,4 +28,3 @@ export default async function apiGetInbox(req: NextApiRequest, res: NextApiRespo
     return res.status(200).json(response)
   }
 }
-

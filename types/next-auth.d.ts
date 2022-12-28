@@ -1,7 +1,7 @@
-import NextAuth from "next-auth"
-import * as Prisma from "@prisma/client"
+import NextAuth from 'next-auth'
+import * as Prisma from '@prisma/client'
 
-declare module "next-auth" {
+declare module 'next-auth' {
   interface User {
     id: Prisma.User['id']
   }
@@ -10,7 +10,7 @@ declare module "next-auth" {
   }
 }
 
-declare module "next-auth/jwt" {
+declare module 'next-auth/jwt' {
   interface JWT {
     userId: Prisma.User['id']
   }

@@ -1,6 +1,6 @@
 // Settings types used in most models (Board, Card, etc)
 
-import { Card, Comment, Reply, User } from "@prisma/client"
+import { Card, Comment, Reply, User } from '@prisma/client'
 
 // If you ever change this, grep for 'private' and 'public'
 export type Visibility = 'private' | 'public'
@@ -46,7 +46,7 @@ export function commentSettings(comment: Pick<Comment, 'settings'>): CommentSett
   const def: CommentSettings = {
     visibility: 'public',
     pinned: false,
-    subscribers: []
+    subscribers: [],
   }
   return { ...def, ...(comment.settings as object) }
 }

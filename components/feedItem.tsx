@@ -14,15 +14,17 @@ export function FeedItemComponent(props: { item: FeedItem }) {
     <div className="woc-feed-item woc-feed-item-comment d-flex">
       <div className="flex-shrink-0">
         <Link href={userRoute(author.id)}>
-          <a><Gravatar email={author.email} size="small" /></a>
+          <a>
+            <Gravatar email={author.email} size="small" />
+          </a>
         </Link>
       </div>
       <div className="flex-grow-1 ms-2">
         <strong>
           <Link href={userRoute(author.id)}>
             <a>{author.displayName}</a>
-          </Link>
-          {" "}at ‘{item.card.title}’
+          </Link>{' '}
+          at ‘{item.card.title}’
         </strong>
         <div>
           <span className="text-muted small">

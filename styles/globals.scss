@@ -56,7 +56,7 @@ mark.rbt-highlight-text {
   }
   // We also don't want the hint string for them
   &::after {
-    content: "";
+    content: '';
   }
 }
 
@@ -163,7 +163,7 @@ footer {
   width: 100%;
   display: block;
   text-align: right;
-  content: "Markdown, ⌘B ⌘I are OK; ⌘E for code; ⇧⏎ quits code blocks";
+  content: 'Markdown, ⌘B ⌘I are OK; ⌘E for code; ⇧⏎ quits code blocks';
 }
 
 .link-button {

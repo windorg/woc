@@ -39,27 +39,26 @@ const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
         <AccountCrumb active />
       </B.Breadcrumb>
 
-      {userId
-        ?
+      {userId ? (
         <>
           <ul>
             <li>
-              <Link href={beeminderAuthUrl()}><a>Connect to Beeminder</a></Link>
+              <Link href={beeminderAuthUrl()}>
+                <a>Connect to Beeminder</a>
+              </Link>
               {user
-                ? (userSettings(user).beeminderUsername
-                  ? ` (connected as ${userSettings(user).beeminderUsername!})` : '')
-                : ' (...)'
-              }
+                ? userSettings(user).beeminderUsername
+                  ? ` (connected as ${userSettings(user).beeminderUsername!})`
+                  : ''
+                : ' (...)'}
             </li>
           </ul>
         </>
-        :
+      ) : (
         <>
-          <p>
-            Please log in.
-          </p>
+          <p>Please log in.</p>
         </>
-      }
+      )}
     </>
   )
 }

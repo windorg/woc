@@ -1,6 +1,6 @@
 // Utilities for working with card parents
 
-import { Card, PrismaClient } from "@prisma/client"
+import { Card, PrismaClient } from '@prisma/client'
 
 // For a card id, gives [topmost parent, child, grandchild, ..., id].
 export async function getCardChain(prisma: Pick<PrismaClient, 'card'>, id: Card['id']) {

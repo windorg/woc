@@ -8,12 +8,18 @@ import { replySettings } from '../lib/model-settings'
 import { replyRoute } from 'lib/routes'
 import { useDeleteReply } from 'lib/queries/replies'
 
-function MenuCopyLink(props: { card: Card, reply: Reply }) {
+function MenuCopyLink(props: { card: Card; reply: Reply }) {
   const link = `https://windofchange.me${replyRoute({ cardId: props.card.id, replyId: props.reply.id })}`
-  return <B.Dropdown.Item
-    onClick={() => { copy(link) }}>
-    <BiShareAlt className="icon" /><span>Copy link</span>
-  </B.Dropdown.Item>
+  return (
+    <B.Dropdown.Item
+      onClick={() => {
+        copy(link)
+      }}
+    >
+      <BiShareAlt className="icon" />
+      <span>Copy link</span>
+    </B.Dropdown.Item>
+  )
 }
 
 // TODO allow private replies
@@ -29,15 +35,17 @@ function MenuCopyLink(props: { card: Card, reply: Reply }) {
 // }
 
 function MenuDelete(props: { deleteReply }) {
-  return <B.Dropdown.Item className="text-danger"
-    onClick={() => props.deleteReply()}>
-    <BiTrashAlt className="icon" /><span>Delete</span>
-  </B.Dropdown.Item>
+  return (
+    <B.Dropdown.Item className="text-danger" onClick={() => props.deleteReply()}>
+      <BiTrashAlt className="icon" />
+      <span>Delete</span>
+    </B.Dropdown.Item>
+  )
 }
 
 export function ReplyMenu(props: {
   card: Card
-  reply: Reply & { canEdit: boolean, canDelete: boolean }
+  reply: Reply & { canEdit: boolean; canDelete: boolean }
   afterDelete?: () => void
 }) {
   const { card, reply } = props
@@ -54,15 +62,18 @@ export function ReplyMenu(props: {
   return (
     <B.Dropdown className="link-button d-flex align-items-center">
       <B.Dropdown.Toggle as="span" className="d-flex align-items-center">
-        <BiDotsHorizontal className="me-1" /><span>More</span>
+        <BiDotsHorizontal className="me-1" />
+        <span>More</span>
       </B.Dropdown.Toggle>
       <B.Dropdown.Menu className={actionMenuStyles.actionMenu}>
         <MenuCopyLink card={card} reply={reply} />
-        {props.reply.canDelete && <>
-          <B.Dropdown.Divider />
-          <MenuDelete deleteReply={deleteReply} />
-        </>}
+        {props.reply.canDelete && (
+          <>
+            <B.Dropdown.Divider />
+            <MenuDelete deleteReply={deleteReply} />
+          </>
+        )}
       </B.Dropdown.Menu>
     </B.Dropdown>
   )
-} 
+}

@@ -6,7 +6,7 @@ import { checkPassword } from '../../../lib/password'
 
 export default NextAuth({
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
     maxAge: 10 * 365 * 24 * 60 * 60, // 10 years
   },
   secret: process.env.NEXTAUTH_SECRET,
@@ -14,22 +14,22 @@ export default NextAuth({
     CredentialsProvider({
       name: 'credentials',
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "email@example.com" },
-        password: { label: "Password", type: "password" }
+        email: { label: 'Email', type: 'email', placeholder: 'email@example.com' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials, _req): Promise<User | null> {
         if (!credentials) return null
         const user = await prisma.user.findUnique({
           where: {
-            email: credentials.email
-          }
+            email: credentials.email,
+          },
         })
         if (!user) return null
         const isValidPassword = checkPassword(credentials.password, user.passwordHash)
         if (!isValidPassword) return null
         return user
-      }
-    })
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -39,8 +39,10 @@ export default NextAuth({
       return token
     },
     async session({ session, token, user }) {
-      if (token) { session.userId = token.userId }
+      if (token) {
+        session.userId = token.userId
+      }
       return session
-    }
-  }
+    },
+  },
 })

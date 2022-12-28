@@ -29,9 +29,12 @@ export type BeeminderAuthCallbackData = Record<string, never>
 
 export type BeeminderAuthCallbackResponse = Result<BeeminderAuthCallbackData, { unauthorized: true }>
 
-export async function serverBeeminderAuthCallback(session: Session | null, query: BeeminderAuthCallbackQuery): Promise<BeeminderAuthCallbackResponse> {
+export async function serverBeeminderAuthCallback(
+  session: Session | null,
+  query: BeeminderAuthCallbackQuery
+): Promise<BeeminderAuthCallbackResponse> {
   if (!session) return { success: false, error: { unauthorized: true } }
-  await prisma.$transaction(async prisma => {
+  await prisma.$transaction(async (prisma) => {
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
       select: { settings: true },
@@ -43,7 +46,7 @@ export async function serverBeeminderAuthCallback(session: Session | null, query
     await prisma.user.update({
       where: { id: session.userId },
       // See https://github.com/prisma/prisma/issues/9247
-      data: ({ settings: newSettings } as unknown) as Prisma.InputJsonObject
+      data: { settings: newSettings } as unknown as Prisma.InputJsonObject,
     })
   })
   return { success: true, data: {} }

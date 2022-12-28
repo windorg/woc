@@ -48,7 +48,7 @@ export default async function updateCard(req: NextApiRequest, res: NextApiRespon
     if (!canEditCard(session?.userId ?? null, card)) return res.status(403)
 
     let diff: Partial<Card> & { settings: Partial<CardSettings> } = {
-      settings: card.settings ?? {}
+      settings: card.settings ?? {},
     }
     if (body.title !== undefined) {
       diff.title = body.title
@@ -57,7 +57,7 @@ export default async function updateCard(req: NextApiRequest, res: NextApiRespon
       diff.tagline = body.tagline
     }
     if (body.private !== undefined) {
-      diff.settings.visibility = (body.private ? "private" : "public")
+      diff.settings.visibility = body.private ? 'private' : 'public'
     }
     if (body.reverseOrder !== undefined) {
       diff.settings.reverseOrder = body.reverseOrder
@@ -71,7 +71,7 @@ export default async function updateCard(req: NextApiRequest, res: NextApiRespon
     await prisma.card.update({
       where: { id: body.cardId },
       // See https://github.com/prisma/prisma/issues/9247
-      data: (diff as unknown) as Prisma.InputJsonObject
+      data: diff as unknown as Prisma.InputJsonObject,
     })
 
     if (diff.settings.beeminderGoal) {

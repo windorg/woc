@@ -1,14 +1,14 @@
-import {Card, Comment, Reply, User} from '@prisma/client'
-import {NextApiRequest, NextApiResponse} from 'next'
-import {prisma} from 'lib/db'
+import { Card, Comment, Reply, User } from '@prisma/client'
+import { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from 'lib/db'
 import * as yup from 'yup'
-import {Schema} from 'yup'
-import {getSession} from 'next-auth/react'
-import {canDeleteReply, canEditReply, canSeeReply} from 'lib/access'
+import { Schema } from 'yup'
+import { getSession } from 'next-auth/react'
+import { canDeleteReply, canEditReply, canSeeReply } from 'lib/access'
 import _ from 'lodash'
-import {Session} from 'next-auth'
-import {filterAsync} from 'lib/array'
-import {Result} from 'lib/http'
+import { Session } from 'next-auth'
+import { filterAsync } from 'lib/array'
+import { Result } from 'lib/http'
 
 export type ListRepliesQuery = {
   // List all replies for one or several cards
@@ -16,35 +16,40 @@ export type ListRepliesQuery = {
 }
 
 const schema: Schema<ListRepliesQuery> = yup.object({
-  cards: yup.array().json().of(yup.string().uuid().required()).required()
+  cards: yup.array().json().of(yup.string().uuid().required()).required(),
 })
 
-export type ListRepliesData =
-  (Reply & {
-    // The author can be 'null' if it was deleted. We don't delete replies if the author's account is gone.
-    author: Pick<User, 'id' | 'handle' | 'email' | 'displayName'> | null
-    canEdit: boolean
-    canDelete: boolean
-    comment: Pick<Comment, 'cardId'>
-  })[]
+export type ListRepliesData = (Reply & {
+  // The author can be 'null' if it was deleted. We don't delete replies if the author's account is gone.
+  author: Pick<User, 'id' | 'handle' | 'email' | 'displayName'> | null
+  canEdit: boolean
+  canDelete: boolean
+  comment: Pick<Comment, 'cardId'>
+})[]
 
 export type ListRepliesResponse = Result<ListRepliesData, never>
 
-export async function serverListReplies(session: Session | null, query: ListRepliesQuery): Promise<ListRepliesResponse> {
-  const replies = await prisma.reply.findMany({
-    where: { comment: { cardId: { in: query.cards } } },
-    include: {
-      comment: { select: { cardId: true, ownerId: true } },
-      author: { select: { id: true, handle: true, email: true, displayName: true } }
-    }
-  })
-    .then(async xs => filterAsync(xs, async (reply) => canSeeReply(session?.userId ?? null, reply)))
-    .then(xs => xs.map(reply => ({
-      ...(_.omit(reply, 'comment')),
-      comment: { cardId: reply.comment.cardId },
-      canEdit: canEditReply(session?.userId ?? null, reply),
-      canDelete: canDeleteReply(session?.userId ?? null, reply)
-    })))
+export async function serverListReplies(
+  session: Session | null,
+  query: ListRepliesQuery
+): Promise<ListRepliesResponse> {
+  const replies = await prisma.reply
+    .findMany({
+      where: { comment: { cardId: { in: query.cards } } },
+      include: {
+        comment: { select: { cardId: true, ownerId: true } },
+        author: { select: { id: true, handle: true, email: true, displayName: true } },
+      },
+    })
+    .then(async (xs) => filterAsync(xs, async (reply) => canSeeReply(session?.userId ?? null, reply)))
+    .then((xs) =>
+      xs.map((reply) => ({
+        ..._.omit(reply, 'comment'),
+        comment: { cardId: reply.comment.cardId },
+        canEdit: canEditReply(session?.userId ?? null, reply),
+        canDelete: canDeleteReply(session?.userId ?? null, reply),
+      }))
+    )
   return {
     success: true,
     data: replies,
@@ -59,4 +64,3 @@ export default async function apiListReplies(req: NextApiRequest, res: NextApiRe
     return res.status(200).json(response)
   }
 }
-
