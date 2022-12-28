@@ -12,7 +12,6 @@ import { LinkButton } from './linkButton'
 import { ReplyMenu } from './replyMenu'
 import { replyRoute, userRoute } from 'lib/routes'
 import { Formik } from 'formik'
-import LinkPreload from 'lib/link-preload'
 import { useUpdateReply } from 'lib/queries/replies'
 
 export type Reply_ = Reply & {
@@ -28,9 +27,9 @@ function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
   return (
     props.author
       ?
-      <LinkPreload href={userRoute(props.author.id)}>
+      <Link href={userRoute(props.author.id)}>
         <a><Gravatar email={props.author.email} size="tiny" /></a>
-      </LinkPreload>
+      </Link>
       :
       <Gravatar email="" size="tiny" />
   )
@@ -47,20 +46,20 @@ function InfoHeader(props: { card: Card, reply: Reply_ }) {
       <strong>
         {reply.author
           ?
-          <LinkPreload href={userRoute(reply.author.id)}>
+          <Link href={userRoute(reply.author.id)}>
             <a>{reply.author.displayName}</a>
-          </LinkPreload>
+          </Link>
           :
           "[deleted]"
         }
       </strong>
       <span className="ms-2" />
-      <LinkPreload href={replyRoute({ cardId: props.card.id, replyId: reply.id })}>
+      <Link href={replyRoute({ cardId: props.card.id, replyId: reply.id })}>
         <a className="d-flex align-items-center">
           <BiLink className="me-1" />
           <ReactTimeAgo timeStyle="twitter-minute-now" date={reply.createdAt} />
         </a>
-      </LinkPreload>
+      </Link>
       {isPrivate && <span className="ms-2">🔒</span>}
     </span>
   )
