@@ -12,18 +12,11 @@ import { FeedItemComponent } from 'components/feedItem'
 import styles from './ShowFeed.module.scss'
 import { signIn } from "next-auth/react"
 import { FeedItem, serverGetFeed } from './api/feed/get'
-import { PreloadContext, WithPreload } from 'lib/link-preload'
-import { prefetchFeed, useFeed } from 'lib/queries/feed'
+import { useFeed } from 'lib/queries/feed'
 import { isNextExport } from 'lib/export'
 
 type Props = {
   feedItems?: FeedItem[]
-}
-
-async function preload(context: PreloadContext): Promise<void> {
-  await Promise.all([
-    prefetchFeed(context.queryClient, { days: 3 }),
-  ])
 }
 
 async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
@@ -38,7 +31,7 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   return serialize(props)
 }
 
-const ShowFeed: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) => {
+const ShowFeed: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   const initialProps = deserialize<Props>(serializedInitialProps)
   const { data: session } = useSession()
 
@@ -82,6 +75,5 @@ const ShowFeed: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
 }
 
 ShowFeed.getInitialProps = getInitialProps
-ShowFeed.preload = preload
 
 export default ShowFeed

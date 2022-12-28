@@ -1,6 +1,5 @@
 import { Comment, Reply, User } from '@prisma/client'
 import { InboxItem } from 'lib/inbox'
-import LinkPreload from 'lib/link-preload'
 import { RenderedMarkdown } from 'lib/markdown'
 import { replyRoute, userRoute } from 'lib/routes'
 import Link from 'next/link'
@@ -13,9 +12,9 @@ function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
   return (
     props.author
       ?
-      <LinkPreload href={userRoute(props.author.id)}>
+      <Link href={userRoute(props.author.id)}>
         <a><Gravatar email={props.author.email} size="small" /></a>
-      </LinkPreload>
+      </Link>
       :
       <Gravatar email="" size="small" />
   )
@@ -33,9 +32,9 @@ export function InboxItemComponent(props: { item: InboxItem }) {
         <strong>
           {author
             ?
-            <LinkPreload href={userRoute(author.id)}>
+            <Link href={userRoute(author.id)}>
               <a>{author.displayName}</a>
-            </LinkPreload>
+            </Link>
             :
             "[deleted]"
           }
@@ -43,12 +42,12 @@ export function InboxItemComponent(props: { item: InboxItem }) {
         </strong>
         <div>
           <span className="text-muted small">
-            <LinkPreload href={replyRoute({ cardId: item.reply.comment.cardId, replyId: item.reply.id })}>
+            <Link href={replyRoute({ cardId: item.reply.comment.cardId, replyId: item.reply.id })}>
               <a className="d-flex align-items-center">
                 <BiLink className="me-1" />
                 <ReactTimeAgo timeStyle="twitter-minute-now" date={item.reply.createdAt} />
               </a>
-            </LinkPreload>
+            </Link>
           </span>
           {/* TODO when private lockIcon */}
         </div>

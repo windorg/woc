@@ -16,10 +16,9 @@ import { cardRoute, boardsRoute } from 'lib/routes'
 import { GetCardData, serverGetCard } from './api/cards/get'
 import { ListCommentsData, serverListComments } from './api/comments/list'
 import { ListRepliesData, serverListReplies } from './api/replies/list'
-import { PreloadContext, WithPreload } from 'lib/link-preload'
-import { prefetchCard, prefetchCards, useCard, useCards } from 'lib/queries/cards'
-import { prefetchComments, useComments } from 'lib/queries/comments'
-import { prefetchReplies, useReplies } from 'lib/queries/replies'
+import { useCard, useCards } from 'lib/queries/cards'
+import { useComments } from 'lib/queries/comments'
+import { useReplies } from 'lib/queries/replies'
 import { SocialTags } from 'components/socialTags'
 import { MoveCardModal } from 'components/moveCardModal'
 import { isNextExport } from 'lib/export'
@@ -33,16 +32,6 @@ type Props = {
   children?: ListCardsData
   comments?: ListCommentsData
   replies?: ListRepliesData
-}
-
-async function preload(context: PreloadContext): Promise<void> {
-  const cardId = context.query.id as string
-  await Promise.all([
-    prefetchCard(context.queryClient, { cardId }),
-    prefetchCards(context.queryClient, { parents: [cardId] }),
-    prefetchComments(context.queryClient, { cards: [cardId] }),
-    prefetchReplies(context.queryClient, { cards: [cardId] })
-  ])
 }
 
 async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
@@ -64,7 +53,7 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   return serialize(props)
 }
 
-const CardPage: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) => {
+const CardPage: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   const initialProps = deserialize<Props>(serializedInitialProps)
   const { cardId } = initialProps
 
@@ -171,6 +160,5 @@ const CardPage: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
 }
 
 CardPage.getInitialProps = getInitialProps
-CardPage.preload = preload
 
 export default CardPage
