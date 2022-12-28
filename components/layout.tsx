@@ -6,7 +6,6 @@ import Head from "next/head"
 import Script from "next/script"
 import { useInboxCount } from "lib/queries/inbox"
 import { accountRoute, boardsRoute, feedRoute, inboxRoute } from "lib/routes"
-import LinkPreload from "lib/link-preload"
 import { useHotkeys } from "react-hotkeys-hook"
 import styles from "./layout.module.scss"
 import { BiSearch } from "react-icons/bi"
@@ -44,7 +43,7 @@ function ChangelogButton() {
 function InboxLink() {
   const { data } = useInboxCount({ refetchInterval: 5000 })
   return (
-    <LinkPreload href={inboxRoute()}>
+    <Link href={inboxRoute()}>
       <a>
         Inbox
         {(data !== undefined) &&
@@ -54,7 +53,7 @@ function InboxLink() {
           </B.Badge>
         }
       </a>
-    </LinkPreload>
+    </Link>
   )
 }
 
@@ -93,7 +92,7 @@ function NavHeader() {
       <div className="d-flex" style={{ flex: "1" }}></div>
       <ChangelogButton />
       {session
-        ? <div className="me-4"><LinkPreload href={feedRoute()}><a>Feed</a></LinkPreload></div>
+        ? <div className="me-4"><Link href={feedRoute()}><a>Feed</a></Link></div>
         : null}
       {session
         ? <div className="me-4"><InboxLink /></div>

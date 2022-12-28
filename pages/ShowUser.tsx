@@ -11,7 +11,6 @@ import { BoardsList } from 'components/boardsList'
 import * as B from 'react-bootstrap'
 import { prefetchUser, useFollowUser, useUnfollowUser, useUser } from 'lib/queries/user'
 import { GetUserData, serverGetUser } from './api/users/get'
-import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { SocialTags } from 'components/socialTags'
 import { isNextExport } from 'lib/export'
 import { ListCardsData, serverListCards } from './api/cards/list'
@@ -21,14 +20,6 @@ type Props = {
   userId: User['id']
   user?: GetUserData
   boards?: ListCardsData
-}
-
-async function preload(context: PreloadContext): Promise<void> {
-  const userId = context.query.userId as string
-  await Promise.all([
-    prefetchUser(context.queryClient, { userId }),
-    prefetchCards(context.queryClient, { owners: [userId], onlyTopLevel: true })
-  ])
 }
 
 async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
@@ -72,7 +63,7 @@ function FollowButton(props: { user }) {
   )
 }
 
-const ShowUser: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) => {
+const ShowUser: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   const initialProps = deserialize<Props>(serializedInitialProps)
   const { userId } = initialProps
   const { data: session } = useSession()
@@ -125,6 +116,5 @@ const ShowUser: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps
 }
 
 ShowUser.getInitialProps = getInitialProps
-ShowUser.preload = preload
 
 export default ShowUser

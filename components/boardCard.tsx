@@ -2,7 +2,6 @@ import { cardSettings } from "../lib/model-settings"
 import Link from 'next/link'
 import { Card, User } from "@prisma/client"
 import { cardRoute, userRoute } from "lib/routes"
-import LinkPreload from "lib/link-preload"
 import * as B from 'react-bootstrap'
 import { useUser } from "@lib/queries/user"
 
@@ -20,14 +19,14 @@ export function BoardCard(props: { board: Board_, kind: Kind }) {
       <B.Card.Body>
         <h3>
           {isPrivate && "🔒 "}
-          <LinkPreload href={cardRoute(board.id)}>
+          <Link href={cardRoute(board.id)}>
             <a className={(kind === 'other-board') ? "text-muted" : "stretched-link"}>
               {board.title}
             </a>
-          </LinkPreload>
+          </Link>
         </h3>
         {(kind === 'other-board') &&
-          <LinkPreload href={userRoute(board.ownerId)}>
+          <Link href={userRoute(board.ownerId)}>
             <a>
               <span>
                 {ownerQuery.data
@@ -39,7 +38,7 @@ export function BoardCard(props: { board: Board_, kind: Kind }) {
                 }
               </span>
             </a>
-          </LinkPreload>
+          </Link>
         }
       </B.Card.Body>
     </B.Card>
