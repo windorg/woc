@@ -12,19 +12,12 @@ import _ from 'lodash'
 import styles from './ShowInbox.module.scss'
 import { InboxItemComponent } from 'components/inboxItem'
 import { InboxItem } from 'lib/inbox'
-import { PreloadContext, WithPreload } from 'lib/link-preload'
-import { prefetchInbox, useInbox } from 'lib/queries/inbox'
+import { useInbox } from 'lib/queries/inbox'
 import { serverGetInbox } from './api/inbox/get'
 import { isNextExport } from 'lib/export'
 
 type Props = {
   inboxItems?: InboxItem[]
-}
-
-async function preload(context: PreloadContext): Promise<void> {
-  await Promise.all([
-    prefetchInbox(context.queryClient, {}),
-  ])
 }
 
 async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
@@ -39,7 +32,7 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   return serialize(props)
 }
 
-const ShowInbox: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) => {
+const ShowInbox: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   const initialProps = deserialize<Props>(serializedInitialProps)
   const { data: session } = useSession()
 
@@ -83,6 +76,5 @@ const ShowInbox: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProp
 }
 
 ShowInbox.getInitialProps = getInitialProps
-ShowInbox.preload = preload
 
 export default ShowInbox

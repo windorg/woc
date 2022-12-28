@@ -9,23 +9,18 @@ import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
 import * as B from 'react-bootstrap'
-import { PreloadContext, WithPreload } from 'lib/link-preload'
 import { isNextExport } from 'lib/export'
 import { ListCardsData, serverListCards } from './api/cards/list'
-import { prefetchCards, useCards } from '@lib/queries/cards'
+import { useCards } from '@lib/queries/cards'
 
 type Props = {
   boards?: ListCardsData
 }
 
-async function preload(context: PreloadContext): Promise<void> {
-  await prefetchCards(context.queryClient, { onlyTopLevel: true })
-}
-
 async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
   const props: Props = {}
-  // Server-side, we want to fetch the data so that we can SSR the page. Client-side, we assume the data is either
-  // already preloaded or will be loaded in the component itself, so we don't fetch anything.
+  // Server-side, we want to fetch the data so that we can SSR the page. Client-side, we assume the data
+  // will be loaded in the component itself, so we don't fetch anything.
   if (typeof window === 'undefined') {
     if (!isNextExport(context)) {
       const session = await getSession(context)
@@ -36,7 +31,7 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   return serialize(props)
 }
 
-const Boards: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) => {
+const Boards: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   const { data: session } = useSession()
   const userId = session?.userId ?? null
   const initialProps = deserialize<Props>(serializedInitialProps)
@@ -96,6 +91,5 @@ const Boards: WithPreload<NextPage<SuperJSONResult>> = (serializedInitialProps) 
 }
 
 Boards.getInitialProps = getInitialProps
-Boards.preload = preload
 
 export default Boards

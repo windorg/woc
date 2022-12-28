@@ -16,7 +16,6 @@ import { CreateReplyModal } from './createReplyModal'
 import { commentRoute } from 'lib/routes'
 import { Formik } from 'formik'
 import { useUpdateComment } from 'lib/queries/comments'
-import LinkPreload from 'lib/link-preload'
 
 export type Comment_ = Comment & {
   canEdit: boolean
@@ -28,12 +27,12 @@ function InfoHeader(props: { card: Card, comment: Comment_ }) {
   const isPrivate = settings.visibility === 'private'
   return (
     <span className="small d-flex">
-      <LinkPreload href={commentRoute({ cardId: props.card.id, commentId: props.comment.id })}>
+      <Link href={commentRoute({ cardId: props.card.id, commentId: props.comment.id })}>
         <a className="d-flex align-items-center">
           <BiLink className="me-1" />
           <ReactTimeAgo timeStyle="twitter-minute-now" date={props.comment.createdAt} />
         </a>
-      </LinkPreload>
+      </Link>
       {isPrivate && <span className="ms-2">🔒</span>}
     </span>
   )
