@@ -22,7 +22,7 @@ export default async function deleteReply(req: DeleteReplyRequest, res: NextApiR
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
-    const reply = await prisma.reply.findUnique({
+    const reply = await prisma.reply.findUniqueOrThrow({
       where: { id: body.replyId },
       include: {
         comment: {
@@ -38,7 +38,6 @@ export default async function deleteReply(req: DeleteReplyRequest, res: NextApiR
           },
         },
       },
-      rejectOnNotFound: true,
     })
     if (!canDeleteReply(session?.userId ?? null, reply)) return res.status(403)
 

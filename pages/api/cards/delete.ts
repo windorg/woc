@@ -23,12 +23,11 @@ export default async function deleteCard(req: DeleteCardRequest, res: NextApiRes
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
-    const card = await prisma.card.findUnique({
+    const card = await prisma.card.findUniqueOrThrow({
       where: { id: body.cardId },
       include: {
         parent: { select: { ownerId: true, settings: true } },
       },
-      rejectOnNotFound: true,
     })
     if (!canEditCard(session?.userId ?? null, card)) return res.status(403)
 
@@ -37,10 +36,9 @@ export default async function deleteCard(req: DeleteCardRequest, res: NextApiRes
     })
     await prisma.$transaction(async (prisma) => {
       if (card.parentId !== null) {
-        const { childrenOrder } = await prisma.card.findUnique({
+        const { childrenOrder } = await prisma.card.findUniqueOrThrow({
           where: { id: card.parentId },
           select: { childrenOrder: true },
-          rejectOnNotFound: true,
         })
         await prisma.card.update({
           where: { id: card.parentId },

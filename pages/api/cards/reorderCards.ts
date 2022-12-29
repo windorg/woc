@@ -55,10 +55,9 @@ export async function serverReorderCards(
   if (!canEditCard(userId, board)) return { success: false, error: { unauthorized: true } }
 
   const newCardOrder = await prisma.$transaction(async (prisma) => {
-    const { childrenOrder } = await prisma.card.findUnique({
+    const { childrenOrder } = await prisma.card.findUniqueOrThrow({
       where: { id: board.id },
       select: { childrenOrder: true },
-      rejectOnNotFound: true,
     })
     const filtered = filterSync(childrenOrder, (x) => x !== card.id)
     const newCardOrder =

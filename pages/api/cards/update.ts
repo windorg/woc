@@ -38,12 +38,11 @@ export default async function updateCard(req: NextApiRequest, res: NextApiRespon
   if (req.method === 'PUT') {
     const session = await getSession({ req })
     const body = schema.cast(req.body)
-    const card = await prisma.card.findUnique({
+    const card = await prisma.card.findUniqueOrThrow({
       where: { id: body.cardId },
       include: {
         _count: { select: { comments: true } },
       },
-      rejectOnNotFound: true,
     })
     if (!canEditCard(session?.userId ?? null, card)) return res.status(403)
 
@@ -70,8 +69,7 @@ export default async function updateCard(req: NextApiRequest, res: NextApiRespon
     }
     await prisma.card.update({
       where: { id: body.cardId },
-      // See https://github.com/prisma/prisma/issues/9247
-      data: diff as unknown as Prisma.InputJsonObject,
+      data: diff,
     })
 
     if (diff.settings.beeminderGoal) {

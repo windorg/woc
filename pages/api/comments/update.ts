@@ -34,7 +34,7 @@ export default async function updateComment(req: UpdateCommentRequest, res: Next
   if (req.method === 'PUT') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
-    const comment = await prisma.comment.findUnique({
+    const comment = await prisma.comment.findUniqueOrThrow({
       where: { id: body.commentId },
       include: {
         card: {
@@ -44,7 +44,6 @@ export default async function updateComment(req: UpdateCommentRequest, res: Next
           },
         },
       },
-      rejectOnNotFound: true,
     })
     if (!canEditComment(session?.userId ?? null, comment)) return res.status(403)
 
@@ -62,8 +61,7 @@ export default async function updateComment(req: UpdateCommentRequest, res: Next
     }
     await prisma.comment.update({
       where: { id: body.commentId },
-      // See https://github.com/prisma/prisma/issues/9247
-      data: diff as unknown as Prisma.InputJsonObject,
+      data: diff,
     })
     // If we ever have "updatedAt", we should also return it here
 
