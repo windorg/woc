@@ -8,6 +8,7 @@ import { getSession } from 'next-auth/react'
 import { canEditCard } from 'lib/access'
 import { Session } from 'next-auth'
 import { filterSync, insertAfter, insertBefore, insertPosition } from 'lib/array'
+import { match, P } from 'ts-pattern'
 
 export type ReorderCardsBody = {
   parentId: Card['id']
@@ -60,16 +61,11 @@ export async function serverReorderCards(
       select: { childrenOrder: true },
     })
     const filtered = filterSync(childrenOrder, (x) => x !== card.id)
-    const newCardOrder =
-      'position' in body
-        ? insertPosition(card.id, filtered, body.position)
-        : 'before' in body
-        ? insertBefore(card.id, filtered, body.before)
-        : 'after' in body
-        ? insertAfter(card.id, filtered, body.after)
-        : (() => {
-            throw new Error('Unknown reorder request')
-          })()
+    const newCardOrder = match(body)
+      .with({ position: P._ }, (body) => insertPosition(card.id, filtered, body.position))
+      .with({ before: P._ }, (body) => insertBefore(card.id, filtered, body.before))
+      .with({ after: P._ }, (body) => insertAfter(card.id, filtered, body.after))
+      .exhaustive()
     await prisma.card.update({
       where: { id: board.id },
       data: { childrenOrder: newCardOrder },

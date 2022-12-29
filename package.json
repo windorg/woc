@@ -72,6 +72,7 @@
     "taghiro": "^0.3.5",
     "tippy.js": "^6.3.7",
     "ts-key-enum": "^2.0.11",
+    "ts-pattern": "^4.0.6",
     "turndown": "^7.1.1",
     "utility-types": "^3.10.0",
     "validator": "^13.7.0",
