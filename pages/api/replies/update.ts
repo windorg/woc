@@ -32,7 +32,7 @@ export default async function updateReply(req: UpdateReplyRequest, res: NextApiR
   if (req.method === 'PUT') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
-    const reply = await prisma.reply.findUnique({
+    const reply = await prisma.reply.findUniqueOrThrow({
       where: { id: body.replyId },
       include: {
         comment: {
@@ -48,7 +48,6 @@ export default async function updateReply(req: UpdateReplyRequest, res: NextApiR
           },
         },
       },
-      rejectOnNotFound: true,
     })
     if (!canEditReply(session?.userId ?? null, reply)) return res.status(403)
 
@@ -63,8 +62,7 @@ export default async function updateReply(req: UpdateReplyRequest, res: NextApiR
     }
     await prisma.reply.update({
       where: { id: body.replyId },
-      // See https://github.com/prisma/prisma/issues/9247
-      data: diff as unknown as Prisma.InputJsonObject,
+      data: diff,
     })
     // If we ever have "updatedAt", we should also return it here
 

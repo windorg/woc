@@ -25,7 +25,7 @@ export default async function deleteComment(req: DeleteCommentRequest, res: Next
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
-    const comment = await prisma.comment.findUnique({
+    const comment = await prisma.comment.findUniqueOrThrow({
       where: { id: body.commentId },
       include: {
         card: {
@@ -37,7 +37,6 @@ export default async function deleteComment(req: DeleteCommentRequest, res: Next
           },
         },
       },
-      rejectOnNotFound: true,
     })
     if (!canEditComment(session?.userId ?? null, comment)) return res.status(403)
 

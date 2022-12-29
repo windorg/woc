@@ -42,10 +42,9 @@ async function setUserSubscription(
 ): Promise<User['id'][]> {
   return await prisma.$transaction(async (prisma) => {
     const settings = commentSettings(
-      await prisma.comment.findUnique({
+      await prisma.comment.findUniqueOrThrow({
         where: { id: commentId },
         select: { settings: true },
-        rejectOnNotFound: true,
       })
     )
     const needsUpdate: boolean =
@@ -63,7 +62,7 @@ async function setUserSubscription(
       }
       await prisma.comment.update({
         where: { id: commentId },
-        data: { settings: newSettings as unknown as Prisma.InputJsonValue },
+        data: { settings: newSettings },
       })
       return newSubscribers
     }
@@ -74,7 +73,7 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
-    const comment = await prisma.comment.findUnique({
+    const comment = await prisma.comment.findUniqueOrThrow({
       where: { id: body.commentId },
       select: {
         id: true,
@@ -87,7 +86,6 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
           },
         },
       },
-      rejectOnNotFound: true,
     })
     if (!session) return res.status(403)
     if (!(await canReplyToComment(session.userId, comment))) return res.status(403)
@@ -104,15 +102,13 @@ export default async function createReply(req: CreateReplyRequest, res: NextApiR
 
     const replyAugmented = {
       ...reply,
-      author: await prisma.user.findUnique({
+      author: await prisma.user.findUniqueOrThrow({
         where: { id: session.userId },
         select: { id: true, handle: true, displayName: true, email: true },
-        rejectOnNotFound: true,
       }),
-      comment: await prisma.comment.findUnique({
+      comment: await prisma.comment.findUniqueOrThrow({
         where: { id: reply.commentId },
         select: { cardId: true },
-        rejectOnNotFound: true,
       }),
       canEdit: canEditReply(session.userId, { ...reply, comment }),
       canDelete: canDeleteReply(session.userId, { ...reply, comment }),

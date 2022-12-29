@@ -30,10 +30,9 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
     // TODO all 403s etc must end with send() otherwise they aren't sent
     if (!session) return res.status(403)
     const parent = body.parentId
-      ? await prisma.card.findUnique({
+      ? await prisma.card.findUniqueOrThrow({
           where: { id: body.parentId },
           select: { id: true, ownerId: true, settings: true },
-          rejectOnNotFound: true,
         })
       : null
     if (parent && !canEditCard(session?.userId ?? null, parent)) return res.status(403)
@@ -50,10 +49,9 @@ export default async function createCard(req: CreateCardRequest, res: NextApiRes
     })
     await prisma.$transaction(async (prisma) => {
       if (body.parentId) {
-        const { childrenOrder } = await prisma.card.findUnique({
+        const { childrenOrder } = await prisma.card.findUniqueOrThrow({
           where: { id: body.parentId },
           select: { childrenOrder: true },
-          rejectOnNotFound: true,
         })
         await prisma.card.update({
           where: { id: body.parentId },

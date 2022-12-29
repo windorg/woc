@@ -35,18 +35,16 @@ export async function serverBeeminderAuthCallback(
 ): Promise<BeeminderAuthCallbackResponse> {
   if (!session) return { success: false, error: { unauthorized: true } }
   await prisma.$transaction(async (prisma) => {
-    const user = await prisma.user.findUnique({
+    const user = await prisma.user.findUniqueOrThrow({
       where: { id: session.userId },
       select: { settings: true },
-      rejectOnNotFound: true,
     })
     const newSettings = (user.settings as Partial<UserSettings>) || {}
     newSettings.beeminderUsername = query.username
     newSettings.beeminderAccessToken = query.access_token
     await prisma.user.update({
       where: { id: session.userId },
-      // See https://github.com/prisma/prisma/issues/9247
-      data: { settings: newSettings } as unknown as Prisma.InputJsonObject,
+      data: { settings: newSettings },
     })
   })
   return { success: true, data: {} }

@@ -12,12 +12,11 @@ export type BeeminderSyncCardPayload = {
 
 // https://api.beeminder.com/#postdata
 export async function beeminderSyncCard(payload: BeeminderSyncCardPayload) {
-  const card = await prisma.card.findUnique({
+  const card = await prisma.card.findUniqueOrThrow({
     where: { id: payload.cardId },
     include: {
       owner: true,
     },
-    rejectOnNotFound: true,
   })
   const { beeminderUsername, beeminderAccessToken } = userSettings(card.owner)
   const beeminderGoal = cardSettings(card).beeminderGoal

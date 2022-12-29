@@ -32,7 +32,7 @@ export default async function createComment(req: CreateCommentRequest, res: Next
   if (req.method === 'POST') {
     const body = schema.validateSync(req.body)
     const session = await getSession({ req })
-    const card = await prisma.card.findUnique({
+    const card = await prisma.card.findUniqueOrThrow({
       where: { id: body.cardId },
       select: {
         id: true,
@@ -40,7 +40,6 @@ export default async function createComment(req: CreateCommentRequest, res: Next
         settings: true,
         _count: { select: { comments: true } },
       },
-      rejectOnNotFound: true,
     })
     if (!canEditCard(session?.userId ?? null, card)) return res.status(403)
     const settings: Partial<CommentSettings> = {

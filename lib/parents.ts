@@ -8,10 +8,9 @@ export async function getCardChain(prisma: Pick<PrismaClient, 'card'>, id: Card[
   let current: Card['id'] | null = id
   while (current) {
     chain = [current, ...chain]
-    const parentCard = await prisma.card.findUnique({
+    const parentCard = await prisma.card.findUniqueOrThrow({
       where: { id: current },
       select: { parentId: true },
-      rejectOnNotFound: true,
     })
     current = parentCard.parentId
   }

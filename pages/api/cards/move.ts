@@ -60,10 +60,9 @@ export async function serverMoveCard(session: Session | null, body: MoveCardBody
 
     // Delete the card from the old parent's childrenOrder
     if (card.parentId !== null) {
-      const { childrenOrder: childrenOrderFrom } = await prisma.card.findUnique({
+      const { childrenOrder: childrenOrderFrom } = await prisma.card.findUniqueOrThrow({
         where: { id: card.parentId },
         select: { childrenOrder: true },
-        rejectOnNotFound: true,
       })
       await prisma.card.update({
         where: { id: card.parentId },
@@ -75,10 +74,9 @@ export async function serverMoveCard(session: Session | null, body: MoveCardBody
 
     // Add the card to the new parent's childrenOrder
     if (body.newParentId !== null) {
-      const { childrenOrder: childrenOrderTo } = await prisma.card.findUnique({
+      const { childrenOrder: childrenOrderTo } = await prisma.card.findUniqueOrThrow({
         where: { id: body.newParentId },
         select: { childrenOrder: true },
-        rejectOnNotFound: true,
       })
       await prisma.card.update({
         where: { id: body.newParentId },

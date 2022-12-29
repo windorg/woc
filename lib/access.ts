@@ -11,10 +11,9 @@ export async function canSeeCard<T extends { id: Card['id']; ownerId: Card['owne
   card: T
 ) {
   if (card.ownerId === userId) return true
-  const fullCard = await prisma.card.findUnique({
+  const fullCard = await prisma.card.findUniqueOrThrow({
     where: { id: card.id },
     include: { parent: { select: { id: true, ownerId: true } } },
-    rejectOnNotFound: true,
   })
   return (
     cardSettings(fullCard).visibility === 'public' &&
@@ -34,10 +33,9 @@ export async function canSeeComment<T extends { id: Comment['id']; ownerId: Comm
   comment: T
 ) {
   if (comment.ownerId === userId) return true
-  const fullComment = await prisma.comment.findUnique({
+  const fullComment = await prisma.comment.findUniqueOrThrow({
     where: { id: comment.id },
     include: { card: { select: { id: true, ownerId: true } } },
-    rejectOnNotFound: true,
   })
   return commentSettings(fullComment).visibility === 'public' && (await canSeeCard(userId, fullComment.card))
 }
@@ -63,10 +61,9 @@ export async function canSeeReply<T extends { id: Reply['id']; authorId: Reply['
   reply: T
 ) {
   if (reply.authorId === userId) return true
-  const fullReply = await prisma.reply.findUnique({
+  const fullReply = await prisma.reply.findUniqueOrThrow({
     where: { id: reply.id },
     include: { comment: { select: { id: true, ownerId: true } } },
-    rejectOnNotFound: true,
   })
   return replySettings(fullReply).visibility === 'public' && (await canSeeComment(userId, fullReply.comment))
 }
