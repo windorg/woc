@@ -21,9 +21,6 @@ import { CreateReplyBody, ReplyResponse } from '../pages/api/replies/create'
 import { DeleteReplyBody } from '../pages/api/replies/delete'
 import { ListRepliesData, ListRepliesQuery, ListRepliesResponse } from '../pages/api/replies/list'
 import { UpdateReplyBody } from '../pages/api/replies/update'
-import { FollowUserBody } from '../pages/api/users/follow'
-import { GetUserData, GetUserQuery, GetUserResponse } from '../pages/api/users/get'
-import { UnfollowUserBody } from '../pages/api/users/unfollow'
 
 export async function callUpdateCard(body: UpdateCardBody): Promise<Partial<Card>> {
   const { data } = await axios.put(`${process.env.NEXT_PUBLIC_APP_URL!}/api/cards/update`, body)
@@ -182,23 +179,4 @@ export async function callListReplies(query, opts?) {
 export async function callUpdateReply(body: UpdateReplyBody): Promise<Partial<Reply>> {
   const { data } = await axios.put(`${process.env.NEXT_PUBLIC_APP_URL!}/api/replies/update`, body)
   return wocResponse(data)
-}
-
-export async function callFollowUser(body: FollowUserBody): Promise<void> {
-  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/users/follow`, body)
-}
-
-export async function callGetUser(query: GetUserQuery): Promise<GetUserData>
-export async function callGetUser(query: GetUserQuery, opts: { returnErrors: true }): Promise<GetUserResponse>
-export async function callGetUser(query, opts?) {
-  const { data: result } = await axios.get(`${process.env.NEXT_PUBLIC_APP_URL!}/api/users/get`, {
-    params: wocQuery(query),
-  })
-  if (opts?.returnErrors) return wocResponse(result)
-  if (result.success) return wocResponse(result.data)
-  if (result.error.notFound) throw new ResponseError('User not found', result.error)
-}
-
-export async function callUnfollowUser(body: UnfollowUserBody): Promise<void> {
-  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/users/unfollow`, body)
 }

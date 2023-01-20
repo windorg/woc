@@ -28,5 +28,9 @@
   },
   "search.exclude": {
     "tiptap/": true
-  }
+  },
+  "graphql-codegen.fileExtensionsDeclaringGraphQLDocuments": [
+    "ts",
+    "tsx"
+  ]
 }
