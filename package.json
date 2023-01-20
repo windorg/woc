@@ -21,6 +21,7 @@
     "@pothos/core": "^3.24.0",
     "@pothos/plugin-prisma": "^3.40.1",
     "@pothos/plugin-scope-auth": "^3.17.0",
+    "@pothos/plugin-simple-objects": "^3.6.7",
     "@prisma/client": "^4.8.0",
     "axios": "^0.24.0",
     "bootstrap": "^5.1.3",

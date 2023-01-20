@@ -1,9 +1,10 @@
 import SchemaBuilder from '@pothos/core'
 import PrismaPlugin from '@pothos/plugin-prisma'
+import SimpleObjectsPlugin from '@pothos/plugin-simple-objects'
 // import ScopeAuthPlugin from '@pothos/plugin-scope-auth'
 import type PrismaTypes from '@pothos/plugin-prisma/generated'
 import { prisma } from '@lib/db'
-import { UUIDResolver } from 'graphql-scalars'
+import { DateTimeResolver, UUIDResolver } from 'graphql-scalars'
 
 export const builder = new SchemaBuilder<{
   Context: {
@@ -19,10 +20,15 @@ export const builder = new SchemaBuilder<{
       Input: string
       Output: string
     }
+    DateTime: {
+      Input: string
+      Output: Date
+    }
   }
 }>({
   plugins: [
     // ScopeAuthPlugin,
+    SimpleObjectsPlugin,
     PrismaPlugin,
   ],
   // authScopes: async (context) => ({
@@ -38,3 +44,4 @@ export const builder = new SchemaBuilder<{
 })
 
 builder.addScalarType('UUID', UUIDResolver, {})
+builder.addScalarType('DateTime', DateTimeResolver, {})
