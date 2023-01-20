@@ -12,6 +12,12 @@ import { QueryClient, QueryClientProvider } from 'react-query'
 import { ReactQueryDevtools } from 'react-query/devtools'
 import React from 'react'
 import { isNextExport } from '../lib/export'
+import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client'
+
+const apolloClient = new ApolloClient({
+  cache: new InMemoryCache(),
+  uri: '/api/graphql',
+})
 
 TimeAgo.setDefaultLocale(en.locale)
 TimeAgo.addLocale(en)
@@ -27,9 +33,11 @@ function MyApp(props) {
           by the SessionProvider would be reused. */}
       <SessionProvider {...(props.session !== undefined ? { session: props.session } : {})}>
         <QueryClientProvider client={queryClient}>
-          <Layout>
-            <Component {...pageProps} />
-          </Layout>
+          <ApolloProvider client={apolloClient}>
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </ApolloProvider>
           <ReactQueryDevtools />
         </QueryClientProvider>
       </SessionProvider>

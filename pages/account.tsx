@@ -9,10 +9,8 @@ import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
 import * as B from 'react-bootstrap'
 import { beeminderAuthUrl } from 'lib/beeminder'
-import { userSettings } from '@lib/model-settings'
-import { useUser } from '@lib/queries/user'
-import { GetUserData } from './api/users/get'
-import { User } from '@prisma/client'
+import { graphql } from 'generated/graphql'
+import { useQuery } from '@apollo/client'
 
 type Props = Record<string, never>
 
@@ -21,13 +19,23 @@ async function getInitialProps(context: NextPageContext): Promise<SuperJSONResul
   return serialize(props)
 }
 
+const getCurrentUserDocument = graphql(`
+  query getCurrentUser {
+    currentUser {
+      displayName
+      handle
+      beeminderUsername
+    }
+  }
+`)
+
 const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   const { data: session } = useSession()
   const userId = session?.userId ?? null
   const initialProps = deserialize<Props>(serializedInitialProps)
 
-  const userQuery = useUser({ userId: userId! })
-  const user = userQuery.data ? (userQuery.data as GetUserData & { settings: User['settings'] }) : null
+  const userQuery = useQuery(getCurrentUserDocument)
+  const user = userQuery.data ? userQuery.data.currentUser : null
 
   return (
     <>
@@ -47,8 +55,8 @@ const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
                 <a>Connect to Beeminder</a>
               </Link>
               {user
-                ? userSettings(user).beeminderUsername
-                  ? ` (connected as ${userSettings(user).beeminderUsername!})`
+                ? user?.beeminderUsername
+                  ? ` (connected as ${user.beeminderUsername})`
                   : ''
                 : ' (...)'}
             </li>

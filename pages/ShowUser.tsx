@@ -1,89 +1,94 @@
 import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
-import type { Card, User } from '@prisma/client'
 import React, { useState } from 'react'
 import { BoardsCrumb, UserCrumb } from '../components/breadcrumbs'
-import { getSession, useSession } from 'next-auth/react'
-import { SuperJSONResult } from 'superjson/dist/types'
-import { deserialize, serialize } from 'superjson'
+import { useSession } from 'next-auth/react'
 import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
 import * as B from 'react-bootstrap'
-import { useFollowUser, useUnfollowUser, useUser } from 'lib/queries/user'
-import { GetUserData, serverGetUser } from './api/users/get'
 import { SocialTags } from 'components/socialTags'
-import { isNextExport } from 'lib/export'
-import { ListCardsData, serverListCards } from './api/cards/list'
 import { useCards } from '@lib/queries/cards'
+import { graphql } from 'generated/graphql'
+import { useMutation, useQuery } from '@apollo/client'
+import { useRouter } from 'next/router'
 
-type Props = {
-  userId: User['id']
-  user?: GetUserData
-  boards?: ListCardsData
-}
-
-async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
-  const userId = context.query.userId as string
-  const props: Props = { userId }
-  if (typeof window === 'undefined') {
-    if (!isNextExport(context)) {
-      const session = await getSession(context)
-      await serverGetUser(session, { userId }).then((result) => {
-        if (result.success) props.user = result.data
-      })
-      await serverListCards(session, { owners: [userId], onlyTopLevel: true }).then((result) => {
-        if (result.success) props.boards = result.data
-      })
+const getUserDocument = graphql(`
+  query getUser($userId: String!) {
+    user(id: $userId) {
+      id
+      displayName
+      handle
+      followed
     }
   }
-  return serialize(props)
-}
+`)
+
+const followUserDocument = graphql(`
+  mutation followUser($userId: String!) {
+    followUser(id: $userId) {
+      id
+      followed
+    }
+  }
+`)
+
+const unfollowUserDocument = graphql(`
+  mutation unfollowUser($userId: String!) {
+    unfollowUser(id: $userId) {
+      id
+      followed
+    }
+  }
+`)
 
 function FollowButton(props: { user }) {
-  const followUserMutation = useFollowUser()
-  const unfollowUserMutation = useUnfollowUser()
+  const [followUser, followUserMutation] = useMutation(followUserDocument, {
+    variables: { userId: props.user.id },
+  })
+  const [unfollowUser, unfollowUserMutation] = useMutation(unfollowUserDocument, {
+    variables: { userId: props.user.id },
+  })
   return props.user.followed ? (
     <B.Button
       size="sm"
       variant="outline-secondary"
-      disabled={unfollowUserMutation.isLoading}
-      onClick={async () => {
-        await unfollowUserMutation.mutateAsync({ userId: props.user.id })
-      }}
+      disabled={unfollowUserMutation.loading}
+      onClick={async () => unfollowUser()}
     >
       Unfollow
-      {unfollowUserMutation.isLoading && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+      {unfollowUserMutation.loading && (
+        <B.Spinner className="ms-2" size="sm" animation="border" role="status" />
+      )}
     </B.Button>
   ) : (
     <B.Button
       size="sm"
       variant="outline-primary"
-      disabled={followUserMutation.isLoading}
-      onClick={async () => {
-        await followUserMutation.mutateAsync({ userId: props.user.id })
-      }}
+      disabled={followUserMutation.loading}
+      onClick={async () => followUser()}
     >
       Follow
-      {followUserMutation.isLoading && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+      {followUserMutation.loading && (
+        <B.Spinner className="ms-2" size="sm" animation="border" role="status" />
+      )}
     </B.Button>
   )
 }
 
-const ShowUser: NextPage<SuperJSONResult> = (serializedInitialProps) => {
-  const initialProps = deserialize<Props>(serializedInitialProps)
-  const { userId } = initialProps
+const ShowUser: NextPage = () => {
+  const userId = useRouter().query.userId as string
   const { data: session } = useSession()
 
-  const userQuery = useUser({ userId }, { initialData: initialProps?.user })
-  const boardsQuery = useCards({ owners: [userId], onlyTopLevel: true }, { initialData: initialProps?.boards })
+  const userQuery = useQuery(getUserDocument, { variables: { userId } })
+  const boardsQuery = useCards({ owners: [userId], onlyTopLevel: true })
 
-  if (userQuery.status === 'loading' || userQuery.status === 'idle')
+  if (userQuery.error) return <B.Alert variant="danger">{userQuery.error.message}</B.Alert>
+  if (!userQuery.data)
     return (
       <div className="d-flex mt-5 justify-content-center">
         <B.Spinner animation="border" />
       </div>
     )
-  if (userQuery.status === 'error') return <B.Alert variant="danger">{(userQuery.error as Error).message}</B.Alert>
 
   if (boardsQuery.status === 'loading' || boardsQuery.status === 'idle')
     return (
@@ -91,9 +96,10 @@ const ShowUser: NextPage<SuperJSONResult> = (serializedInitialProps) => {
         <B.Spinner animation="border" />
       </div>
     )
-  if (boardsQuery.status === 'error') return <B.Alert variant="danger">{(boardsQuery.error as Error).message}</B.Alert>
+  if (boardsQuery.status === 'error')
+    return <B.Alert variant="danger">{(boardsQuery.error as Error).message}</B.Alert>
 
-  const user = userQuery.data
+  const user = userQuery.data.user
   const boards = boardsQuery.data
 
   return (
@@ -131,7 +137,5 @@ const ShowUser: NextPage<SuperJSONResult> = (serializedInitialProps) => {
     </>
   )
 }
-
-ShowUser.getInitialProps = getInitialProps
 
 export default ShowUser

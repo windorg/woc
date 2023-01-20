@@ -18,6 +18,12 @@ dotenv -- psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
 npx prisma db push
 ```
 
+You should also run the GraphQL codegen watcher, at least until https://github.com/capaj/graphql-codegen-vscode/issues/21 is fixed:
+
+```
+npm run gql:watch
+```
+
 ## Local development - Tauri
 
 ```
