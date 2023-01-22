@@ -1,34 +1,35 @@
 import type * as GQL from 'generated/graphql/graphql'
 import { filterSync } from '@lib/array'
-import { commentSettings } from '@lib/model-settings'
 import { AddCommentForm } from 'components/addCommentForm'
 import { CommentComponent } from 'components/commentComponent'
 import _ from 'lodash'
-import { ListCommentsData } from 'pages/api/comments/list'
 import { ListRepliesData } from 'pages/api/replies/list'
 import * as R from 'ramda'
 import styles from './shared.module.scss'
 
 export function Comments(props: {
   card: Pick<GQL.Card, 'id' | 'canEdit' | 'reverseOrder'>
-  comments: ListCommentsData
+  comments: Pick<
+    GQL.Comment,
+    'id' | 'createdAt' | 'pinned' | 'visibility' | 'content' | 'canEdit'
+  >[]
   replies: ListRepliesData
 }) {
   const { card, comments, replies } = props
 
-  const renderCommentList = (comments) =>
+  const renderCommentList = (comments: typeof props.comments) =>
     comments.map((comment) => (
       <CommentComponent
         key={comment.id}
         card={card}
-        comment={{ ...comment, canEdit: card.canEdit }}
+        comment={comment}
         replies={filterSync(replies, (reply) => reply.commentId === comment.id)}
       />
     ))
 
   const [pinnedComments, otherComments] = _.partition(
     _.orderBy(comments, ['createdAt'], ['desc']),
-    (comment) => commentSettings(comment).pinned
+    (comment) => comment.pinned
   )
 
   // Note: we only use autoFocus for 'normalOrderComments' because for 'reverseOrderComments' it's annoying that the focus always jumps to the end of

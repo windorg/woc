@@ -30,3 +30,12 @@ export function evictCardChildren(
     })
     .exhaustive()
 }
+
+/**
+ * Evict all queries that fetch this card's comments.
+ */
+export function evictCardComments(cache: ApolloCache<any>, options: { cardId: string }) {
+  const id = cache.identify({ __typename: 'Card', id: options.cardId })
+  cache.evict({ id, fieldName: 'comments' })
+  cache.evict({ id, fieldName: 'commentCount' })
+}

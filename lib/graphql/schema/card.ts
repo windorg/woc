@@ -1,8 +1,9 @@
 import { builder } from '../builder'
+import { Comment } from './comment'
 import { prisma } from '@lib/db'
 import endent from 'endent'
 import { CardSettings, cardSettings } from '@lib/model-settings'
-import { canEditCard, canSeeCard } from '@lib/access'
+import { canEditCard, canSeeCard, canSeeComment } from '@lib/access'
 import { getCardChain } from '@lib/parents'
 import { filterAsync, filterSync } from '@lib/array'
 import { GraphQLError } from 'graphql'
@@ -41,6 +42,15 @@ export const Card = builder.prismaObject('Card', {
           where: { parentId: parent.id },
         })
         return filterAsync(children, async (card) => canSeeCard(context.userId, card))
+      },
+    }),
+    comments: t.field({
+      type: [Comment],
+      resolve: async (parent, args, context) => {
+        const comments = await prisma.comment.findMany({
+          where: { cardId: parent.id },
+        })
+        return filterAsync(comments, async (comment) => canSeeComment(context.userId, comment))
       },
     }),
     commentCount: t.relationCount('comments', {

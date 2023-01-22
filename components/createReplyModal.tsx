@@ -1,14 +1,13 @@
-import { Comment } from '@prisma/client'
+import type * as GQL from 'generated/graphql/graphql'
 import React from 'react'
 import * as B from 'react-bootstrap'
 import { Formik } from 'formik'
-import { Reply } from '@prisma/client'
 import { Tiptap, TiptapMethods } from './tiptap'
 import { useCreateReply } from 'lib/queries/replies'
 
 export function CreateReplyModal(props: {
   show: boolean
-  comment: Comment
+  comment: Pick<GQL.Comment, 'id'>
   // This callback will be called when the user tries to hide the modal. (The modal can't hide itself.)
   onHide: () => void
   afterCreate?: () => void
@@ -47,7 +46,9 @@ export function CreateReplyModal(props: {
               </div>
               <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>
                 Post a reply
-                {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+                {formik.isSubmitting && (
+                  <B.Spinner className="ms-2" size="sm" animation="border" role="status" />
+                )}
               </B.Button>
               <B.Button variant="secondary" type="button" className="ms-2" onClick={props.onHide}>
                 Cancel
