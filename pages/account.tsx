@@ -3,25 +3,17 @@ import Head from 'next/head'
 import React from 'react'
 import { AccountCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
-import { getSession, signIn, useSession } from 'next-auth/react'
-import { SuperJSONResult } from 'superjson/dist/types'
-import { deserialize, serialize } from 'superjson'
+import { useSession } from 'next-auth/react'
 import _ from 'lodash'
 import * as B from 'react-bootstrap'
 import { beeminderAuthUrl } from 'lib/beeminder'
 import { graphql } from 'generated/graphql'
 import { useQuery } from '@apollo/client'
 
-type Props = Record<string, never>
-
-async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
-  const props: Props = {}
-  return serialize(props)
-}
-
-const getCurrentUserDocument = graphql(`
-  query getCurrentUser {
-    currentUser {
+const _getLoggedInUser = graphql(`
+  query getLoggedInUser($userId: UUID!) {
+    user(id: $userId) {
+      id
       displayName
       handle
       beeminderUsername
@@ -29,13 +21,12 @@ const getCurrentUserDocument = graphql(`
   }
 `)
 
-const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
+const Account: NextPage = () => {
   const { data: session } = useSession()
   const userId = session?.userId ?? null
-  const initialProps = deserialize<Props>(serializedInitialProps)
 
-  const userQuery = useQuery(getCurrentUserDocument)
-  const user = userQuery.data ? userQuery.data.currentUser : null
+  const userQuery = useQuery(_getLoggedInUser)
+  const user = userQuery.data ? userQuery.data.user : null
 
   return (
     <>
@@ -51,9 +42,7 @@ const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
         <>
           <ul>
             <li>
-              <Link href={beeminderAuthUrl()}>
-                <a>Connect to Beeminder</a>
-              </Link>
+              <Link href={beeminderAuthUrl()}>Connect to Beeminder</Link>
               {user
                 ? user?.beeminderUsername
                   ? ` (connected as ${user.beeminderUsername})`
@@ -70,7 +59,5 @@ const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
     </>
   )
 }
-
-Account.getInitialProps = getInitialProps
 
 export default Account

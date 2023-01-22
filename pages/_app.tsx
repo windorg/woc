@@ -16,7 +16,7 @@ import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client'
 
 const apolloClient = new ApolloClient({
   cache: new InMemoryCache(),
-  uri: '/api/graphql',
+  uri: `${process.env.NEXT_PUBLIC_APP_URL!}/api/graphql`,
 })
 
 TimeAgo.setDefaultLocale(en.locale)

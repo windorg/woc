@@ -1,15 +1,35 @@
-import { Card } from '@prisma/client'
+import type * as GQL from 'generated/graphql/graphql'
 import * as B from 'react-bootstrap'
 import TextareaAutosize from 'react-textarea-autosize'
 import React, { useRef } from 'react'
 import { Formik } from 'formik'
-import { useCreateCard } from 'lib/queries/cards'
 import styles from './shared.module.scss'
+import { useMutation } from '@apollo/client'
+import { graphql } from 'generated/graphql'
+import { evictCardChildren } from '@lib/graphql/cache'
 
-export function AddCardForm(props: { parentId: Card['id'] }) {
-  const createCardMutation = useCreateCard()
+const useCreateCard = () => {
+  const [action, result] = useMutation(
+    graphql(`
+      mutation createCard($parentId: UUID!, $title: String!, $private: Boolean!) {
+        createCard(parentId: $parentId, title: $title, private: $private) {
+          id
+        }
+      }
+    `),
+    {
+      update: (cache, { data }, { variables }) => {
+        evictCardChildren(cache, { cardId: variables!.parentId })
+      },
+    }
+  )
+  return { do: action, result }
+}
+
+export function AddCardForm(props: { parentId: GQL.Card['id'] }) {
   const [focused, setFocused] = React.useState(false)
   const inputRef: React.RefObject<HTMLTextAreaElement> = useRef(null)
+  const createCardMutation = useCreateCard()
   return (
     <Formik
       initialValues={{
@@ -18,7 +38,7 @@ export function AddCardForm(props: { parentId: Card['id'] }) {
       }}
       onSubmit={async (values, formik) => {
         // TODO: what exactly will happen in prod if the backend fails with err500 for whatever reason?
-        await createCardMutation.mutateAsync({ parentId: props.parentId, ...values })
+        await createCardMutation.do({ variables: { parentId: props.parentId, ...values } })
         formik.resetForm()
         inputRef.current!.blur()
         setFocused(false)
@@ -70,7 +90,9 @@ export function AddCardForm(props: { parentId: Card['id'] }) {
                 </B.Button>
                 <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
                   Add a card
-                  {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+                  {formik.isSubmitting && (
+                    <B.Spinner className="ms-2" size="sm" animation="border" role="status" />
+                  )}
                 </B.Button>
               </span>
             </div>

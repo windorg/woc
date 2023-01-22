@@ -1,92 +1,71 @@
 import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
-import type { User, Card, Comment, Reply } from '@prisma/client'
-import { cardSettings, commentSettings } from '../lib/model-settings'
 import * as B from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, CardCrumb, CardCrumbFetch } from '../components/breadcrumbs'
 import React, { useEffect, useState } from 'react'
 import _ from 'lodash'
-import { SuperJSONResult } from 'superjson/dist/types'
-import { deserialize, serialize } from 'superjson'
-import { getSession } from 'next-auth/react'
 import { EditCardModal } from 'components/editCardModal'
 import { CardActions } from 'components/cardActions'
 import { useRouter } from 'next/router'
 import { cardRoute, boardsRoute } from 'lib/routes'
-import { GetCardData, serverGetCard } from './api/cards/get'
-import { ListCommentsData, serverListComments } from './api/comments/list'
-import { ListRepliesData, serverListReplies } from './api/replies/list'
-import { useCard, useCards } from 'lib/queries/cards'
 import { useComments } from 'lib/queries/comments'
 import { useReplies } from 'lib/queries/replies'
 import { SocialTags } from 'components/socialTags'
 import { MoveCardModal } from 'components/moveCardModal'
-import { isNextExport } from 'lib/export'
-import { ListCardsData, serverListCards } from './api/cards/list'
 import { Subcards } from 'components/card/subcards'
 import { Comments } from 'components/card/comments'
+import { graphql } from 'generated/graphql'
+import { useQuery } from '@apollo/client'
 
-type Props = {
-  cardId: Card['id']
-  card?: GetCardData
-  children?: ListCardsData
-  comments?: ListCommentsData
-  replies?: ListRepliesData
-}
-
-async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
-  const cardId = context.query.id as string
-  const props: Props = { cardId }
-  if (typeof window === 'undefined') {
-    if (!isNextExport(context)) {
-      const session = await getSession(context)
-      await serverGetCard(session, { cardId }).then((result) => {
-        if (result.success) props.card = result.data
-      })
-      await serverListCards(session, { parents: [cardId] }).then((result) => {
-        if (result.success) props.children = result.data
-      })
-      await serverListComments(session, { cards: [cardId] }).then((result) => {
-        if (result.success) props.comments = result.data
-      })
-      await serverListReplies(session, { cards: [cardId] }).then((result) => {
-        if (result.success) props.replies = result.data
-      })
+const _getCard = graphql(`
+  query getCard($id: UUID!) {
+    card(id: $id) {
+      id
+      title
+      tagline
+      visibility
+      parentId
+      canEdit
+      archived
+      reverseOrder
+      parentChain
+      childrenOrder
+      children {
+        id
+        title
+        visibility
+        tagline
+        archived
+        commentCount
+      }
+      owner {
+        id
+        handle
+      }
     }
   }
-  return serialize(props)
-}
+`)
 
-const CardPage: NextPage<SuperJSONResult> = (serializedInitialProps) => {
-  const initialProps = deserialize<Props>(serializedInitialProps)
-  const { cardId } = initialProps
-
+const CardPage: NextPage = () => {
   const router = useRouter()
+
+  const cardId = router.query.id as string
+
   const [editing, setEditing] = useState(false)
   const [moving, setMoving] = useState(false)
 
-  const cardQuery = useCard({ cardId }, { initialData: initialProps.card })
-  const childrenQuery = useCards({ parents: [cardId] }, { initialData: initialProps.children })
-  const commentsQuery = useComments({ cards: [cardId] }, { initialData: initialProps.comments })
-  const repliesQuery = useReplies({ cards: [cardId] }, { initialData: initialProps.replies })
+  const cardQuery = useQuery(_getCard, { variables: { id: cardId } })
+  const commentsQuery = useComments({ cards: [cardId] })
+  const repliesQuery = useReplies({ cards: [cardId] })
 
   // TODO all of this is boilerplate
-  if (cardQuery.status === 'loading' || cardQuery.status === 'idle')
+  if (cardQuery.error) return <B.Alert variant="danger">{cardQuery.error.message}</B.Alert>
+  if (!cardQuery.data)
     return (
       <div className="d-flex mt-5 justify-content-center">
         <B.Spinner animation="border" />
       </div>
     )
-  if (cardQuery.status === 'error') return <B.Alert variant="danger">{(cardQuery.error as Error).message}</B.Alert>
-
-  if (childrenQuery.status === 'loading' || childrenQuery.status === 'idle')
-    return (
-      <div className="d-flex mt-5 justify-content-center">
-        <B.Spinner animation="border" />
-      </div>
-    )
-  if (childrenQuery.status === 'error')
-    return <B.Alert variant="danger">{(childrenQuery.error as Error).message}</B.Alert>
 
   if (commentsQuery.status === 'loading' || commentsQuery.status === 'idle')
     return (
@@ -107,12 +86,11 @@ const CardPage: NextPage<SuperJSONResult> = (serializedInitialProps) => {
   if (repliesQuery.status === 'error')
     return <B.Alert variant="danger">{(repliesQuery.error as Error).message}</B.Alert>
 
-  const card = cardQuery.data
-  const children = childrenQuery.data
+  const card = cardQuery.data.card
   const comments = commentsQuery.data
   const replies = repliesQuery.data
 
-  const isPrivate = cardSettings(card).visibility === 'private'
+  const isPrivate = card.visibility === 'private'
 
   return (
     <>
@@ -121,7 +99,11 @@ const CardPage: NextPage<SuperJSONResult> = (serializedInitialProps) => {
       </Head>
       <SocialTags
         title={card.title}
-        description={card.tagline ? `${card.tagline}\n\n— by @${card.owner.handle}` : `— by @${card.owner.handle}`}
+        description={
+          card.tagline
+            ? `${card.tagline}\n\n— by @${card.owner.handle}`
+            : `— by @${card.owner.handle}`
+        }
       />
 
       <B.Breadcrumb>
@@ -141,12 +123,17 @@ const CardPage: NextPage<SuperJSONResult> = (serializedInitialProps) => {
             onHide={() => setEditing(false)}
             afterSave={() => setEditing(false)}
           />
-          <MoveCardModal card={card} show={moving} onHide={() => setMoving(false)} afterMove={() => setMoving(false)} />
+          <MoveCardModal
+            card={card}
+            show={moving}
+            onHide={() => setMoving(false)}
+            afterMove={() => setMoving(false)}
+          />
         </>
       )}
 
       <h1>
-        {cardSettings(card).archived && (
+        {card.archived && (
           <B.Badge bg="secondary" className="me-2">
             Archived
           </B.Badge>
@@ -161,7 +148,10 @@ const CardPage: NextPage<SuperJSONResult> = (serializedInitialProps) => {
         </div>
       )}
 
-      <div className="mb-5" style={{ marginTop: 'calc(0.9rem + 0.3vw)', fontSize: 'calc(0.9rem + 0.3vw)' }}>
+      <div
+        className="mb-5"
+        style={{ marginTop: 'calc(0.9rem + 0.3vw)', fontSize: 'calc(0.9rem + 0.3vw)' }}
+      >
         <CardActions
           card={card}
           onEdit={() => setEditing(true)}
@@ -176,13 +166,11 @@ const CardPage: NextPage<SuperJSONResult> = (serializedInitialProps) => {
         />
       </div>
 
-      <Subcards parent={card} cards={children} />
+      <Subcards parent={card} cards={card.children} />
 
       <Comments card={card} comments={comments} replies={replies} />
     </>
   )
 }
-
-CardPage.getInitialProps = getInitialProps
 
 export default CardPage

@@ -1,4 +1,5 @@
-import { Card, Reply } from '@prisma/client'
+import type * as GQL from 'generated/graphql/graphql'
+import { Reply } from '@prisma/client'
 import * as B from 'react-bootstrap'
 import React from 'react'
 import { BiDotsHorizontal, BiTrashAlt, BiShareAlt } from 'react-icons/bi'
@@ -8,8 +9,11 @@ import { replySettings } from '../lib/model-settings'
 import { replyRoute } from 'lib/routes'
 import { useDeleteReply } from 'lib/queries/replies'
 
-function MenuCopyLink(props: { card: Card; reply: Reply }) {
-  const link = `https://windofchange.me${replyRoute({ cardId: props.card.id, replyId: props.reply.id })}`
+function MenuCopyLink(props: { card: Pick<GQL.Card, 'id'>; reply: Reply }) {
+  const link = `https://windofchange.me${replyRoute({
+    cardId: props.card.id,
+    replyId: props.reply.id,
+  })}`
   return (
     <B.Dropdown.Item
       onClick={() => {
@@ -44,7 +48,7 @@ function MenuDelete(props: { deleteReply }) {
 }
 
 export function ReplyMenu(props: {
-  card: Card
+  card: Pick<GQL.Card, 'id'>
   reply: Reply & { canEdit: boolean; canDelete: boolean }
   afterDelete?: () => void
 }) {

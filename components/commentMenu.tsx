@@ -1,4 +1,5 @@
-import { Card, Comment } from '@prisma/client'
+import type * as GQL from 'generated/graphql/graphql'
+import { Comment } from '@prisma/client'
 import * as B from 'react-bootstrap'
 import React from 'react'
 import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 'react-icons/bi'
@@ -9,8 +10,11 @@ import { commentSettings } from '../lib/model-settings'
 import { commentRoute } from 'lib/routes'
 import { useDeleteComment, useUpdateComment } from 'lib/queries/comments'
 
-function MenuCopyLink(props: { card: Card; comment: Comment }) {
-  const link = `https://windofchange.me${commentRoute({ cardId: props.card.id, commentId: props.comment.id })}`
+function MenuCopyLink(props: { card: Pick<GQL.Card, 'id'>; comment: Comment }) {
+  const link = `https://windofchange.me${commentRoute({
+    cardId: props.card.id,
+    commentId: props.comment.id,
+  })}`
   return (
     <B.Dropdown.Item
       onClick={() => {
@@ -68,7 +72,11 @@ function MenuDelete(props: { deleteComment }) {
   )
 }
 
-export function CommentMenu(props: { card: Card; comment: Comment & { canEdit: boolean }; afterDelete?: () => void }) {
+export function CommentMenu(props: {
+  card: Pick<GQL.Card, 'id'>
+  comment: Comment & { canEdit: boolean }
+  afterDelete?: () => void
+}) {
   const { card, comment } = props
   const settings = commentSettings(comment)
   const isPrivate = settings.visibility === 'private'

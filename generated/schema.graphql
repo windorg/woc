@@ -1,0 +1,155 @@
+type Card {
+  archived: Boolean!
+
+  """
+  Beeminder goal to sync with (goal name in the current user's connected Beeminder account).
+  
+  Can't be queried unless you have edit access to the card.
+  """
+  beeminderGoal: String
+
+  """Whether the current user can edit this card."""
+  canEdit: Boolean!
+
+  """
+  Subcards of this card.
+  
+  Note: not necessarily in the right order! You have to order them using `childrenOrder`.
+  """
+  children: [Card!]!
+  childrenOrder: [UUID!]!
+
+  """
+  Number of comments on this card.
+  
+  Note: this is a count of *all* comments, not just the ones visible to the current user.
+  """
+  commentCount: Int!
+  createdAt: DateTime!
+  id: UUID!
+  owner: User!
+  ownerId: UUID!
+  parent: Card!
+
+  """
+  IDs of all cards in the parent chain (first = toplevel), will be `[]` if `parent === null`
+  """
+  parentChain: [UUID!]!
+  parentId: UUID
+
+  """Whether to show updates from oldest to newest"""
+  reverseOrder: Boolean!
+  tagline: String!
+  title: String!
+  visibility: String!
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+type DeleteCardResult {
+  ownerId: UUID!
+  parent: Card
+}
+
+type MoveCardResult {
+  card: Card!
+  newParent: Card
+  oldParent: Card
+}
+
+type Mutation {
+  createCard(parentId: UUID, private: Boolean, title: String!): Card!
+  deleteCard(id: UUID!): DeleteCardResult!
+
+  """Follow a user."""
+  followUser(id: UUID!): User!
+  moveCard(id: UUID!, newParentId: UUID): MoveCardResult!
+  reorderCardChildren(input: ReorderCardChildrenInput!): ReorderCardChildrenResult!
+
+  """Unfollow a user."""
+  unfollowUser(id: UUID!): User!
+  updateCard(input: UpdateCardInput!): UpdateCardResult!
+}
+
+type Query {
+  """
+  Find a card by ID.
+  
+  Throws an error if the card was not found.
+  """
+  card(id: UUID!): Card!
+
+  """List all visible top-level cards."""
+  topLevelCards: [Card!]!
+
+  """
+  Find a user by ID.
+  
+  Throws an error if the user was not found.
+  """
+  user(id: UUID!): User!
+}
+
+"""
+The input for the `reorderCardChildren` mutation.
+
+Exactly one of `position`, `before`, or `after` must be provided.
+"""
+input ReorderCardChildrenInput {
+  """The card that the `childId` card should be moved after"""
+  after: UUID
+
+  """The card that the `childId` card should be moved before"""
+  before: UUID
+  childId: UUID!
+  id: UUID!
+
+  """The new index that the card should have in the board"""
+  position: Int
+}
+
+type ReorderCardChildrenResult {
+  card: Card!
+}
+
+"""
+A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier.
+"""
+scalar UUID
+
+input UpdateCardInput {
+  archived: Boolean
+  beeminderGoal: String
+  id: UUID!
+  private: Boolean
+  reverseOrder: Boolean
+  tagline: String
+  title: String
+}
+
+type UpdateCardResult {
+  card: Card!
+}
+
+type User {
+  """All cards owned by this user, including subcards."""
+  allCards: [Card!]!
+
+  """The user's Beeminder username. Only available to the user themselves."""
+  beeminderUsername: String
+  displayName: String!
+
+  """The user's email address. Only available to the user themselves."""
+  email: String!
+
+  """Whether the currently logged-in user is following this user."""
+  followed: Boolean
+  handle: String!
+  id: UUID!
+
+  """Cards that are directly owned by this user."""
+  topLevelCards: [Card!]!
+}

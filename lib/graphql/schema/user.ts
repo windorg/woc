@@ -2,34 +2,34 @@ import { builder } from '../builder'
 import { prisma } from '@lib/db'
 import endent from 'endent'
 import { userSettings } from '@lib/model-settings'
+import { GraphQLError } from 'graphql'
 
 export const User = builder.prismaObject('User', {
   fields: (t) => ({
-    id: t.exposeString('id'),
+    id: t.expose('id', { type: 'UUID' }),
     handle: t.exposeString('handle'),
     displayName: t.exposeString('displayName'),
+    email: t.exposeString('email', {
+      description: endent`
+        The user's email address. Only available to the user themselves.
+      `,
+      authScopes: async (user, args, context) => context.userId === user.id,
+    }),
     followed: t.boolean({
       description: endent`
-        Whether the current user is following this user.
-        (Only available if the current user is logged in.)
+        Whether the currently logged-in user is following this user.
       `,
       nullable: true,
-      resolve: async (parent, args, context) => {
+      resolve: async (user, args, context) => {
         if (!context.userId) return null
-        return follows(context.userId, parent.id)
+        return follows(context.userId, user.id)
       },
     }),
-  }),
-})
-
-export const CurrentUser = builder.prismaObject('User', {
-  variant: 'CurrentUser',
-  fields: (t) => ({
-    id: t.exposeString('id'),
-    handle: t.exposeString('handle'),
-    displayName: t.exposeString('displayName'),
-    email: t.exposeString('email'),
     beeminderUsername: t.string({
+      description: endent`
+        The user's Beeminder username. Only available to the user themselves.
+      `,
+      authScopes: async (user, args, context) => context.userId === user.id,
       nullable: true,
       select: { settings: true },
       resolve: (parent) => userSettings(parent).beeminderUsername,
@@ -45,33 +45,13 @@ builder.queryField('user', (t) =>
       Find a user by ID.
       
       Throws an error if the user was not found.
-      
-      This query will only return fields that are always available publicly. If you need to fetch the logged-in user's data, use \`currentUser\`.
     `,
-    args: { id: t.arg.string({ required: true }) },
+    args: { id: t.arg({ type: 'UUID', required: true }) },
     resolve: async (query, root, args, ctx, info) =>
       prisma.user.findUniqueOrThrow({
         ...query,
         where: { id: args.id },
       }),
-  })
-)
-
-builder.queryField('currentUser', (t) =>
-  t.prismaField({
-    type: CurrentUser,
-    description: endent`
-      Get the currently logged-in user.
-      
-      Throws an error if the user is not logged in.
-    `,
-    resolve: async (query, root, args, ctx, info) => {
-      if (ctx.userId === null) throw new Error('Not logged in')
-      return prisma.user.findUniqueOrThrow({
-        ...query,
-        where: { id: ctx.userId },
-      })
-    },
   })
 )
 
@@ -81,10 +61,10 @@ builder.mutationField('followUser', (t) =>
     description: endent`
       Follow a user.
     `,
-    args: { id: t.arg.string({ required: true }) },
+    args: { id: t.arg({ type: 'UUID', required: true }) },
     resolve: async (query, root, args, ctx, info) => {
-      if (ctx.userId === null) throw new Error('Not logged in')
-      if (ctx.userId === args.id) throw new Error('Cannot follow yourself')
+      if (ctx.userId === null) throw new GraphQLError('Not logged in')
+      if (ctx.userId === args.id) throw new GraphQLError('Cannot follow yourself')
       if (!(await follows(ctx.userId, args.id))) await follow(ctx.userId, args.id)
       return prisma.user.findUniqueOrThrow({
         ...query,
@@ -100,10 +80,10 @@ builder.mutationField('unfollowUser', (t) =>
     description: endent`
       Unfollow a user.
     `,
-    args: { id: t.arg.string({ required: true }) },
+    args: { id: t.arg({ type: 'UUID', required: true }) },
     resolve: async (query, root, args, ctx, info) => {
-      if (ctx.userId === null) throw new Error('Not logged in')
-      if (ctx.userId === args.id) throw new Error('Cannot unfollow yourself')
+      if (ctx.userId === null) throw new GraphQLError('Not logged in')
+      if (ctx.userId === args.id) throw new GraphQLError('Cannot unfollow yourself')
       if (await follows(ctx.userId, args.id)) await unfollow(ctx.userId, args.id)
       return prisma.user.findUniqueOrThrow({
         ...query,

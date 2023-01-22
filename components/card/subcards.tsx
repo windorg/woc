@@ -1,20 +1,22 @@
+import type * as GQL from 'generated/graphql/graphql'
 import { sortByIdOrder } from '@lib/array'
 import { cardSettings } from '@lib/model-settings'
 import { LinkButton } from 'components/linkButton'
 import _ from 'lodash'
-import { GetCardData } from 'pages/api/cards/get'
-import { ListCardsData } from 'pages/api/cards/list'
 import * as React from 'react'
 import { AddCardForm } from './addCardForm'
 import { CardsList } from './cardsList'
 import { BiArchive } from 'react-icons/bi'
 import styles from './shared.module.scss'
 
-export function Subcards(props: { parent: GetCardData; cards: ListCardsData }) {
+export function Subcards(props: {
+  parent: Pick<GQL.Card, 'id' | 'childrenOrder' | 'canEdit'>
+  cards: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'archived' | 'visibility' | 'commentCount'>[]
+}) {
   const { parent, cards } = props
   const [normalCards, archivedCards] = _.partition(
     sortByIdOrder(cards, parent.childrenOrder, { onMissingElement: 'skip' }),
-    (card) => !cardSettings(card).archived
+    (card) => !card.archived
   )
   const [showArchived, setShowArchived] = React.useState(false)
   return (
@@ -37,7 +39,11 @@ export function Subcards(props: { parent: GetCardData; cards: ListCardsData }) {
       </div>
       <div className={styles._list}>
         {parent.canEdit && !showArchived && <AddCardForm parentId={parent.id} />}
-        <CardsList parentId={parent.id} cards={showArchived ? archivedCards : normalCards} allowEdit={parent.canEdit} />
+        <CardsList
+          parentId={parent.id}
+          cards={showArchived ? archivedCards : normalCards}
+          allowEdit={parent.canEdit}
+        />
       </div>
     </div>
     //   {

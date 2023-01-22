@@ -7,24 +7,12 @@ import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
 import * as B from 'react-bootstrap'
 import { SocialTags } from 'components/socialTags'
-import { useCards } from '@lib/queries/cards'
 import { graphql } from 'generated/graphql'
 import { useMutation, useQuery } from '@apollo/client'
 import { useRouter } from 'next/router'
 
-const getUserDocument = graphql(`
-  query getUser($userId: String!) {
-    user(id: $userId) {
-      id
-      displayName
-      handle
-      followed
-    }
-  }
-`)
-
-const followUserDocument = graphql(`
-  mutation followUser($userId: String!) {
+const _followUser = graphql(`
+  mutation followUser($userId: UUID!) {
     followUser(id: $userId) {
       id
       followed
@@ -32,8 +20,8 @@ const followUserDocument = graphql(`
   }
 `)
 
-const unfollowUserDocument = graphql(`
-  mutation unfollowUser($userId: String!) {
+const _unfollowUser = graphql(`
+  mutation unfollowUser($userId: UUID!) {
     unfollowUser(id: $userId) {
       id
       followed
@@ -42,10 +30,10 @@ const unfollowUserDocument = graphql(`
 `)
 
 function FollowButton(props: { user }) {
-  const [followUser, followUserMutation] = useMutation(followUserDocument, {
+  const [followUser, followUserMutation] = useMutation(_followUser, {
     variables: { userId: props.user.id },
   })
-  const [unfollowUser, unfollowUserMutation] = useMutation(unfollowUserDocument, {
+  const [unfollowUser, unfollowUserMutation] = useMutation(_unfollowUser, {
     variables: { userId: props.user.id },
   })
   return props.user.followed ? (
@@ -75,12 +63,28 @@ function FollowButton(props: { user }) {
   )
 }
 
+const _getUser = graphql(`
+  query getUser($userId: UUID!) {
+    user(id: $userId) {
+      id
+      displayName
+      handle
+      followed
+      topLevelCards {
+        id
+        title
+        ownerId
+        visibility
+      }
+    }
+  }
+`)
+
 const ShowUser: NextPage = () => {
   const userId = useRouter().query.userId as string
   const { data: session } = useSession()
 
-  const userQuery = useQuery(getUserDocument, { variables: { userId } })
-  const boardsQuery = useCards({ owners: [userId], onlyTopLevel: true })
+  const userQuery = useQuery(_getUser, { variables: { userId } })
 
   if (userQuery.error) return <B.Alert variant="danger">{userQuery.error.message}</B.Alert>
   if (!userQuery.data)
@@ -90,17 +94,7 @@ const ShowUser: NextPage = () => {
       </div>
     )
 
-  if (boardsQuery.status === 'loading' || boardsQuery.status === 'idle')
-    return (
-      <div className="d-flex mt-5 justify-content-center">
-        <B.Spinner animation="border" />
-      </div>
-    )
-  if (boardsQuery.status === 'error')
-    return <B.Alert variant="danger">{(boardsQuery.error as Error).message}</B.Alert>
-
   const user = userQuery.data.user
-  const boards = boardsQuery.data
 
   return (
     <>
@@ -131,7 +125,7 @@ const ShowUser: NextPage = () => {
       <BoardsList
         allowNewBoard={(session?.userId ?? null) === user.id}
         heading="Boards"
-        boards={boards}
+        boards={user.topLevelCards}
         kind="own-board"
       />
     </>

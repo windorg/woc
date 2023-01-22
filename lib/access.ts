@@ -10,6 +10,7 @@ export async function canSeeCard<T extends { id: Card['id']; ownerId: Card['owne
   userId: User['id'] | null,
   card: T
 ): Promise<boolean> {
+  if (!card.ownerId) throw new Error('canSeeCard: Card has no ownerId')
   if (card.ownerId === userId) return true
   const fullCard = await prisma.card.findUniqueOrThrow({
     where: { id: card.id },

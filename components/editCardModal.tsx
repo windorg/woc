@@ -1,17 +1,50 @@
-import { Card } from '@prisma/client'
+import type * as GQL from 'generated/graphql/graphql'
 import { Formik } from 'formik'
-import { cardSettings } from 'lib/model-settings'
 import React from 'react'
 import * as B from 'react-bootstrap'
-import { useUpdateCard } from 'lib/queries/cards'
 import Link from 'next/link'
 import { accountRoute } from 'lib/routes'
+import { graphql } from 'generated/graphql'
+import { useMutation } from '@apollo/client'
 
-export function EditCardModal(props: { card: Card; show: boolean; onHide: () => void; afterSave?: () => void }) {
+const _updateCard_EditCardModal = graphql(`
+  mutation updateCard_EditCardModal(
+    $id: UUID!
+    $title: String
+    $tagline: String
+    $reverseOrder: Boolean
+    $beeminderGoal: String
+  ) {
+    updateCard(
+      input: {
+        id: $id
+        title: $title
+        tagline: $tagline
+        reverseOrder: $reverseOrder
+        beeminderGoal: $beeminderGoal
+      }
+    ) {
+      card {
+        id
+        title
+        tagline
+        reverseOrder
+        beeminderGoal
+      }
+    }
+  }
+`)
+
+export function EditCardModal(props: {
+  card: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'reverseOrder' | 'beeminderGoal'>
+  show: boolean
+  onHide: () => void
+  afterSave?: () => void
+}) {
   // NB: autoFocus is broken inside modals so we use a ref and onEntered instead.
   // See https://github.com/react-bootstrap/react-bootstrap/issues/5102
   const titleInputRef: React.RefObject<HTMLInputElement> = React.useRef(null)
-  const updateCardMutation = useUpdateCard()
+  const [updateCard, updateCardMutation] = useMutation(_updateCard_EditCardModal)
   const { card } = props
   return (
     <B.Modal
@@ -30,16 +63,18 @@ export function EditCardModal(props: { card: Card; show: boolean; onHide: () => 
           initialValues={{
             title: card.title,
             tagline: card.tagline,
-            reverseOrder: cardSettings(card).reverseOrder,
-            beeminderGoal: cardSettings(card).beeminderGoal || '',
+            reverseOrder: card.reverseOrder,
+            beeminderGoal: card.beeminderGoal || '',
           }}
           onSubmit={async (values, formik) => {
-            await updateCardMutation.mutateAsync({
-              cardId: card.id,
-              ...values,
-              title: values.title.trim(),
-              tagline: values.tagline.trim(),
-              beeminderGoal: values.beeminderGoal.trim() || null,
+            await updateCard({
+              variables: {
+                id: card.id,
+                ...values,
+                title: values.title.trim(),
+                tagline: values.tagline.trim(),
+                beeminderGoal: values.beeminderGoal.trim() || null,
+              },
             })
             if (props.afterSave) props.afterSave()
             formik.resetForm()
@@ -95,7 +130,8 @@ export function EditCardModal(props: { card: Card; show: boolean; onHide: () => 
                         Show comments in reverse order
                         <br />
                         <span className="text-muted small">
-                          Good for cards that work like blog posts. Or maybe you just really like the reverse order.
+                          Good for cards that work like blog posts. Or maybe you just really like
+                          the reverse order.
                         </span>
                       </B.Form.Check.Label>
                     </B.Form.Check>
@@ -103,13 +139,10 @@ export function EditCardModal(props: { card: Card; show: boolean; onHide: () => 
 
                   <B.Tab eventKey="beeminder" title="Beeminder" className="pt-3">
                     <p className="text-muted small">
-                      Sync comment count to <a href="https://beeminder.com">Beeminder</a>. The current count will be
-                      posted as a datapoint — so your goal type should be something like “Gain weight” rather than “Do
-                      more”. Make sure your account is connected to Beeminder in{' '}
-                      <Link href={accountRoute()}>
-                        <a>account settings</a>
-                      </Link>
-                      .
+                      Sync comment count to <a href="https://beeminder.com">Beeminder</a>. The
+                      current count will be posted as a datapoint — so your goal type should be
+                      something like “Gain weight” rather than “Do more”. Make sure your account is
+                      connected to Beeminder in <Link href={accountRoute()}>account settings</Link>.
                     </p>
                     <B.Form.Group className="mb-3">
                       <B.Form.Label>Beeminder goal slug</B.Form.Label>
@@ -131,7 +164,9 @@ export function EditCardModal(props: { card: Card; show: boolean; onHide: () => 
 
                 <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>
                   Save
-                  {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+                  {formik.isSubmitting && (
+                    <B.Spinner className="ms-2" size="sm" animation="border" role="status" />
+                  )}
                 </B.Button>
 
                 <B.Button className="ms-2" variant="secondary" type="button" onClick={props.onHide}>
