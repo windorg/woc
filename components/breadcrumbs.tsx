@@ -1,17 +1,17 @@
-import { Card, User } from '@prisma/client'
 import React from 'react'
 import * as B from 'react-bootstrap'
-import { cardSettings } from '../lib/model-settings'
 import Link from 'next/link'
 import { boardsRoute, cardRoute, feedRoute, inboxRoute, userRoute, accountRoute } from 'lib/routes'
-import { useCard } from '@lib/queries/cards'
+import { graphql } from 'generated/graphql'
+import { useQuery } from '@apollo/client'
+import type * as GQL from 'generated/graphql/graphql'
 
 function LinkItem(props: { href: string; children: React.ReactNode; active?: boolean }) {
   return props.active ? (
     <B.Breadcrumb.Item active>{props.children}</B.Breadcrumb.Item>
   ) : (
     <B.Breadcrumb.Item linkAs={Link} href={props.href}>
-      <a>{props.children}</a>
+      {props.children}
     </B.Breadcrumb.Item>
   )
 }
@@ -48,7 +48,7 @@ export function BoardsCrumb(props: { active?: boolean }) {
   )
 }
 
-export function UserCrumb(props: { active?: boolean; user: Pick<User, 'id' | 'handle'> }) {
+export function UserCrumb(props: { active?: boolean; user: Pick<GQL.User, 'id' | 'handle'> }) {
   return (
     <LinkItem active={props.active} href={userRoute(props.user.id)}>
       <em>@{props.user.handle}</em>
@@ -56,8 +56,11 @@ export function UserCrumb(props: { active?: boolean; user: Pick<User, 'id' | 'ha
   )
 }
 
-export function CardCrumb(props: { active?: boolean; card: Pick<Card, 'id' | 'title' | 'settings'> }) {
-  const isPrivate = cardSettings(props.card).visibility === 'private'
+export function CardCrumb(props: {
+  active?: boolean
+  card: Pick<GQL.Card, 'id' | 'title' | 'visibility'>
+}) {
+  const isPrivate = props.card.visibility === 'private'
   return (
     <LinkItem active={props.active} href={cardRoute(props.card.id)}>
       {isPrivate ? '🔒 ' : ''}
@@ -66,14 +69,23 @@ export function CardCrumb(props: { active?: boolean; card: Pick<Card, 'id' | 'ti
   )
 }
 
-export function CardCrumbFetch(props: { active?: boolean; cardId: Card['id'] }) {
-  const cardQuery = useCard({ cardId: props.cardId })
-  const isPrivate = cardQuery.data ? cardSettings(cardQuery.data).visibility === 'private' : false
+const _getCardInfo = graphql(`
+  query getCardInfo($id: UUID!) {
+    card(id: $id) {
+      title
+      visibility
+    }
+  }
+`)
+
+export function CardCrumbFetch(props: { active?: boolean; cardId: GQL.Card['id'] }) {
+  const card = useQuery(_getCardInfo, { variables: { id: props.cardId } }).data?.card
+  const isPrivate = card ? card.visibility === 'private' : false
   return (
     <LinkItem active={props.active} href={cardRoute(props.cardId)}>
-      {cardQuery.data ? (
+      {card ? (
         <>
-          {isPrivate ? '🔒 ' : ''} {cardQuery.data.title}
+          {isPrivate ? '🔒 ' : ''} {card.title}
         </>
       ) : (
         <B.Spinner animation="border" size="sm" />

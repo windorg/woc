@@ -4,52 +4,43 @@ import React from 'react'
 import { BoardsCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
 import { getSession, signIn, useSession } from 'next-auth/react'
-import { SuperJSONResult } from 'superjson/dist/types'
-import { deserialize, serialize } from 'superjson'
 import _ from 'lodash'
 import { BoardsList } from 'components/boardsList'
 import * as B from 'react-bootstrap'
-import { isNextExport } from 'lib/export'
-import { ListCardsData, serverListCards } from './api/cards/list'
-import { useCards } from '@lib/queries/cards'
+import { graphql } from 'generated/graphql'
+import { useQuery } from '@apollo/client'
 
-type Props = {
-  boards?: ListCardsData
-}
-
-async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
-  const props: Props = {}
-  // Server-side, we want to fetch the data so that we can SSR the page. Client-side, we assume the data
-  // will be loaded in the component itself, so we don't fetch anything.
-  if (typeof window === 'undefined') {
-    if (!isNextExport(context)) {
-      const session = await getSession(context)
-      await serverListCards(session, { onlyTopLevel: true }).then((result) => {
-        if (result.success) props.boards = result.data
-      })
+const _getTopLevelCards = graphql(`
+  query getTopLevelCards {
+    topLevelCards {
+      id
+      title
+      ownerId
+      visibility
     }
   }
-  return serialize(props)
-}
+`)
 
-const Boards: NextPage<SuperJSONResult> = (serializedInitialProps) => {
+const Boards: NextPage = () => {
   const { data: session } = useSession()
   const userId = session?.userId ?? null
-  const initialProps = deserialize<Props>(serializedInitialProps)
 
-  const boardsQuery = useCards({ onlyTopLevel: true }, { initialData: initialProps?.boards })
+  const topLevelCardsQuery = useQuery(_getTopLevelCards)
 
-  if (boardsQuery.status === 'loading' || boardsQuery.status === 'idle')
+  if (topLevelCardsQuery.error)
+    return <B.Alert variant="danger">{topLevelCardsQuery.error.message}</B.Alert>
+  if (!topLevelCardsQuery.data)
     return (
       <div className="d-flex mt-5 justify-content-center">
         <B.Spinner animation="border" />
       </div>
     )
-  if (boardsQuery.status === 'error') return <B.Alert variant="danger">{(boardsQuery.error as Error).message}</B.Alert>
 
-  const boards = boardsQuery.data
+  const boards = topLevelCardsQuery.data.topLevelCards
 
-  const [userBoards, otherBoards] = userId ? _.partition(boards, (board) => board.ownerId === userId) : [[], boards]
+  const [userBoards, otherBoards] = userId
+    ? _.partition(boards, (board) => board.ownerId === userId)
+    : [[], boards]
 
   return (
     <>
@@ -63,8 +54,18 @@ const Boards: NextPage<SuperJSONResult> = (serializedInitialProps) => {
 
       {userId ? (
         <>
-          <BoardsList allowNewBoard={true} heading="Your boards" boards={userBoards} kind="own-board" />
-          <BoardsList allowNewBoard={false} heading="Others' public boards" boards={otherBoards} kind="other-board" />
+          <BoardsList
+            allowNewBoard={true}
+            heading="Your boards"
+            boards={userBoards}
+            kind="own-board"
+          />
+          <BoardsList
+            allowNewBoard={false}
+            heading="Others' public boards"
+            boards={otherBoards}
+            kind="other-board"
+          />
         </>
       ) : (
         <>
@@ -73,19 +74,18 @@ const Boards: NextPage<SuperJSONResult> = (serializedInitialProps) => {
             <a href="#" onClick={async () => signIn()}>
               log in
             </a>{' '}
-            or{' '}
-            <Link href="/Signup">
-              <a>sign up</a>
-            </Link>
-            .
+            or <Link href="/Signup">sign up</Link>.
           </p>
-          <BoardsList allowNewBoard={false} heading="Public boards" boards={otherBoards} kind="other-board" />
+          <BoardsList
+            allowNewBoard={false}
+            heading="Public boards"
+            boards={otherBoards}
+            kind="other-board"
+          />
         </>
       )}
     </>
   )
 }
-
-Boards.getInitialProps = getInitialProps
 
 export default Boards

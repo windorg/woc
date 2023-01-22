@@ -1,5 +1,4 @@
-import { Card } from '@prisma/client'
-import { cardSettings } from '../lib/model-settings'
+import type * as GQL from 'generated/graphql/graphql'
 import * as B from 'react-bootstrap'
 import React from 'react'
 import {
@@ -16,9 +15,10 @@ import { HiArrowRight } from 'react-icons/hi'
 import copy from 'copy-to-clipboard'
 import styles from './actionMenu.module.scss'
 import { cardRoute } from 'lib/routes'
-import { useUpdateCard, useDeleteCard } from 'lib/queries/cards'
 import { LinkButton } from './linkButton'
-import { UpdateCardBody } from 'pages/api/cards/update'
+import { useMutation } from '@apollo/client'
+import { graphql } from 'generated/graphql'
+import { evictCardChildren } from '@lib/graphql/cache'
 
 function ButtonEdit(props: { onEdit }) {
   return (
@@ -39,7 +39,7 @@ function ButtonMakePrivate(props: { private; updateCard }) {
   )
 }
 
-function MenuCopyLink(props: { card: Card }) {
+function MenuCopyLink(props: { card: Pick<GQL.Card, 'id'> }) {
   return (
     <B.Dropdown.Item
       onClick={() => {
@@ -88,20 +88,65 @@ function MenuDelete(props: { deleteCard }) {
   )
 }
 
+const useUpdateCard = () => {
+  const [action, result] = useMutation(
+    graphql(`
+      mutation updateCard($id: UUID!, $archived: Boolean, $private: Boolean) {
+        updateCard(input: { id: $id, archived: $archived, private: $private }) {
+          card {
+            id
+            archived
+            visibility
+          }
+        }
+      }
+    `)
+    // We don't have to evict anything from the cache because Apollo will automatically update the cache with newly fetched data.
+  )
+  return { do: action, result }
+}
+
+const useDeleteCard = () => {
+  const [action, result] = useMutation(
+    graphql(`
+      mutation deleteCard($id: UUID!) {
+        deleteCard(id: $id) {
+          parent {
+            id
+          }
+          ownerId
+        }
+      }
+    `),
+    {
+      update: (cache, { data }) => {
+        evictCardChildren(cache, {
+          cardId: data!.deleteCard.parent?.id || null,
+          ownerId: data!.deleteCard.ownerId,
+        })
+      },
+    }
+  )
+  return { do: action, result }
+}
+
 // "More" button with a dropdown
-function CardMenu(props: { card: Card & { canEdit: boolean }; onMove: () => void; afterDelete?: () => void }) {
+function CardMenu(props: {
+  card: Pick<GQL.Card, 'id' | 'canEdit' | 'archived'>
+  onMove: () => void
+  afterDelete?: () => void
+}) {
   const { card } = props
-  const settings = cardSettings(card)
 
   const updateCardMutation = useUpdateCard()
   const deleteCardMutation = useDeleteCard()
 
   const updateCard = async (data) => {
-    await updateCardMutation.mutateAsync({ cardId: card.id, ...data })
+    await updateCardMutation.do({ variables: { id: card.id, ...data } })
   }
 
   const deleteCard = async () => {
-    await deleteCardMutation.mutateAsync({ cardId: card.id })
+    await deleteCardMutation.do({ variables: { id: card.id } })
     if (props.afterDelete) props.afterDelete()
   }
 
@@ -116,7 +161,7 @@ function CardMenu(props: { card: Card & { canEdit: boolean }; onMove: () => void
         {props.card.canEdit && (
           <>
             <MenuMove onMove={props.onMove} />
-            <MenuArchive archived={settings.archived} updateCard={updateCard} />
+            <MenuArchive archived={card.archived} updateCard={updateCard} />
             <B.Dropdown.Divider />
             <MenuDelete deleteCard={deleteCard} />
           </>
@@ -127,18 +172,17 @@ function CardMenu(props: { card: Card & { canEdit: boolean }; onMove: () => void
 }
 
 export function CardActions(props: {
-  card: Card & { canEdit: boolean }
+  card: Pick<GQL.Card, 'id' | 'canEdit' | 'archived' | 'visibility'>
   onEdit: () => void
   onMove: () => void
   afterDelete?: () => void
 }) {
   const { card } = props
-  const settings = cardSettings(card)
-  const isPrivate = settings.visibility === 'private'
+  const isPrivate = card.visibility === 'private'
 
   const updateCardMutation = useUpdateCard()
-  const updateCard = async (data: Omit<UpdateCardBody, 'cardId'>) => {
-    await updateCardMutation.mutateAsync({ cardId: card.id, ...data })
+  const updateCard = async (data) => {
+    await updateCardMutation.do({ variables: { id: card.id, ...data } })
   }
 
   return (

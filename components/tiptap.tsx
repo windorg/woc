@@ -10,6 +10,7 @@ import { Plugin, PluginKey } from 'prosemirror-state'
 import TurndownService from 'turndown'
 import { TiptapBubbleMenu } from './tiptapBubbleMenu'
 import styles from './tiptap.module.scss'
+import HorizontalRule from '@tiptap/extension-horizontal-rule'
 
 const turndownService = new TurndownService()
 
@@ -93,7 +94,12 @@ const LinkDialog = (props: { editor: Editor; open; onHide; hrefValue: string; se
               if (href === '') {
                 props.editor.chain().focus().extendMarkRange('link').unsetLink().run()
               } else {
-                props.editor.chain().focus().extendMarkRange('link').updateAttributes('link', { href }).run()
+                props.editor
+                  .chain()
+                  .focus()
+                  .extendMarkRange('link')
+                  .updateAttributes('link', { href })
+                  .run()
               }
             } else {
               props.editor.commands.setLink({ href })
@@ -137,6 +143,7 @@ let Tiptap = forwardRef(
       extensions: [
         StarterKit.configure({
           heading: { levels: [1, 2, 3] },
+          horizontalRule: false,
         }),
         Typography,
         LinkWithDialog.configure({
@@ -147,6 +154,7 @@ let Tiptap = forwardRef(
           },
         }),
         TrailingNode,
+        HorizontalRule,
         SubmitShortcut.configure({ onSubmit: props.onSubmit }),
       ],
       editorProps: {

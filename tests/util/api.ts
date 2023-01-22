@@ -1,78 +1,99 @@
+import type * as GQL from 'generated/graphql/graphql'
 import { APIRequestContext } from '@playwright/test'
-import { Card, User } from '@prisma/client'
-import type { GetCardData, GetCardResponse } from '@pages/api/cards/get'
-import type { ListCardsData, ListCardsResponse } from '@pages/api/cards/list'
+import { User } from '@prisma/client'
 import randomWords from 'random-words'
+import { print } from 'graphql'
+import { gql } from '@apollo/client'
 
 export async function apiCreateBoard(
   request: APIRequestContext,
   options?: {
     private?: boolean
   }
-): Promise<Card> {
+): Promise<Pick<GQL.Card, 'id' | 'title'>> {
   const title = randomWords(3).join('-')
   return (
-    await request.post('/api/cards/create', {
+    await request.post('/api/graphql', {
       data: {
-        parentId: null,
-        title,
-        private: options?.private || false,
+        query: print(gql`
+          mutation createTopLevelCard($private: Boolean!, $title: String!) {
+            createCard(parentId: null, private: $private, title: $title) {
+              id
+              title
+            }
+          }
+        `),
+        variables: {
+          private: options?.private || false,
+          title,
+        },
+        operationName: 'createTopLevelCard',
       },
     })
-  ).json()
+  )
+    .json()
+    .then((response) => response.data.createCard)
 }
 
 export async function apiCreateCard(
   request: APIRequestContext,
   options: {
-    parentId: Card['id']
+    parentId: GQL.Card['id']
     private?: boolean
   }
-): Promise<Card> {
+): Promise<Pick<GQL.Card, 'id' | 'title'>> {
   const title = randomWords(3).join('-')
   return (
-    await request.post('/api/cards/create', {
+    await request.post('/api/graphql', {
       data: {
-        parentId: options.parentId,
-        title,
-        private: options?.private || false,
+        query: print(gql`
+          mutation createCard($parentId: UUID!, $private: Boolean!, $title: String!) {
+            createCard(parentId: $parentId, private: $private, title: $title) {
+              id
+              title
+            }
+          }
+        `),
+        variables: {
+          parentId: options.parentId,
+          private: options?.private || false,
+          title,
+        },
+        operationName: 'createCard',
       },
     })
-  ).json()
+  )
+    .json()
+    .then((response) => response.data.createCard)
 }
 
 export async function apiGetCard(
   request: APIRequestContext,
   options: {
-    id: Card['id']
+    id: GQL.Card['id']
   }
-): Promise<GetCardResponse> {
-  const response = await (
-    await request.get('/api/cards/get', {
-      params: {
-        cardId: options.id,
+): Promise<
+  (Pick<GQL.Card, 'id' | 'title'> & { children: Pick<GQL.Card, 'id' | 'title'>[] }) | null
+> {
+  const response = await request.post('/api/graphql', {
+    data: {
+      query: print(gql`
+        query getCard($id: UUID!) {
+          card(id: $id) {
+            id
+            title
+            children {
+              id
+              title
+            }
+          }
+        }
+      `),
+      variables: {
+        id: options.id,
       },
-    })
-  ).json()
-  return response
-}
-
-export async function apiListCards(
-  request: APIRequestContext,
-  options: {
-    parents?: Card['id'][]
-    owners?: User['id'][]
-    onlyTopLevel?: boolean
-  }
-): Promise<ListCardsResponse> {
-  const response = await (
-    await request.get('/api/cards/list', {
-      params: {
-        ...('parents' in options ? { parents: JSON.stringify(options.parents) } : {}),
-        ...('owners' in options ? { owners: JSON.stringify(options.owners) } : {}),
-        ...('onlyTopLevel' in options ? { onlyTopLevel: options.onlyTopLevel } : {}),
-      },
-    })
-  ).json()
-  return response
+      operationName: 'getCard',
+    },
+  })
+  return response.json().then((x) => (x.data ? x.data.card : null))
 }

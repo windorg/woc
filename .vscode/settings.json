@@ -3,8 +3,8 @@
   "editor.detectIndentation": false,
   "typescript.format.semicolons": "remove",
   "editor.formatOnSave": true,
-  "editor.wordWrapColumn": 120,
-  "evenBetterToml.formatter.columnWidth": 120,
+  "editor.wordWrapColumn": 100,
+  "evenBetterToml.formatter.columnWidth": 100,
   "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },

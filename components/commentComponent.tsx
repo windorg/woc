@@ -1,4 +1,5 @@
-import { Card, Comment, Reply, User } from '@prisma/client'
+import type * as GQL from 'generated/graphql/graphql'
+import { Comment, Reply, User } from '@prisma/client'
 import { commentSettings } from '../lib/model-settings'
 import React, { createRef, RefObject, useState } from 'react'
 import Link from 'next/link'
@@ -22,16 +23,17 @@ export type Comment_ = Comment & {
 }
 
 // Timestamp & the little lock
-function InfoHeader(props: { card: Card; comment: Comment_ }) {
+function InfoHeader(props: { card: Pick<GQL.Card, 'id'>; comment: Comment_ }) {
   const settings = commentSettings(props.comment)
   const isPrivate = settings.visibility === 'private'
   return (
     <span className="small d-flex">
-      <Link href={commentRoute({ cardId: props.card.id, commentId: props.comment.id })}>
-        <a className="d-flex align-items-center">
-          <BiLink className="me-1" />
-          <ReactTimeAgo timeStyle="twitter-minute-now" date={props.comment.createdAt} />
-        </a>
+      <Link
+        href={commentRoute({ cardId: props.card.id, commentId: props.comment.id })}
+        className="d-flex align-items-center"
+      >
+        <BiLink className="me-1" />
+        <ReactTimeAgo timeStyle="twitter-minute-now" date={props.comment.createdAt} />
       </Link>
       {isPrivate && <span className="ms-2">🔒</span>}
     </span>
@@ -40,7 +42,7 @@ function InfoHeader(props: { card: Card; comment: Comment_ }) {
 
 // Comment in "normal" mode
 function ShowCommentBody(props: {
-  card: Card
+  card: Pick<GQL.Card, 'id'>
   comment: Comment_
   afterDelete?: () => void
   startEditing: () => void
@@ -76,7 +78,11 @@ function ShowCommentBody(props: {
 }
 
 // Comment in "edit" mode
-function EditCommentBody(props: { card: Card; comment: Comment_; stopEditing: () => void }) {
+function EditCommentBody(props: {
+  card: Pick<GQL.Card, 'id'>
+  comment: Comment_
+  stopEditing: () => void
+}) {
   const { comment } = props
   const editorRef: RefObject<TiptapMethods> = React.useRef(null)
   const updateCommentMutation = useUpdateComment()
@@ -108,9 +114,17 @@ function EditCommentBody(props: { card: Card; comment: Comment_; stopEditing: ()
             </div>
             <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
               Save
-              {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+              {formik.isSubmitting && (
+                <B.Spinner className="ms-2" size="sm" animation="border" role="status" />
+              )}
             </B.Button>
-            <B.Button size="sm" variant="secondary" type="button" className="ms-2" onClick={props.stopEditing}>
+            <B.Button
+              size="sm"
+              variant="secondary"
+              type="button"
+              className="ms-2"
+              onClick={props.stopEditing}
+            >
               Cancel
             </B.Button>
           </B.Form>
@@ -120,7 +134,11 @@ function EditCommentBody(props: { card: Card; comment: Comment_; stopEditing: ()
   )
 }
 
-function Replies(props: { card; replies; afterDelete?: (id: Reply['id']) => void }) {
+function Replies(props: {
+  card: Pick<GQL.Card, 'id'>
+  replies
+  afterDelete?: (id: Reply['id']) => void
+}) {
   const replies = _.orderBy(props.replies, ['createdAt'], ['asc'])
   return (
     <div className="woc-comment-replies">
@@ -138,7 +156,11 @@ function Replies(props: { card; replies; afterDelete?: (id: Reply['id']) => void
   )
 }
 
-export function CommentComponent(props: { card: Card; comment: Comment_; replies: Reply_[] }) {
+export function CommentComponent(props: {
+  card: Pick<GQL.Card, 'id'>
+  comment: Comment_
+  replies: Reply_[]
+}) {
   const { comment } = props
 
   const settings = commentSettings(comment)

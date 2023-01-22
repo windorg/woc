@@ -11,9 +11,7 @@ import { InboxItemActions } from './inboxItemActions'
 function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
   return props.author ? (
     <Link href={userRoute(props.author.id)}>
-      <a>
-        <Gravatar email={props.author.email} size="small" />
-      </a>
+      <Gravatar email={props.author.email} size="small" />
     </Link>
   ) : (
     <Gravatar email="" size="small" />
@@ -30,22 +28,17 @@ export function InboxItemComponent(props: { item: InboxItem }) {
       </div>
       <div className="flex-grow-1 ms-2">
         <strong>
-          {author ? (
-            <Link href={userRoute(author.id)}>
-              <a>{author.displayName}</a>
-            </Link>
-          ) : (
-            '[deleted]'
-          )}{' '}
+          {author ? <Link href={userRoute(author.id)}>{author.displayName}</Link> : '[deleted]'}{' '}
           replied at ‘{item.reply.comment.card.title}’
         </strong>
         <div>
           <span className="text-muted small">
-            <Link href={replyRoute({ cardId: item.reply.comment.cardId, replyId: item.reply.id })}>
-              <a className="d-flex align-items-center">
-                <BiLink className="me-1" />
-                <ReactTimeAgo timeStyle="twitter-minute-now" date={item.reply.createdAt} />
-              </a>
+            <Link
+              href={replyRoute({ cardId: item.reply.comment.cardId, replyId: item.reply.id })}
+              className="d-flex align-items-center"
+            >
+              <BiLink className="me-1" />
+              <ReactTimeAgo timeStyle="twitter-minute-now" date={item.reply.createdAt} />
             </Link>
           </span>
           {/* TODO when private lockIcon */}

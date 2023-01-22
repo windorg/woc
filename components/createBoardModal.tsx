@@ -1,11 +1,36 @@
 import React, { useRef } from 'react'
 import * as B from 'react-bootstrap'
 import { Formik } from 'formik'
-import { useCreateCard } from '@lib/queries/cards'
+import { graphql } from 'generated/graphql'
+import { useMutation } from '@apollo/client'
+import { evictCardChildren } from '@lib/graphql/cache'
 
-export function CreateBoardModal(props: { show: boolean; onHide: () => void; afterCreate?: () => void }) {
+const useCreateTopLevelCard = () => {
+  const [action, result] = useMutation(
+    graphql(`
+      mutation createTopLevelCard($title: String!, $private: Boolean!) {
+        createCard(title: $title, private: $private, parentId: null) {
+          id
+          ownerId
+        }
+      }
+    `),
+    {
+      update: (cache, { data }, { variables }) => {
+        evictCardChildren(cache, { cardId: null, ownerId: data!.createCard.ownerId })
+      },
+    }
+  )
+  return { do: action, result }
+}
+
+export function CreateBoardModal(props: {
+  show: boolean
+  onHide: () => void
+  afterCreate?: () => void
+}) {
   const titleInputRef: React.RefObject<HTMLInputElement> = useRef(null)
-  const createBoardMutation = useCreateCard()
+  const createTopLevelCardMutation = useCreateTopLevelCard()
   return (
     <B.Modal
       size="lg"
@@ -22,7 +47,7 @@ export function CreateBoardModal(props: { show: boolean; onHide: () => void; aft
         <Formik
           initialValues={{ private: false, title: '' }}
           onSubmit={async (values, formik) => {
-            await createBoardMutation.mutateAsync({ ...values, parentId: null })
+            await createTopLevelCardMutation.do({ variables: { ...values } })
             if (props.afterCreate) props.afterCreate()
             formik.resetForm()
           }}
@@ -47,7 +72,9 @@ export function CreateBoardModal(props: { show: boolean; onHide: () => void; aft
               </B.Form.Group>
               <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>
                 Create a board
-                {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+                {formik.isSubmitting && (
+                  <B.Spinner className="ms-2" size="sm" animation="border" role="status" />
+                )}
               </B.Button>
               <B.Form.Check
                 name="private"

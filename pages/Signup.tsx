@@ -109,7 +109,7 @@ function SignupForm(props) {
         </B.Form>
       )}
     </Formik>
-  )
+  );
 }
 
 const Signup: NextPage<SuperJSONResult> = (props) => {
