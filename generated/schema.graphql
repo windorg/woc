@@ -25,6 +25,7 @@ type Card {
   Note: this is a count of *all* comments, not just the ones visible to the current user.
   """
   commentCount: Int!
+  comments: [Comment!]!
   createdAt: DateTime!
   id: UUID!
   owner: User!
@@ -44,6 +45,27 @@ type Card {
   visibility: String!
 }
 
+type Comment {
+  """Whether the current user can edit this comment."""
+  canEdit: Boolean!
+
+  """The card this comment is attached to."""
+  card: Card!
+  cardId: UUID!
+
+  """The content of the comment, as Markdown."""
+  content: String!
+  createdAt: DateTime!
+  id: UUID!
+  ownerId: UUID!
+
+  """
+  Whether the comment is pinned. Several comments can be pinned in the same card.
+  """
+  pinned: Boolean!
+  visibility: String!
+}
+
 """
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
@@ -54,6 +76,10 @@ type DeleteCardResult {
   parent: Card
 }
 
+type DeleteCommentResult {
+  card: Card!
+}
+
 type MoveCardResult {
   card: Card!
   newParent: Card
@@ -62,7 +88,9 @@ type MoveCardResult {
 
 type Mutation {
   createCard(parentId: UUID, private: Boolean, title: String!): Card!
+  createComment(cardId: UUID!, content: String!, private: Boolean): Comment!
   deleteCard(id: UUID!): DeleteCardResult!
+  deleteComment(id: UUID!): DeleteCommentResult!
 
   """Follow a user."""
   followUser(id: UUID!): User!
@@ -72,6 +100,7 @@ type Mutation {
   """Unfollow a user."""
   unfollowUser(id: UUID!): User!
   updateCard(input: UpdateCardInput!): UpdateCardResult!
+  updateComment(input: UpdateCommentInput!): UpdateCommentResult!
 }
 
 type Query {
@@ -132,6 +161,17 @@ input UpdateCardInput {
 
 type UpdateCardResult {
   card: Card!
+}
+
+input UpdateCommentInput {
+  content: String
+  id: UUID!
+  pinned: Boolean
+  private: Boolean
+}
+
+type UpdateCommentResult {
+  comment: Comment!
 }
 
 type User {

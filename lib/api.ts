@@ -1,15 +1,7 @@
-import { Card, Comment, Reply } from '@prisma/client'
+import { Reply } from '@prisma/client'
 import axios from 'axios'
 import { ResponseError, wocQuery, wocResponse } from 'lib/http'
-import type { Comment_, CreateCommentBody } from 'pages/api/comments/create'
-import type { DeleteCommentBody } from 'pages/api/comments/delete'
 import { SignupBody, SignupData, SignupResponse } from '../pages/api/auth/signup'
-import {
-  ListCommentsData,
-  ListCommentsQuery,
-  ListCommentsResponse,
-} from '../pages/api/comments/list'
-import { UpdateCommentBody } from '../pages/api/comments/update'
 import { GetFeedData, GetFeedQuery, GetFeedResponse } from '../pages/api/feed/get'
 import { InboxCountResponse } from '../pages/api/inbox/count'
 import { GetInboxData, GetInboxQuery, GetInboxResponse } from '../pages/api/inbox/get'
@@ -18,15 +10,6 @@ import { CreateReplyBody, ReplyResponse } from '../pages/api/replies/create'
 import { DeleteReplyBody } from '../pages/api/replies/delete'
 import { ListRepliesData, ListRepliesQuery, ListRepliesResponse } from '../pages/api/replies/list'
 import { UpdateReplyBody } from '../pages/api/replies/update'
-
-export async function callCreateComment(body: CreateCommentBody): Promise<Comment_> {
-  const { data } = await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/comments/create`, body)
-  return wocResponse(data)
-}
-
-export async function callDeleteComment(body: DeleteCommentBody): Promise<void> {
-  await axios.post(`${process.env.NEXT_PUBLIC_APP_URL!}/api/comments/delete`, body)
-}
 
 export async function callSignup(body: SignupBody): Promise<SignupData>
 export async function callSignup(
@@ -41,27 +24,6 @@ export async function callSignup(body: SignupBody, opts?) {
   if (opts?.returnErrors) return wocResponse(result)
   if (result.success) return wocResponse(result.data)
   if (result.error) throw new ResponseError('Signup error', result.error)
-}
-
-export async function callListComments(query: ListCommentsQuery): Promise<ListCommentsData>
-export async function callListComments(
-  query: ListCommentsQuery,
-  opts: { returnErrors: true }
-): Promise<ListCommentsResponse>
-export async function callListComments(query, opts?) {
-  const { data: result } = await axios.get(
-    `${process.env.NEXT_PUBLIC_APP_URL!}/api/comments/list`,
-    {
-      params: wocQuery(query),
-    }
-  )
-  if (opts?.returnErrors) return wocResponse(result)
-  if (result.success) return wocResponse(result.data)
-}
-
-export async function callUpdateComment(body: UpdateCommentBody): Promise<Partial<Comment>> {
-  const { data } = await axios.put(`${process.env.NEXT_PUBLIC_APP_URL!}/api/comments/update`, body)
-  return wocResponse(data)
 }
 
 export async function callGetFeed(query: GetFeedQuery): Promise<GetFeedData>

@@ -1,7 +1,6 @@
 import type * as GQL from 'generated/graphql/graphql'
-import { Comment, Reply, User } from '@prisma/client'
-import { commentSettings } from '../lib/model-settings'
-import React, { createRef, RefObject, useState } from 'react'
+import { Reply, User } from '@prisma/client'
+import React, { RefObject, useState } from 'react'
 import Link from 'next/link'
 import { RenderedMarkdown, markdownToHtml } from '../lib/markdown'
 import ReactTimeAgo from 'react-time-ago'
@@ -16,16 +15,32 @@ import { LinkButton } from './linkButton'
 import { CreateReplyModal } from './createReplyModal'
 import { commentRoute } from 'lib/routes'
 import { Formik } from 'formik'
-import { useUpdateComment } from 'lib/queries/comments'
+import { useMutation } from '@apollo/client'
+import { graphql } from 'generated/graphql'
 
-export type Comment_ = Comment & {
-  canEdit: boolean
+const useUpdateCommentContent = () => {
+  const [action, result] = useMutation(
+    graphql(`
+      mutation updateCommentContent($id: UUID!, $content: String!) {
+        updateComment(input: { id: $id, content: $content }) {
+          comment {
+            id
+            content
+          }
+        }
+      }
+    `)
+    // We don't have to evict anything from the cache because Apollo will automatically update the cache with newly fetched data.
+  )
+  return { do: action, result }
 }
 
 // Timestamp & the little lock
-function InfoHeader(props: { card: Pick<GQL.Card, 'id'>; comment: Comment_ }) {
-  const settings = commentSettings(props.comment)
-  const isPrivate = settings.visibility === 'private'
+function InfoHeader(props: {
+  card: Pick<GQL.Card, 'id'>
+  comment: Pick<GQL.Comment, 'id' | 'visibility' | 'createdAt'>
+}) {
+  const isPrivate = props.comment.visibility === 'private'
   return (
     <span className="small d-flex">
       <Link
@@ -43,7 +58,7 @@ function InfoHeader(props: { card: Pick<GQL.Card, 'id'>; comment: Comment_ }) {
 // Comment in "normal" mode
 function ShowCommentBody(props: {
   card: Pick<GQL.Card, 'id'>
-  comment: Comment_
+  comment: Pick<GQL.Comment, 'id' | 'content' | 'visibility' | 'pinned' | 'createdAt' | 'canEdit'>
   afterDelete?: () => void
   startEditing: () => void
   openReplyModal: () => void
@@ -80,12 +95,12 @@ function ShowCommentBody(props: {
 // Comment in "edit" mode
 function EditCommentBody(props: {
   card: Pick<GQL.Card, 'id'>
-  comment: Comment_
+  comment: Pick<GQL.Comment, 'id' | 'content' | 'visibility' | 'createdAt' | 'canEdit'>
   stopEditing: () => void
 }) {
   const { comment } = props
   const editorRef: RefObject<TiptapMethods> = React.useRef(null)
-  const updateCommentMutation = useUpdateComment()
+  const updateCommentContentMutation = useUpdateCommentContent()
   return (
     <>
       <div className="d-flex justify-content-between" style={{ marginBottom: '.3em' }}>
@@ -95,9 +110,11 @@ function EditCommentBody(props: {
         initialValues={{}}
         onSubmit={async () => {
           if (!editorRef.current) throw Error('Editor is not initialized')
-          await updateCommentMutation.mutateAsync({
-            commentId: comment.id,
-            content: editorRef.current.getMarkdown(),
+          await updateCommentContentMutation.do({
+            variables: {
+              id: comment.id,
+              content: editorRef.current.getMarkdown(),
+            },
           })
           props.stopEditing()
         }}
@@ -158,18 +175,17 @@ function Replies(props: {
 
 export function CommentComponent(props: {
   card: Pick<GQL.Card, 'id'>
-  comment: Comment_
+  comment: Pick<GQL.Comment, 'id' | 'visibility' | 'pinned' | 'content' | 'createdAt' | 'canEdit'>
   replies: Reply_[]
 }) {
   const { comment } = props
 
-  const settings = commentSettings(comment)
-  const isPrivate = settings.visibility === 'private'
+  const isPrivate = comment.visibility === 'private'
   const classes = `
     woc-comment
     ${styles.comment}
     ${isPrivate ? styles.commentPrivate : ''}
-    ${settings.pinned ? styles.commentPinned : ''}
+    ${comment.pinned ? styles.commentPinned : ''}
     `
 
   // Is the comment itself (not the replies) in the editing mode now?
