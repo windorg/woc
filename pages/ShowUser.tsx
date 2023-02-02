@@ -1,6 +1,6 @@
-import type { NextPage, NextPageContext } from 'next'
+import type { NextPage } from 'next'
 import Head from 'next/head'
-import React, { useState } from 'react'
+import React from 'react'
 import { BoardsCrumb, UserCrumb } from '../components/breadcrumbs'
 import { useSession } from 'next-auth/react'
 import _ from 'lodash'
@@ -10,6 +10,7 @@ import { SocialTags } from 'components/socialTags'
 import { graphql } from 'generated/graphql'
 import { useMutation, useQuery } from '@apollo/client'
 import { useRouter } from 'next/router'
+import { Query } from '@components/query'
 
 const _followUser = graphql(`
   mutation followUser($userId: UUID!) {
@@ -63,71 +64,72 @@ function FollowButton(props: { user }) {
   )
 }
 
-const _getUser = graphql(`
-  query getUser($userId: UUID!) {
-    user(id: $userId) {
-      id
-      displayName
-      handle
-      followed
-      topLevelCards {
-        id
-        title
-        ownerId
-        visibility
+const useGetUser = (variables: { userId: string }) => {
+  return useQuery(
+    graphql(`
+      query getUser($userId: UUID!) {
+        user(id: $userId) {
+          id
+          displayName
+          handle
+          followed
+          topLevelCards {
+            id
+            title
+            ownerId
+            visibility
+          }
+        }
       }
-    }
-  }
-`)
+    `),
+    { variables }
+  )
+}
 
 const ShowUser: NextPage = () => {
   const userId = useRouter().query.userId as string
   const { data: session } = useSession()
 
-  const userQuery = useQuery(_getUser, { variables: { userId } })
-
-  if (userQuery.error) return <B.Alert variant="danger">{userQuery.error.message}</B.Alert>
-  if (!userQuery.data)
-    return (
-      <div className="d-flex mt-5 justify-content-center">
-        <B.Spinner animation="border" />
-      </div>
-    )
-
-  const user = userQuery.data.user
+  const userQuery = useGetUser({ userId })
 
   return (
     <>
-      <Head>
-        <title>
-          {user.displayName} @{user.handle} / WOC
-        </title>
-      </Head>
-      <SocialTags title={`${user.displayName} @${user.handle}`} />
-
-      <B.Breadcrumb>
-        <BoardsCrumb />
-        <UserCrumb user={user} active />
-      </B.Breadcrumb>
-
-      <h1>
-        <span className="me-3">{user.displayName}</span>
-        <em>@{user.handle}</em>
-        {/* TODO should show up even when the user isn't logged in */}
-        {user.followed !== null && (
+      <Query queries={{ userQuery }}>
+        {({ userQuery: { user } }) => (
           <>
-            <span className="ms-4" />
-            <FollowButton user={user} />
+            <Head>
+              <title>
+                {user.displayName} @{user.handle} / WOC
+              </title>
+            </Head>
+            <SocialTags title={`${user.displayName} @${user.handle}`} />
+
+            <B.Breadcrumb>
+              <BoardsCrumb />
+              <UserCrumb user={user} active />
+            </B.Breadcrumb>
+
+            <h1>
+              <span className="me-3">{user.displayName}</span>
+              <em>@{user.handle}</em>
+              {/* TODO should show up even when the user isn't logged in */}
+              {user.followed !== null && (
+                <>
+                  <span className="ms-4" />
+                  <FollowButton user={user} />
+                </>
+              )}
+            </h1>
+
+            <BoardsList
+              allowNewBoard={(session?.userId ?? null) === user.id}
+              heading="Boards"
+              boards={user.topLevelCards}
+              kind="own-board"
+            />
           </>
         )}
-      </h1>
-
-      <BoardsList
-        allowNewBoard={(session?.userId ?? null) === user.id}
-        heading="Boards"
-        boards={user.topLevelCards}
-        kind="own-board"
-      />
+      </Query>
     </>
   )
 }
