@@ -4,7 +4,6 @@ import * as B from 'react-bootstrap'
 import React from 'react'
 import { BoardsCrumb } from '../components/breadcrumbs'
 import { signIn, signOut, useSession } from 'next-auth/react'
-import { SuperJSONResult } from 'superjson/dist/types'
 import _ from 'lodash'
 import { Formik } from 'formik'
 import { boardsRoute } from 'lib/routes'
@@ -48,7 +47,9 @@ function SignupForm(props) {
                 placeholder="alice@example.com"
                 isInvalid={!!formik.errors.email}
               />
-              <B.Form.Control.Feedback type="invalid">{formik.errors.email}</B.Form.Control.Feedback>
+              <B.Form.Control.Feedback type="invalid">
+                {formik.errors.email}
+              </B.Form.Control.Feedback>
             </B.InputGroup>
           </B.Form.Group>
 
@@ -65,7 +66,9 @@ function SignupForm(props) {
                 placeholder="alice"
                 isInvalid={!!formik.errors.handle}
               />
-              <B.Form.Control.Feedback type="invalid">{formik.errors.handle}</B.Form.Control.Feedback>
+              <B.Form.Control.Feedback type="invalid">
+                {formik.errors.handle}
+              </B.Form.Control.Feedback>
             </B.InputGroup>
           </B.Form.Group>
 
@@ -81,7 +84,9 @@ function SignupForm(props) {
                 placeholder="Alice"
                 isInvalid={!!formik.errors.displayName}
               />
-              <B.Form.Control.Feedback type="invalid">{formik.errors.displayName}</B.Form.Control.Feedback>
+              <B.Form.Control.Feedback type="invalid">
+                {formik.errors.displayName}
+              </B.Form.Control.Feedback>
             </B.InputGroup>
           </B.Form.Group>
 
@@ -96,23 +101,27 @@ function SignupForm(props) {
                 type="password"
                 isInvalid={!!formik.errors.password}
               />
-              <B.Form.Control.Feedback type="invalid">{formik.errors.password}</B.Form.Control.Feedback>
+              <B.Form.Control.Feedback type="invalid">
+                {formik.errors.password}
+              </B.Form.Control.Feedback>
             </B.InputGroup>
           </B.Form.Group>
 
           <div className="d-grid mt-4">
             <B.Button variant="primary" type="submit" disabled={formik.isSubmitting}>
               Sign up
-              {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+              {formik.isSubmitting && (
+                <B.Spinner className="ms-2" size="sm" animation="border" role="status" />
+              )}
             </B.Button>
           </div>
         </B.Form>
       )}
     </Formik>
-  );
+  )
 }
 
-const Signup: NextPage<SuperJSONResult> = (props) => {
+const Signup: NextPage = () => {
   const { data: session } = useSession()
 
   return (

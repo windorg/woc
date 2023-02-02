@@ -4,39 +4,17 @@ import { signIn } from 'next-auth/react'
 import React from 'react'
 import * as B from 'react-bootstrap'
 import { BoardsCrumb, InboxCrumb } from '../components/breadcrumbs'
-import { getSession, useSession } from 'next-auth/react'
-import { SuperJSONResult } from 'superjson/dist/types'
-import { deserialize, serialize } from 'superjson'
+import { useSession } from 'next-auth/react'
 import _ from 'lodash'
 import styles from './ShowInbox.module.scss'
 import { InboxItemComponent } from 'components/inboxItem'
 import { InboxItem } from 'lib/inbox'
 import { useInbox } from 'lib/queries/inbox'
-import { serverGetInbox } from './api/inbox/get'
-import { isNextExport } from 'lib/export'
 
-type Props = {
-  inboxItems?: InboxItem[]
-}
-
-async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
-  const props: Props = {}
-  if (typeof window === 'undefined') {
-    if (!isNextExport(context)) {
-      const session = await getSession(context)
-      await serverGetInbox(session, {}).then((result) => {
-        if (result.success) props.inboxItems = result.data
-      })
-    }
-  }
-  return serialize(props)
-}
-
-const ShowInbox: NextPage<SuperJSONResult> = (serializedInitialProps) => {
-  const initialProps = deserialize<Props>(serializedInitialProps)
+const ShowInbox: NextPage = () => {
   const { data: session } = useSession()
 
-  const inboxQuery = useInbox({}, { initialData: initialProps?.inboxItems })
+  const inboxQuery = useInbox({})
 
   if (inboxQuery.status === 'loading' || inboxQuery.status === 'idle')
     return (
@@ -82,7 +60,5 @@ const ShowInbox: NextPage<SuperJSONResult> = (serializedInitialProps) => {
     </>
   )
 }
-
-ShowInbox.getInitialProps = getInitialProps
 
 export default ShowInbox
