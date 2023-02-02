@@ -3,11 +3,10 @@ import { prisma } from '@lib/db'
 import { Card as PrismaCard } from '@prisma/client'
 import { canEditCard } from '@lib/access'
 import { Card } from '../../schema/card'
-import { CardSettings } from '@lib/model-settings'
+import { CardSettings, Visibility as BackendVisibility } from '@lib/model-settings'
 import _ from 'lodash'
 import { addJob } from '@lib/job-queue'
 import { GraphQLError } from 'graphql'
-import { Visibility } from '@lib/graphql/schema/visibility'
 
 export const UpdateCardInput = builder.inputType('UpdateCardInput', {
   fields: (t) => ({
@@ -54,7 +53,9 @@ builder.mutationField('updateCard', (t) =>
         diff.tagline = input.tagline
       }
       if (!_.isNil(input.private)) {
-        diff.settings.visibility = input.private ? Visibility.Private : Visibility.Public
+        diff.settings.visibility = input.private
+          ? BackendVisibility.Private
+          : BackendVisibility.Public
       }
       if (!_.isNil(input.reverseOrder)) {
         diff.settings.reverseOrder = input.reverseOrder

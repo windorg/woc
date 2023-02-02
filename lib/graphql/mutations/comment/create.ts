@@ -4,7 +4,7 @@ import { canEditCard } from '@lib/access'
 import { cardSettings, CommentSettings } from '@lib/model-settings'
 import { GraphQLError } from 'graphql'
 import { addJob } from '@lib/job-queue'
-import { Visibility } from '@lib/graphql/schema/visibility'
+import { Visibility as BackendVisibility } from '@lib/model-settings'
 
 builder.mutationField('createComment', (t) =>
   t.prismaField({
@@ -28,7 +28,7 @@ builder.mutationField('createComment', (t) =>
           cardId: args.cardId,
           ownerId: card.ownerId,
           settings: {
-            visibility: args.private ? Visibility.Private : Visibility.Public,
+            visibility: args.private ? BackendVisibility.Private : BackendVisibility.Public,
           } satisfies Partial<CommentSettings>,
         },
       })

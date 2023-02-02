@@ -1,10 +1,9 @@
 import { builder } from '../../builder'
 import { prisma } from '@lib/db'
 import { canEditCard } from '@lib/access'
-import { CardSettings } from '@lib/model-settings'
+import { CardSettings, Visibility as BackendVisibility } from '@lib/model-settings'
 import { addCardToParent } from '@lib/parents'
 import { GraphQLError } from 'graphql'
-import { Visibility } from '@lib/graphql/schema/visibility'
 
 builder.mutationField('createCard', (t) =>
   t.prismaField({
@@ -30,7 +29,7 @@ builder.mutationField('createCard', (t) =>
           parentId: args.parentId,
           ownerId: parent ? parent.ownerId : ctx.userId,
           settings: {
-            visibility: args.private ? Visibility.Private : Visibility.Public,
+            visibility: args.private ? BackendVisibility.Private : BackendVisibility.Public,
           } satisfies Partial<CardSettings>,
         },
       })

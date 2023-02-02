@@ -1,4 +1,4 @@
-import type * as GQL from 'generated/graphql/graphql'
+import * as GQL from 'generated/graphql/graphql'
 import { Reply, User } from '@prisma/client'
 import React, { RefObject, useState } from 'react'
 import Link from 'next/link'
@@ -17,7 +17,6 @@ import { commentRoute } from 'lib/routes'
 import { Formik } from 'formik'
 import { useMutation } from '@apollo/client'
 import { graphql } from 'generated/graphql'
-import { Visibility } from '@lib/graphql/schema/visibility'
 
 const useUpdateCommentContent = () => {
   const [action, result] = useMutation(
@@ -41,7 +40,7 @@ function InfoHeader(props: {
   card: Pick<GQL.Card, 'id'>
   comment: Pick<GQL.Comment, 'id' | 'visibility' | 'createdAt'>
 }) {
-  const isPrivate = props.comment.visibility === Visibility.Private
+  const isPrivate = props.comment.visibility === GQL.Visibility.Private
   return (
     <span className="small d-flex">
       <Link
@@ -181,7 +180,7 @@ export function CommentComponent(props: {
 }) {
   const { comment } = props
 
-  const isPrivate = comment.visibility === Visibility.Private
+  const isPrivate = comment.visibility === GQL.Visibility.Private
   const classes = `
     woc-comment
     ${styles.comment}

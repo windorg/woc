@@ -42,7 +42,7 @@ type Card {
   reverseOrder: Boolean!
   tagline: String!
   title: String!
-  visibility: String!
+  visibility: Visibility!
 }
 
 type Comment {
@@ -64,7 +64,7 @@ type Comment {
   """
   pinned: Boolean!
   replies: [Reply!]!
-  visibility: String!
+  visibility: Visibility!
 }
 
 """
@@ -180,7 +180,7 @@ type Reply {
   content: String!
   createdAt: DateTime!
   id: UUID!
-  visibility: String!
+  visibility: Visibility!
 }
 
 """
@@ -243,4 +243,9 @@ type User {
 
   """A URL pointing to the user's userpic."""
   userpicUrl: String!
+}
+
+enum Visibility {
+  private
+  public
 }

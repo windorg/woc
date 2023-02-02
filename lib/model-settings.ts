@@ -1,7 +1,16 @@
 // Settings types used in most models (Board, Card, etc)
 
 import { Card, Comment, Reply, User } from '@prisma/client'
-import { Visibility } from './graphql/schema/visibility'
+
+/**
+ * Card, comment, reply visibility.
+ *
+ * This is the backend type and should not leak into the frontend. Use GQL.Visibility in the frontend.
+ */
+export enum Visibility {
+  Private = 'private',
+  Public = 'public',
+}
 
 export type UserSettings = {
   beeminderUsername: string | null
