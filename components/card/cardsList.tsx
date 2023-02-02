@@ -4,7 +4,7 @@ import * as DndModifiers from '@dnd-kit/modifiers'
 import type * as GQL from 'generated/graphql/graphql'
 import { CardsListItem } from './cardsListItem'
 import { CSS } from '@dnd-kit/utilities'
-import { filterSync, insertPosition } from 'lib/array'
+import { deleteSync, insertPosition } from 'lib/array'
 import { graphql } from 'generated/graphql'
 import { useApolloClient, useMutation } from '@apollo/client'
 import { evictCardChildren } from '@lib/graphql/cache'
@@ -81,11 +81,7 @@ export function CardsList(props: {
     const newIndex = ids.indexOf(over.id)
     // If we know the resulting index, we can just apply the reordering and then look at
     // before/after. Note: we can't use 'position' because it ignores archived cards.
-    const newOrder = insertPosition(
-      active.id,
-      filterSync(ids, (id) => id !== active.id),
-      newIndex
-    )
+    const newOrder = insertPosition(active.id, deleteSync(ids, active.id), newIndex)
     const prev: GQL.Card['id'] | undefined = newOrder[newIndex - 1]
     const next: GQL.Card['id'] | undefined = newOrder[newIndex + 1]
     if (active.id !== over.id) {

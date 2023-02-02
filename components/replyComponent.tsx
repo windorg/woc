@@ -1,7 +1,5 @@
 import type * as GQL from 'generated/graphql/graphql'
-import { Reply, User } from '@prisma/client'
-import { replySettings } from '../lib/model-settings'
-import React, { createRef, RefObject, useState } from 'react'
+import React, { RefObject, useState } from 'react'
 import Link from 'next/link'
 import { RenderedMarkdown, markdownToHtml } from '../lib/markdown'
 import ReactTimeAgo from 'react-time-ago'
@@ -13,32 +11,32 @@ import { LinkButton } from './linkButton'
 import { ReplyMenu } from './replyMenu'
 import { replyRoute, userRoute } from 'lib/routes'
 import { Formik } from 'formik'
-import { useUpdateReply } from 'lib/queries/replies'
+import { useMutation } from '@apollo/client'
+import { graphql } from 'generated/graphql'
 
-export type Reply_ = Reply & {
-  // The author can be 'null' if it was deleted. We don't delete replies if the author's account is gone.
-  author: Pick<User, 'id' | 'email' | 'displayName'> | null
-  canEdit: boolean
-  // Unlike other entities, canEdit ≠ canDelete for replies. Comment owners can always delete replies, even ones left by
-  // other people.
-  canDelete: boolean
+export type Reply_ = Pick<
+  GQL.Reply,
+  'id' | 'content' | 'createdAt' | 'canEdit' | 'canDelete' | 'visibility'
+> & {
+  // The author can be 'undefined' if it was deleted.
+  // We don't delete replies if the author's account is gone.
+  author: Pick<GQL.User, 'id' | 'displayName' | 'userpicUrl'> | undefined
 }
 
-function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
+function AuthorPic(props: { author: Pick<GQL.User, 'id' | 'userpicUrl'> | undefined }) {
   return props.author ? (
     <Link href={userRoute(props.author.id)}>
-      <Gravatar email={props.author.email} size="tiny" />
+      <Gravatar url={props.author.userpicUrl} size="tiny" />
     </Link>
   ) : (
-    <Gravatar email="" size="tiny" />
+    <Gravatar size="tiny" />
   )
 }
 
 // Timestamp & the little lock
 function InfoHeader(props: { card: Pick<GQL.Card, 'id'>; reply: Reply_ }) {
   const { reply } = props
-  const settings = replySettings(reply)
-  const isPrivate = settings.visibility === 'private'
+  const isPrivate = reply.visibility === 'private'
   // TODO when we implement private replies, check that the lock can be shown
   return (
     <span className="small d-inline-flex">
@@ -70,8 +68,7 @@ function ShowReply(props: {
   startEditing: () => void
 }) {
   const { card, reply } = props
-  const settings = replySettings(reply)
-  const isPrivate = settings.visibility === 'private'
+  const isPrivate = reply.visibility === 'private'
   const classes = `
     woc-reply
     d-flex
@@ -114,14 +111,30 @@ function ShowReply(props: {
   )
 }
 
+const useUpdateReplyContent = () => {
+  const [action, result] = useMutation(
+    graphql(`
+      mutation updateReplyContent($id: UUID!, $content: String!) {
+        updateReply(input: { id: $id, content: $content }) {
+          reply {
+            id
+            content
+          }
+        }
+      }
+    `)
+    // We don't have to evict anything from the cache because Apollo will automatically update the cache with newly fetched data.
+  )
+  return { do: action, result }
+}
+
 // Component in "edit" mode
 function EditReply(props: { card: Pick<GQL.Card, 'id'>; reply: Reply_; stopEditing: () => void }) {
   const editorRef: RefObject<TiptapMethods> = React.useRef(null)
-  const updateReplyMutation = useUpdateReply()
+  const updateReplyMutation = useUpdateReplyContent()
 
   const { card, reply } = props
-  const settings = replySettings(reply)
-  const isPrivate = settings.visibility === 'private'
+  const isPrivate = reply.visibility === 'private'
   const classes = `
       woc-reply
       d-flex
@@ -145,9 +158,11 @@ function EditReply(props: { card: Pick<GQL.Card, 'id'>; reply: Reply_; stopEditi
           initialValues={{}}
           onSubmit={async () => {
             if (!editorRef.current) throw Error('Editor is not initialized')
-            await updateReplyMutation.mutateAsync({
-              replyId: reply.id,
-              content: editorRef.current.getMarkdown(),
+            await updateReplyMutation.do({
+              variables: {
+                id: reply.id,
+                content: editorRef.current.getMarkdown(),
+              },
             })
             props.stopEditing()
           }}

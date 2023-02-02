@@ -63,6 +63,7 @@ type Comment {
   Whether the comment is pinned. Several comments can be pinned in the same card.
   """
   pinned: Boolean!
+  replies: [Reply!]!
   visibility: String!
 }
 
@@ -80,6 +81,10 @@ type DeleteCommentResult {
   card: Card!
 }
 
+type DeleteReplyResult {
+  comment: Comment!
+}
+
 type MoveCardResult {
   card: Card!
   newParent: Card
@@ -89,8 +94,10 @@ type MoveCardResult {
 type Mutation {
   createCard(parentId: UUID, private: Boolean, title: String!): Card!
   createComment(cardId: UUID!, content: String!, private: Boolean): Comment!
+  createReply(commentId: UUID!, content: String!): Reply!
   deleteCard(id: UUID!): DeleteCardResult!
   deleteComment(id: UUID!): DeleteCommentResult!
+  deleteReply(id: UUID!): DeleteReplyResult!
 
   """Follow a user."""
   followUser(id: UUID!): User!
@@ -101,6 +108,7 @@ type Mutation {
   unfollowUser(id: UUID!): User!
   updateCard(input: UpdateCardInput!): UpdateCardResult!
   updateComment(input: UpdateCommentInput!): UpdateCommentResult!
+  updateReply(input: UpdateReplyInput!): UpdateReplyResult!
 }
 
 type Query {
@@ -144,6 +152,37 @@ type ReorderCardChildrenResult {
   card: Card!
 }
 
+type Reply {
+  """
+  The user who posted the reply. Can be `undefined` if the user has been deleted.
+  """
+  author: User!
+
+  """
+  The user who posted the reply. Can be `null` if the user has been deleted.
+  """
+  authorId: UUID
+
+  """
+  Whether the current user can delete this reply.
+  
+  Note: since anybody can reply on public comments, comment authors have the ability to delete replies on their comments, regardless of who posted them.
+  """
+  canDelete: Boolean!
+
+  """Whether the current user can edit this reply."""
+  canEdit: Boolean!
+
+  """The comment this reply is posted on."""
+  commentId: UUID!
+
+  """The content of the reply, as Markdown."""
+  content: String!
+  createdAt: DateTime!
+  id: UUID!
+  visibility: String!
+}
+
 """
 A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier.
 """
@@ -174,6 +213,15 @@ type UpdateCommentResult {
   comment: Comment!
 }
 
+input UpdateReplyInput {
+  content: String
+  id: UUID!
+}
+
+type UpdateReplyResult {
+  reply: Reply!
+}
+
 type User {
   """All cards owned by this user, including subcards."""
   allCards: [Card!]!
@@ -192,4 +240,7 @@ type User {
 
   """Cards that are directly owned by this user."""
   topLevelCards: [Card!]!
+
+  """A URL pointing to the user's userpic."""
+  userpicUrl: String!
 }

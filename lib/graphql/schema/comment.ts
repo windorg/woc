@@ -2,13 +2,14 @@ import { builder } from '../builder'
 import { prisma } from '@lib/db'
 import endent from 'endent'
 import { CommentSettings, commentSettings } from '@lib/model-settings'
-import { canEditComment, canSeeComment } from '@lib/access'
+import { canEditComment, canSeeComment, canSeeReply } from '@lib/access'
 import { filterAsync, filterSync } from '@lib/array'
 import { GraphQLError } from 'graphql'
+import { Reply } from './reply'
 
 export const Comment = builder.prismaObject('Comment', {
-  authScopes: async (parent, context) => {
-    return canSeeComment(context.userId, parent)
+  authScopes: async (comment, context) => {
+    return canSeeComment(context.userId, comment)
   },
   fields: (t) => ({
     id: t.expose('id', { type: 'UUID' }),
@@ -27,23 +28,31 @@ export const Comment = builder.prismaObject('Comment', {
       `,
     }),
 
+    replies: t.field({
+      type: [Reply],
+      select: { replies: true },
+      resolve: async (comment, args, context) => {
+        return filterAsync(comment.replies, async (reply) => canSeeReply(context.userId, reply))
+      },
+    }),
+
     canEdit: t.boolean({
       description: endent`
         Whether the current user can edit this comment.
       `,
-      resolve: async (parent, args, context) => {
-        return canEditComment(context.userId, parent)
+      resolve: async (comment, args, context) => {
+        return canEditComment(context.userId, comment)
       },
     }),
 
     visibility: t.string({
-      resolve: (parent, args, context) => commentSettings(parent).visibility,
+      resolve: (comment, args, context) => commentSettings(comment).visibility,
     }),
     pinned: t.boolean({
       description: endent`
         Whether the comment is pinned. Several comments can be pinned in the same card.
       `,
-      resolve: (parent, args, context) => commentSettings(parent).pinned,
+      resolve: (comment, args, context) => commentSettings(comment).pinned,
     }),
   }),
 })

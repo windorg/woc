@@ -2,10 +2,10 @@ import { builder } from '../builder'
 import { Comment } from './comment'
 import { prisma } from '@lib/db'
 import endent from 'endent'
-import { CardSettings, cardSettings } from '@lib/model-settings'
+import { cardSettings } from '@lib/model-settings'
 import { canEditCard, canSeeCard, canSeeComment } from '@lib/access'
 import { getCardChain } from '@lib/parents'
-import { filterAsync, filterSync } from '@lib/array'
+import { filterAsync } from '@lib/array'
 import { GraphQLError } from 'graphql'
 
 export const Card = builder.prismaObject('Card', {
@@ -21,9 +21,9 @@ export const Card = builder.prismaObject('Card', {
     createdAt: t.expose('createdAt', { type: 'DateTime' }),
     childrenOrder: t.field({
       type: ['UUID'],
-      resolve: async (parent, args, context) => {
-        return filterAsync(parent.childrenOrder, async (id) =>
-          canSeeCard(context.userId, { id, ownerId: parent.ownerId })
+      resolve: async (card, args, context) => {
+        return filterAsync(card.childrenOrder, async (id) =>
+          canSeeCard(context.userId, { id, ownerId: card.ownerId })
         )
       },
     }),
@@ -36,21 +36,16 @@ export const Card = builder.prismaObject('Card', {
         
         Note: not necessarily in the right order! You have to order them using \`childrenOrder\`.
       `,
-      resolve: async (query, parent, args, context) => {
-        const children = await prisma.card.findMany({
-          ...query,
-          where: { parentId: parent.id },
-        })
-        return filterAsync(children, async (card) => canSeeCard(context.userId, card))
+      select: (args, ctx, nestedSelection) => ({ children: nestedSelection(true) }),
+      resolve: async (query, card, args, context) => {
+        return filterAsync(card.children, async (card) => canSeeCard(context.userId, card))
       },
     }),
-    comments: t.field({
-      type: [Comment],
-      resolve: async (parent, args, context) => {
-        const comments = await prisma.comment.findMany({
-          where: { cardId: parent.id },
-        })
-        return filterAsync(comments, async (comment) => canSeeComment(context.userId, comment))
+    comments: t.prismaField({
+      type: ['Comment'],
+      select: (args, ctx, nestedSelection) => ({ comments: nestedSelection(true) }),
+      resolve: async (query, card, args, context) => {
+        return filterAsync(card.comments, async (comment) => canSeeComment(context.userId, comment))
       },
     }),
     commentCount: t.relationCount('comments', {
@@ -66,9 +61,9 @@ export const Card = builder.prismaObject('Card', {
       description: endent`
         IDs of all cards in the parent chain (first = toplevel), will be \`[]\` if \`parent === null\`
       `,
-      resolve: async (parent, args, context) => {
-        return parent.parentId
-          ? await prisma.$transaction(async (prisma) => getCardChain(prisma, parent.parentId!))
+      resolve: async (card, args, context) => {
+        return card.parentId
+          ? await prisma.$transaction(async (prisma) => getCardChain(prisma, card.parentId!))
           : []
       },
     }),
@@ -77,22 +72,22 @@ export const Card = builder.prismaObject('Card', {
       description: endent`
         Whether the current user can edit this card.
       `,
-      resolve: async (parent, args, context) => {
-        return canEditCard(context.userId, parent)
+      resolve: async (card, args, context) => {
+        return canEditCard(context.userId, card)
       },
     }),
 
     visibility: t.string({
-      resolve: (parent, args, context) => cardSettings(parent).visibility,
+      resolve: (card, args, context) => cardSettings(card).visibility,
     }),
     reverseOrder: t.boolean({
       description: endent`
         Whether to show updates from oldest to newest
       `,
-      resolve: (parent, args, context) => cardSettings(parent).reverseOrder,
+      resolve: (card, args, context) => cardSettings(card).reverseOrder,
     }),
     archived: t.boolean({
-      resolve: (parent, args, context) => cardSettings(parent).archived,
+      resolve: (card, args, context) => cardSettings(card).archived,
     }),
     beeminderGoal: t.string({
       nullable: true,
@@ -101,10 +96,10 @@ export const Card = builder.prismaObject('Card', {
 
         Can't be queried unless you have edit access to the card.
       `,
-      resolve: async (parent, args, context) => {
-        if (!(await canEditCard(context.userId, parent)))
+      resolve: async (card, args, context) => {
+        if (!(await canEditCard(context.userId, card)))
           throw new GraphQLError('You do not have permission to access `beeminderGoal`')
-        return cardSettings(parent).beeminderGoal
+        return cardSettings(card).beeminderGoal
       },
     }),
   }),
@@ -132,8 +127,8 @@ builder.queryField('card', (t) =>
   })
 )
 
-builder.queryField('topLevelCards', (t) => {
-  return t.prismaField({
+builder.queryField('topLevelCards', (t) =>
+  t.prismaField({
     type: [Card],
     description: endent`
       List all visible top-level cards.
@@ -146,4 +141,4 @@ builder.queryField('topLevelCards', (t) => {
       return filterAsync(cards, async (card) => canSeeCard(ctx.userId, card))
     },
   })
-})
+)

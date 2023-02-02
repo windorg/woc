@@ -8,7 +8,6 @@ import { EditCardModal } from 'components/editCardModal'
 import { CardActions } from 'components/cardActions'
 import { useRouter } from 'next/router'
 import { cardRoute, boardsRoute } from 'lib/routes'
-import { useReplies } from 'lib/queries/replies'
 import { SocialTags } from 'components/socialTags'
 import { MoveCardModal } from 'components/moveCardModal'
 import { Subcards } from 'components/card/subcards'
@@ -64,6 +63,19 @@ const useGetComments = (variables: { cardId: string }) => {
             visibility
             pinned
             canEdit
+            replies {
+              id
+              content
+              visibility
+              canEdit
+              createdAt
+              canDelete
+              author {
+                id
+                displayName
+                userpicUrl
+              }
+            }
           }
         }
       }
@@ -82,7 +94,6 @@ const CardPage: NextPage = () => {
 
   const cardQuery = useGetCard({ id: cardId })
   const commentsQuery = useGetComments({ cardId })
-  const repliesQuery = useReplies({ cards: [cardId] })
 
   return (
     <>
@@ -167,7 +178,7 @@ const CardPage: NextPage = () => {
         )}
       </Query>
 
-      {/* Comments and replies */}
+      {/* Comments with replies */}
       <Query queries={{ cardQuery, commentsQuery }}>
         {({
           cardQuery: { card },
@@ -175,16 +186,7 @@ const CardPage: NextPage = () => {
             card: { comments },
           },
         }) => {
-          // TODO we can show the comments before loading the replies
-          if (repliesQuery.status === 'loading' || repliesQuery.status === 'idle')
-            return (
-              <div className="d-flex mt-5 justify-content-center">
-                <B.Spinner animation="border" />
-              </div>
-            )
-          if (repliesQuery.status === 'error')
-            return <B.Alert variant="danger">{(repliesQuery.error as Error).message}</B.Alert>
-          return <Comments card={card} comments={comments} replies={repliesQuery.data} />
+          return <Comments card={card} comments={comments} />
         }}
       </Query>
     </>

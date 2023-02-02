@@ -1,3 +1,4 @@
+import { getUserpicUrl } from '@lib/userpic'
 import { Comment, Reply, User } from '@prisma/client'
 import { InboxItem } from 'lib/inbox'
 import { RenderedMarkdown } from 'lib/markdown'
@@ -9,12 +10,13 @@ import { Gravatar } from './gravatar'
 import { InboxItemActions } from './inboxItemActions'
 
 function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
+  const userpicUrl = getUserpicUrl(props.author ? props.author.email : null)
   return props.author ? (
     <Link href={userRoute(props.author.id)}>
-      <Gravatar email={props.author.email} size="small" />
+      <Gravatar url={userpicUrl} size="small" />
     </Link>
   ) : (
-    <Gravatar email="" size="small" />
+    <Gravatar url={userpicUrl} size="small" />
   )
 }
 

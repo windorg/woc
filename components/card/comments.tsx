@@ -1,30 +1,33 @@
 import type * as GQL from 'generated/graphql/graphql'
-import { filterSync } from '@lib/array'
 import { AddCommentForm } from 'components/addCommentForm'
 import { CommentComponent } from 'components/commentComponent'
 import _ from 'lodash'
-import { ListRepliesData } from 'pages/api/replies/list'
 import * as R from 'ramda'
 import styles from './shared.module.scss'
 
+type Reply_ = Pick<
+  GQL.Reply,
+  'id' | 'createdAt' | 'content' | 'visibility' | 'canEdit' | 'canDelete'
+> & {
+  author: Pick<GQL.User, 'id' | 'displayName' | 'userpicUrl'> | undefined
+}
+
+type Comment_ = Pick<
+  GQL.Comment,
+  'id' | 'createdAt' | 'pinned' | 'visibility' | 'content' | 'canEdit'
+> & {
+  replies: Reply_[]
+}
+
 export function Comments(props: {
   card: Pick<GQL.Card, 'id' | 'canEdit' | 'reverseOrder'>
-  comments: Pick<
-    GQL.Comment,
-    'id' | 'createdAt' | 'pinned' | 'visibility' | 'content' | 'canEdit'
-  >[]
-  replies: ListRepliesData
+  comments: Comment_[]
 }) {
-  const { card, comments, replies } = props
+  const { card, comments } = props
 
   const renderCommentList = (comments: typeof props.comments) =>
     comments.map((comment) => (
-      <CommentComponent
-        key={comment.id}
-        card={card}
-        comment={comment}
-        replies={filterSync(replies, (reply) => reply.commentId === comment.id)}
-      />
+      <CommentComponent key={comment.id} card={card} comment={comment} replies={comment.replies} />
     ))
 
   const [pinnedComments, otherComments] = _.partition(

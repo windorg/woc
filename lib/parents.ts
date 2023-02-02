@@ -1,7 +1,7 @@
 /** Utilities for working with card parents */
 
 import { Card, PrismaClient } from '@prisma/client'
-import { filterSync } from './array'
+import { deleteSync } from './array'
 
 /** For a card id, gives [topmost parent, child, grandchild, ..., id]. */
 export async function getCardChain(prisma: Pick<PrismaClient, 'card'>, id: Card['id']) {
@@ -54,6 +54,6 @@ export async function removeCardFromParent(
   })
   return await prisma.card.update({
     where: { id: parentId },
-    data: { childrenOrder: filterSync(childrenOrder, (id) => id !== cardId) },
+    data: { childrenOrder: deleteSync(childrenOrder, cardId) },
   })
 }
