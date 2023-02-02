@@ -1,6 +1,6 @@
 import type * as GQL from 'generated/graphql/graphql'
 import { match, P } from 'ts-pattern'
-import { filterSync, insertAfter, insertBefore, insertPosition } from 'lib/array'
+import { deleteSync, insertAfter, insertBefore, insertPosition } from 'lib/array'
 
 /**
  * Say what the result of reordering the children of a card would be.
@@ -12,7 +12,7 @@ export function reorderCardChildren(
   childrenOrder: GQL.Card['childrenOrder'],
   onBadInput: (err: string) => void
 ): GQL.Card['childrenOrder'] {
-  const filtered = filterSync(childrenOrder, (x) => x !== input.childId)
+  const filtered = deleteSync(childrenOrder, input.childId)
   return match(input)
     .with({ position: P.number }, (input) =>
       insertPosition(input.childId, filtered, input.position)

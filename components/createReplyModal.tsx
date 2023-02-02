@@ -3,7 +3,27 @@ import React from 'react'
 import * as B from 'react-bootstrap'
 import { Formik } from 'formik'
 import { Tiptap, TiptapMethods } from './tiptap'
-import { useCreateReply } from 'lib/queries/replies'
+import { useMutation } from '@apollo/client'
+import { graphql } from 'generated/graphql'
+import { evictCommentReplies } from '@lib/graphql/cache'
+
+const useCreateReply = () => {
+  const [action, result] = useMutation(
+    graphql(`
+      mutation createReply($commentId: UUID!, $content: String!) {
+        createReply(commentId: $commentId, content: $content) {
+          id
+        }
+      }
+    `),
+    {
+      update: (cache, { data }, { variables }) => {
+        evictCommentReplies(cache, { commentId: variables!.commentId })
+      },
+    }
+  )
+  return { do: action, result }
+}
 
 export function CreateReplyModal(props: {
   show: boolean
@@ -30,10 +50,12 @@ export function CreateReplyModal(props: {
           initialValues={{}}
           onSubmit={async (values, formik) => {
             if (!editorRef.current) throw Error('Editor is not initialized')
-            await createReplyMutation.mutateAsync({
-              ...values,
-              commentId: props.comment.id,
-              content: editorRef.current.getMarkdown(),
+            await createReplyMutation.do({
+              variables: {
+                ...values,
+                commentId: props.comment.id,
+                content: editorRef.current.getMarkdown(),
+              },
             })
             if (props.afterCreate) props.afterCreate()
             formik.resetForm()

@@ -3,6 +3,7 @@ import { prisma } from '@lib/db'
 import endent from 'endent'
 import { userSettings } from '@lib/model-settings'
 import { GraphQLError } from 'graphql'
+import { getUserpicUrl } from '@lib/userpic'
 
 export const User = builder.prismaObject('User', {
   fields: (t) => ({
@@ -14,6 +15,13 @@ export const User = builder.prismaObject('User', {
         The user's email address. Only available to the user themselves.
       `,
       authScopes: async (user, args, context) => context.userId === user.id,
+    }),
+    userpicUrl: t.field({
+      type: 'String',
+      description: endent`
+        A URL pointing to the user's userpic.
+      `,
+      resolve: (user) => getUserpicUrl(user.email),
     }),
     followed: t.boolean({
       description: endent`
@@ -31,8 +39,7 @@ export const User = builder.prismaObject('User', {
       `,
       authScopes: async (user, args, context) => context.userId === user.id,
       nullable: true,
-      select: { settings: true },
-      resolve: (parent) => userSettings(parent).beeminderUsername,
+      resolve: (user) => userSettings(user).beeminderUsername,
     }),
     // beeminderAccessToken is not exposed on purpose — it's a secret
   }),

@@ -1,4 +1,4 @@
-import type { Card, Comment, User } from '@prisma/client'
+import { getUserpicUrl } from '@lib/userpic'
 import { RenderedMarkdown } from 'lib/markdown'
 import { commentRoute, userRoute } from 'lib/routes'
 import Link from 'next/link'
@@ -10,11 +10,12 @@ import { Gravatar } from './gravatar'
 export function FeedItemComponent(props: { item: FeedItem }) {
   const { item } = props
   const author = item.owner
+  const userpicUrl = getUserpicUrl(author.email)
   return (
     <div className="woc-feed-item woc-feed-item-comment d-flex">
       <div className="flex-shrink-0">
         <Link href={userRoute(author.id)}>
-          <Gravatar email={author.email} size="small" />
+          <Gravatar url={userpicUrl} size="small" />
         </Link>
       </div>
       <div className="flex-grow-1 ms-2">

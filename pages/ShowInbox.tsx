@@ -4,7 +4,6 @@ import { signIn } from 'next-auth/react'
 import React from 'react'
 import * as B from 'react-bootstrap'
 import { BoardsCrumb, InboxCrumb } from '../components/breadcrumbs'
-import Link from 'next/link'
 import { getSession, useSession } from 'next-auth/react'
 import { SuperJSONResult } from 'superjson/dist/types'
 import { deserialize, serialize } from 'superjson'
@@ -45,7 +44,8 @@ const ShowInbox: NextPage<SuperJSONResult> = (serializedInitialProps) => {
         <B.Spinner animation="border" />
       </div>
     )
-  if (inboxQuery.status === 'error') return <B.Alert variant="danger">{(inboxQuery.error as Error).message}</B.Alert>
+  if (inboxQuery.status === 'error')
+    return <B.Alert variant="danger">{(inboxQuery.error as Error).message}</B.Alert>
 
   const inboxItems = inboxQuery.data
 
