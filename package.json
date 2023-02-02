@@ -85,7 +85,7 @@
     "@graphql-codegen/client-preset": "^1.2.6",
     "@graphql-codegen/schema-ast": "^2.6.1",
     "@next/eslint-plugin-next": "13.1.4",
-    "@playwright/test": "^1.24.1",
+    "@playwright/test": "^1.30.0",
     "@tauri-apps/cli": "^1.1.1",
     "@types/commonmark": "^0.27.5",
     "@types/glob": "^8.0.1",
