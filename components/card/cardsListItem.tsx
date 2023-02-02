@@ -1,9 +1,8 @@
-import type * as GQL from 'generated/graphql/graphql'
+import * as GQL from 'generated/graphql/graphql'
 import * as B from 'react-bootstrap'
 import { cardRoute } from 'lib/routes'
 import styles from './shared.module.scss'
 import Link from 'next/link'
-import { Visibility } from '@lib/graphql/schema/visibility'
 
 // A card in the sub-cards list
 export function CardsListItem(props: {
@@ -13,7 +12,7 @@ export function CardsListItem(props: {
 }) {
   const { card } = props
   const dragged = props?.dragged ?? false
-  const isPrivate = card.visibility === Visibility.Private
+  const isPrivate = card.visibility === GQL.Visibility.Private
   return (
     // NB: .position-relative is needed for .stretched-link to work properly
     <div

@@ -1,3 +1,4 @@
+import * as GQL from 'generated/graphql/graphql'
 import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
 import * as B from 'react-bootstrap'
@@ -15,7 +16,6 @@ import { Comments } from 'components/card/comments'
 import { graphql } from 'generated/graphql'
 import { useQuery } from '@apollo/client'
 import { Query } from '@components/query'
-import { Visibility } from '@lib/graphql/schema/visibility'
 
 const useGetCard = (variables: { id: string }) => {
   return useQuery(
@@ -149,7 +149,7 @@ const CardPage: NextPage = () => {
                   Archived
                 </B.Badge>
               )}
-              {card.visibility === Visibility.Private && '🔒 '}
+              {card.visibility === GQL.Visibility.Private && '🔒 '}
               {card.title}
             </h1>
             {card.tagline && (

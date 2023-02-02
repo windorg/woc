@@ -1,10 +1,9 @@
-import type * as GQL from 'generated/graphql/graphql'
+import * as GQL from 'generated/graphql/graphql'
 import Link from 'next/link'
 import { cardRoute, userRoute } from 'lib/routes'
 import * as B from 'react-bootstrap'
 import { graphql } from 'generated/graphql'
 import { useQuery } from '@apollo/client'
-import { Visibility } from '@lib/graphql/schema/visibility'
 
 type Kind = 'own-board' | 'other-board'
 
@@ -23,7 +22,7 @@ export function BoardCard(props: {
   kind: Kind
 }) {
   const { board, kind } = props
-  const isPrivate = board.visibility === Visibility.Private
+  const isPrivate = board.visibility === GQL.Visibility.Private
 
   const ownerQuery = useQuery(_getBoardOwner, { variables: { userId: props.board.ownerId } })
 

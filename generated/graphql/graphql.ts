@@ -55,7 +55,7 @@ export type Card = {
   reverseOrder: Scalars['Boolean'];
   tagline: Scalars['String'];
   title: Scalars['String'];
-  visibility: Scalars['String'];
+  visibility: Visibility;
 };
 
 export type Comment = {
@@ -73,7 +73,7 @@ export type Comment = {
   /** Whether the comment is pinned. Several comments can be pinned in the same card. */
   pinned: Scalars['Boolean'];
   replies: Array<Reply>;
-  visibility: Scalars['String'];
+  visibility: Visibility;
 };
 
 export type DeleteCardResult = {
@@ -258,7 +258,7 @@ export type Reply = {
   content: Scalars['String'];
   createdAt: Scalars['DateTime'];
   id: Scalars['UUID'];
-  visibility: Scalars['String'];
+  visibility: Visibility;
 };
 
 export type UpdateCardInput = {
@@ -317,6 +317,11 @@ export type User = {
   userpicUrl: Scalars['String'];
 };
 
+export enum Visibility {
+  Private = 'private',
+  Public = 'public'
+}
+
 export type CreateCommentMutationVariables = Exact<{
   cardId: Scalars['UUID'];
   content: Scalars['String'];
@@ -338,7 +343,7 @@ export type GetCardInfoQueryVariables = Exact<{
 }>;
 
 
-export type GetCardInfoQuery = { __typename?: 'Query', card: { __typename?: 'Card', title: string, visibility: string } };
+export type GetCardInfoQuery = { __typename?: 'Query', card: { __typename?: 'Card', title: string, visibility: Visibility } };
 
 export type CreateCardMutationVariables = Exact<{
   parentId: Scalars['UUID'];
@@ -366,7 +371,7 @@ export type UpdateCardMutationVariables = Exact<{
 }>;
 
 
-export type UpdateCardMutation = { __typename?: 'Mutation', updateCard: { __typename?: 'UpdateCardResult', card: { __typename?: 'Card', id: string, archived: boolean, visibility: string } } };
+export type UpdateCardMutation = { __typename?: 'Mutation', updateCard: { __typename?: 'UpdateCardResult', card: { __typename?: 'Card', id: string, archived: boolean, visibility: Visibility } } };
 
 export type DeleteCardMutationVariables = Exact<{
   id: Scalars['UUID'];
@@ -390,7 +395,7 @@ export type UpdateCommentMutationVariables = Exact<{
 }>;
 
 
-export type UpdateCommentMutation = { __typename?: 'Mutation', updateComment: { __typename?: 'UpdateCommentResult', comment: { __typename?: 'Comment', id: string, pinned: boolean, visibility: string } } };
+export type UpdateCommentMutation = { __typename?: 'Mutation', updateComment: { __typename?: 'UpdateCommentResult', comment: { __typename?: 'Comment', id: string, pinned: boolean, visibility: Visibility } } };
 
 export type DeleteCommentMutationVariables = Exact<{
   id: Scalars['UUID'];
@@ -466,7 +471,7 @@ export type GetAllCardsQuery = { __typename?: 'Query', user: { __typename?: 'Use
 export type GetTopLevelCardsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetTopLevelCardsQuery = { __typename?: 'Query', topLevelCards: Array<{ __typename?: 'Card', id: string, title: string, ownerId: string, visibility: string }> };
+export type GetTopLevelCardsQuery = { __typename?: 'Query', topLevelCards: Array<{ __typename?: 'Card', id: string, title: string, ownerId: string, visibility: Visibility }> };
 
 export type FollowUserMutationVariables = Exact<{
   userId: Scalars['UUID'];
@@ -487,7 +492,7 @@ export type GetUserQueryVariables = Exact<{
 }>;
 
 
-export type GetUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, displayName: string, handle: string, followed?: boolean | null, topLevelCards: Array<{ __typename?: 'Card', id: string, title: string, ownerId: string, visibility: string }> } };
+export type GetUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, displayName: string, handle: string, followed?: boolean | null, topLevelCards: Array<{ __typename?: 'Card', id: string, title: string, ownerId: string, visibility: Visibility }> } };
 
 export type GetLoggedInUserQueryVariables = Exact<{
   userId: Scalars['UUID'];
@@ -501,14 +506,14 @@ export type GetCardQueryVariables = Exact<{
 }>;
 
 
-export type GetCardQuery = { __typename?: 'Query', card: { __typename?: 'Card', id: string, title: string, tagline: string, visibility: string, parentId?: string | null, canEdit: boolean, archived: boolean, reverseOrder: boolean, parentChain: Array<string>, childrenOrder: Array<string>, children: Array<{ __typename?: 'Card', id: string, title: string, visibility: string, tagline: string, archived: boolean, commentCount: number }>, owner: { __typename?: 'User', id: string, handle: string } } };
+export type GetCardQuery = { __typename?: 'Query', card: { __typename?: 'Card', id: string, title: string, tagline: string, visibility: Visibility, parentId?: string | null, canEdit: boolean, archived: boolean, reverseOrder: boolean, parentChain: Array<string>, childrenOrder: Array<string>, children: Array<{ __typename?: 'Card', id: string, title: string, visibility: Visibility, tagline: string, archived: boolean, commentCount: number }>, owner: { __typename?: 'User', id: string, handle: string } } };
 
 export type GetCommentsQueryVariables = Exact<{
   cardId: Scalars['UUID'];
 }>;
 
 
-export type GetCommentsQuery = { __typename?: 'Query', card: { __typename?: 'Card', id: string, comments: Array<{ __typename?: 'Comment', id: string, content: string, createdAt: Date, visibility: string, pinned: boolean, canEdit: boolean, replies: Array<{ __typename?: 'Reply', id: string, content: string, visibility: string, canEdit: boolean, createdAt: Date, canDelete: boolean, author: { __typename?: 'User', id: string, displayName: string, userpicUrl: string } }> }> } };
+export type GetCommentsQuery = { __typename?: 'Query', card: { __typename?: 'Card', id: string, comments: Array<{ __typename?: 'Comment', id: string, content: string, createdAt: Date, visibility: Visibility, pinned: boolean, canEdit: boolean, replies: Array<{ __typename?: 'Reply', id: string, content: string, visibility: Visibility, canEdit: boolean, createdAt: Date, canDelete: boolean, author: { __typename?: 'User', id: string, displayName: string, userpicUrl: string } }> }> } };
 
 
 export const CreateCommentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createComment"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"cardId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"content"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"private"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createComment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"cardId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"cardId"}}},{"kind":"Argument","name":{"kind":"Name","value":"content"},"value":{"kind":"Variable","name":{"kind":"Name","value":"content"}}},{"kind":"Argument","name":{"kind":"Name","value":"private"},"value":{"kind":"Variable","name":{"kind":"Name","value":"private"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<CreateCommentMutation, CreateCommentMutationVariables>;

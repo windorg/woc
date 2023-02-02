@@ -1,4 +1,4 @@
-import type * as GQL from 'generated/graphql/graphql'
+import * as GQL from 'generated/graphql/graphql'
 import * as B from 'react-bootstrap'
 import React from 'react'
 import {
@@ -19,7 +19,6 @@ import { LinkButton } from './linkButton'
 import { useMutation } from '@apollo/client'
 import { graphql } from 'generated/graphql'
 import { evictCardChildren } from '@lib/graphql/cache'
-import { Visibility } from '@lib/graphql/schema/visibility'
 
 function ButtonEdit(props: { onEdit }) {
   return (
@@ -179,7 +178,7 @@ export function CardActions(props: {
   afterDelete?: () => void
 }) {
   const { card } = props
-  const isPrivate = card.visibility === Visibility.Private
+  const isPrivate = card.visibility === GQL.Visibility.Private
 
   const updateCardMutation = useUpdateCard()
   const updateCard = async (data) => {

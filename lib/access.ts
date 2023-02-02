@@ -1,7 +1,6 @@
 import { Card, User, Comment, Reply } from '@prisma/client'
 import { prisma } from './db'
-import { Visibility } from './graphql/schema/visibility'
-import { cardSettings, commentSettings, replySettings } from './model-settings'
+import { cardSettings, commentSettings, replySettings, Visibility } from './model-settings'
 
 // Note: it makes sense that these functions should only be callable server-side because there might simply be not
 // enough data client-side to decide if something is editable or not (e.g. "only X Y Z people can edit it" but the

@@ -1,4 +1,4 @@
-import type * as GQL from 'generated/graphql/graphql'
+import * as GQL from 'generated/graphql/graphql'
 import * as B from 'react-bootstrap'
 import React from 'react'
 import { BiDotsHorizontal, BiTrashAlt, BiLockOpen, BiLock, BiShareAlt } from 'react-icons/bi'
@@ -9,7 +9,6 @@ import { commentRoute } from 'lib/routes'
 import { useMutation } from '@apollo/client'
 import { graphql } from 'generated/graphql'
 import { evictCardComments } from '@lib/graphql/cache'
-import { Visibility } from '@lib/graphql/schema/visibility'
 
 const useUpdateComment = () => {
   const [action, result] = useMutation(
@@ -117,7 +116,7 @@ export function CommentMenu(props: {
   afterDelete?: () => void
 }) {
   const { card, comment } = props
-  const isPrivate = comment.visibility === Visibility.Private
+  const isPrivate = comment.visibility === GQL.Visibility.Private
 
   const updateCommentMutation = useUpdateComment()
   const deleteCommentMutation = useDeleteComment()
