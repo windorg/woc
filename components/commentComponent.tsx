@@ -17,6 +17,7 @@ import { commentRoute } from 'lib/routes'
 import { Formik } from 'formik'
 import { useMutation } from '@apollo/client'
 import { graphql } from 'generated/graphql'
+import { Visibility } from '@lib/graphql/schema/visibility'
 
 const useUpdateCommentContent = () => {
   const [action, result] = useMutation(
@@ -40,7 +41,7 @@ function InfoHeader(props: {
   card: Pick<GQL.Card, 'id'>
   comment: Pick<GQL.Comment, 'id' | 'visibility' | 'createdAt'>
 }) {
-  const isPrivate = props.comment.visibility === 'private'
+  const isPrivate = props.comment.visibility === Visibility.Private
   return (
     <span className="small d-flex">
       <Link
@@ -180,7 +181,7 @@ export function CommentComponent(props: {
 }) {
   const { comment } = props
 
-  const isPrivate = comment.visibility === 'private'
+  const isPrivate = comment.visibility === Visibility.Private
   const classes = `
     woc-comment
     ${styles.comment}

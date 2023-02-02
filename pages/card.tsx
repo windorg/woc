@@ -15,6 +15,7 @@ import { Comments } from 'components/card/comments'
 import { graphql } from 'generated/graphql'
 import { useQuery } from '@apollo/client'
 import { Query } from '@components/query'
+import { Visibility } from '@lib/graphql/schema/visibility'
 
 const useGetCard = (variables: { id: string }) => {
   return useQuery(
@@ -148,7 +149,7 @@ const CardPage: NextPage = () => {
                   Archived
                 </B.Badge>
               )}
-              {card.visibility === 'private' && '🔒 '}
+              {card.visibility === Visibility.Private && '🔒 '}
               {card.title}
             </h1>
             {card.tagline && (

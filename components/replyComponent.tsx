@@ -13,6 +13,7 @@ import { replyRoute, userRoute } from 'lib/routes'
 import { Formik } from 'formik'
 import { useMutation } from '@apollo/client'
 import { graphql } from 'generated/graphql'
+import { Visibility } from '@lib/graphql/schema/visibility'
 
 export type Reply_ = Pick<
   GQL.Reply,
@@ -36,7 +37,7 @@ function AuthorPic(props: { author: Pick<GQL.User, 'id' | 'userpicUrl'> | undefi
 // Timestamp & the little lock
 function InfoHeader(props: { card: Pick<GQL.Card, 'id'>; reply: Reply_ }) {
   const { reply } = props
-  const isPrivate = reply.visibility === 'private'
+  const isPrivate = reply.visibility === Visibility.Private
   // TODO when we implement private replies, check that the lock can be shown
   return (
     <span className="small d-inline-flex">
@@ -68,7 +69,7 @@ function ShowReply(props: {
   startEditing: () => void
 }) {
   const { card, reply } = props
-  const isPrivate = reply.visibility === 'private'
+  const isPrivate = reply.visibility === Visibility.Private
   const classes = `
     woc-reply
     d-flex
@@ -134,7 +135,7 @@ function EditReply(props: { card: Pick<GQL.Card, 'id'>; reply: Reply_; stopEditi
   const updateReplyMutation = useUpdateReplyContent()
 
   const { card, reply } = props
-  const isPrivate = reply.visibility === 'private'
+  const isPrivate = reply.visibility === Visibility.Private
   const classes = `
       woc-reply
       d-flex

@@ -6,6 +6,7 @@ import { canEditComment, canSeeComment, canSeeReply } from '@lib/access'
 import { filterAsync, filterSync } from '@lib/array'
 import { GraphQLError } from 'graphql'
 import { Reply } from './reply'
+import { Visibility } from './visibility'
 
 export const Comment = builder.prismaObject('Comment', {
   authScopes: async (comment, context) => {
@@ -45,7 +46,8 @@ export const Comment = builder.prismaObject('Comment', {
       },
     }),
 
-    visibility: t.string({
+    visibility: t.field({
+      type: Visibility,
       resolve: (comment, args, context) => commentSettings(comment).visibility,
     }),
     pinned: t.boolean({

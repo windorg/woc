@@ -41,7 +41,7 @@ builder.mutationField('updateReply', (t) =>
         diff.content = input.content
       }
       // if (!_.isNil(input.private)) {
-      //   diff.settings.visibility = input.private ? 'private' : 'public'
+      //   diff.settings.visibility = input.private ? Visibility.Private : Visibility.Public
       // }
       const newReply = await prisma.reply.update({
         where: { id: input.id },

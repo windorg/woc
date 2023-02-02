@@ -7,6 +7,7 @@ import { canEditCard, canSeeCard, canSeeComment } from '@lib/access'
 import { getCardChain } from '@lib/parents'
 import { filterAsync } from '@lib/array'
 import { GraphQLError } from 'graphql'
+import { Visibility } from './visibility'
 
 export const Card = builder.prismaObject('Card', {
   authScopes: async (parent, context) => {
@@ -77,7 +78,8 @@ export const Card = builder.prismaObject('Card', {
       },
     }),
 
-    visibility: t.string({
+    visibility: t.field({
+      type: Visibility,
       resolve: (card, args, context) => cardSettings(card).visibility,
     }),
     reverseOrder: t.boolean({
