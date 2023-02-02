@@ -1,5 +1,6 @@
 import { builder } from './builder'
 
+import './schema/visibility'
 import './schema/user'
 import './schema/card'
 import './schema/comment'

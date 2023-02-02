@@ -1,9 +1,7 @@
 // Settings types used in most models (Board, Card, etc)
 
 import { Card, Comment, Reply, User } from '@prisma/client'
-
-// If you ever change this, grep for 'private' and 'public'
-export type Visibility = 'private' | 'public'
+import { Visibility } from './graphql/schema/visibility'
 
 export type UserSettings = {
   beeminderUsername: string | null
@@ -27,7 +25,7 @@ export type CardSettings = {
 }
 export function cardSettings(card: Pick<Card, 'settings'>): CardSettings {
   const def: CardSettings = {
-    visibility: 'public',
+    visibility: Visibility.Public,
     reverseOrder: false,
     archived: false,
     beeminderGoal: null,
@@ -44,7 +42,7 @@ export type CommentSettings = {
 }
 export function commentSettings(comment: Pick<Comment, 'settings'>): CommentSettings {
   const def: CommentSettings = {
-    visibility: 'public',
+    visibility: Visibility.Public,
     pinned: false,
     subscribers: [],
   }
@@ -56,7 +54,7 @@ export type ReplySettings = {
 }
 export function replySettings(reply: Pick<Reply, 'settings'>): ReplySettings {
   const def: ReplySettings = {
-    visibility: 'public',
+    visibility: Visibility.Public,
   }
   return { ...def, ...(reply.settings as object) }
 }

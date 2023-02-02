@@ -1,5 +1,6 @@
 import { Card, User, Comment, Reply } from '@prisma/client'
 import { prisma } from './db'
+import { Visibility } from './graphql/schema/visibility'
 import { cardSettings, commentSettings, replySettings } from './model-settings'
 
 // Note: it makes sense that these functions should only be callable server-side because there might simply be not
@@ -17,7 +18,7 @@ export async function canSeeCard<T extends { id: Card['id']; ownerId: Card['owne
     include: { parent: { select: { id: true, ownerId: true } } },
   })
   return (
-    cardSettings(fullCard).visibility === 'public' &&
+    cardSettings(fullCard).visibility === Visibility.Public &&
     (fullCard.parent === null || (await canSeeCard(userId, fullCard.parent)))
   )
 }
@@ -39,7 +40,7 @@ export async function canSeeComment<T extends { id: Comment['id']; ownerId: Comm
     include: { card: { select: { id: true, ownerId: true } } },
   })
   return (
-    commentSettings(fullComment).visibility === 'public' &&
+    commentSettings(fullComment).visibility === Visibility.Public &&
     (await canSeeCard(userId, fullComment.card))
   )
 }
@@ -69,7 +70,7 @@ export async function canSeeReply<T extends { id: Reply['id']; authorId: Reply['
     include: { comment: { select: { id: true, ownerId: true } } },
   })
   return (
-    replySettings(fullReply).visibility === 'public' &&
+    replySettings(fullReply).visibility === Visibility.Public &&
     (await canSeeComment(userId, fullReply.comment))
   )
 }

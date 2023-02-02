@@ -6,6 +6,7 @@ import { Comment as PrismaComment } from '@prisma/client'
 import { CommentSettings } from '@lib/model-settings'
 import { GraphQLError } from 'graphql'
 import _ from 'lodash'
+import { Visibility } from '@lib/graphql/schema/visibility'
 
 export const UpdateCommentInput = builder.inputType('UpdateCommentInput', {
   fields: (t) => ({
@@ -42,7 +43,7 @@ builder.mutationField('updateComment', (t) =>
         diff.content = input.content
       }
       if (!_.isNil(input.private)) {
-        diff.settings.visibility = input.private ? 'private' : 'public'
+        diff.settings.visibility = input.private ? Visibility.Private : Visibility.Public
       }
       if (!_.isNil(input.pinned)) {
         diff.settings.pinned = input.pinned

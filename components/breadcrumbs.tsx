@@ -5,6 +5,7 @@ import { boardsRoute, cardRoute, feedRoute, inboxRoute, userRoute, accountRoute 
 import { graphql } from 'generated/graphql'
 import { useQuery } from '@apollo/client'
 import type * as GQL from 'generated/graphql/graphql'
+import { Visibility } from '@lib/graphql/schema/visibility'
 
 function LinkItem(props: { href: string; children: React.ReactNode; active?: boolean }) {
   return props.active ? (
@@ -60,7 +61,7 @@ export function CardCrumb(props: {
   active?: boolean
   card: Pick<GQL.Card, 'id' | 'title' | 'visibility'>
 }) {
-  const isPrivate = props.card.visibility === 'private'
+  const isPrivate = props.card.visibility === Visibility.Private
   return (
     <LinkItem active={props.active} href={cardRoute(props.card.id)}>
       {isPrivate ? '🔒 ' : ''}
@@ -80,7 +81,7 @@ const _getCardInfo = graphql(`
 
 export function CardCrumbFetch(props: { active?: boolean; cardId: GQL.Card['id'] }) {
   const card = useQuery(_getCardInfo, { variables: { id: props.cardId } }).data?.card
-  const isPrivate = card ? card.visibility === 'private' : false
+  const isPrivate = card ? card.visibility === Visibility.Private : false
   return (
     <LinkItem active={props.active} href={cardRoute(props.cardId)}>
       {card ? (

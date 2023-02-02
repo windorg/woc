@@ -3,6 +3,7 @@ import { prisma } from '@lib/db'
 import endent from 'endent'
 import { canDeleteReply, canEditReply, canSeeReply } from '@lib/access'
 import { replySettings } from '@lib/model-settings'
+import { Visibility } from './visibility'
 
 export const Reply = builder.prismaObject('Reply', {
   authScopes: async (reply, context) => {
@@ -57,7 +58,8 @@ export const Reply = builder.prismaObject('Reply', {
       },
     }),
 
-    visibility: t.string({
+    visibility: t.field({
+      type: Visibility,
       resolve: (reply, args, context) => replySettings(reply).visibility,
     }),
 
