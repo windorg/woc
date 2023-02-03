@@ -4,32 +4,38 @@ import { cardRoute, userRoute } from 'lib/routes'
 import * as B from 'react-bootstrap'
 import { graphql } from 'generated/graphql'
 import { useQuery } from '@apollo/client'
+import styles from './boardCard.module.scss'
+import ReactTimeAgo from 'react-time-ago'
+import { Query } from './query'
 
 type Kind = 'own-board' | 'other-board'
 
-const _getBoardOwner = graphql(`
-  query getBoardOwner($userId: UUID!) {
-    user(id: $userId) {
-      id
-      displayName
-      handle
-    }
-  }
-`)
+const useGetBoardOwner = (variables: { userId: string }) => {
+  return useQuery(
+    graphql(`
+      query getBoardOwner($userId: UUID!) {
+        user(id: $userId) {
+          id
+          displayName
+          handle
+        }
+      }
+    `),
+    { variables }
+  )
+}
 
 export function BoardCard(props: {
-  board: Pick<GQL.Card, 'id' | 'title' | 'ownerId' | 'visibility'>
+  board: Pick<GQL.Card, 'id' | 'title' | 'createdAt' | 'tagline' | 'ownerId' | 'visibility'>
   kind: Kind
 }) {
   const { board, kind } = props
   const isPrivate = board.visibility === GQL.Visibility.Private
 
-  const ownerQuery = useQuery(_getBoardOwner, { variables: { userId: props.board.ownerId } })
+  const boardOwnerQuery = useGetBoardOwner({ userId: props.board.ownerId })
 
   return (
-    <B.Card
-      className={`position-relative woc-board mt-3 mb-3 ${isPrivate ? 'woc-board-private' : ''}`}
-    >
+    <B.Card className={styles._card}>
       <B.Card.Body>
         <h3>
           {isPrivate && '🔒 '}
@@ -40,21 +46,24 @@ export function BoardCard(props: {
             {board.title}
           </Link>
         </h3>
-        {kind === 'other-board' && (
-          <Link href={userRoute(board.ownerId)}>
-            <span>
-              {ownerQuery.data ? (
-                <>
-                  <span className="me-2">{ownerQuery.data.user.displayName}</span>
-                  <em>@{ownerQuery.data.user.handle}</em>
-                </>
-              ) : (
-                <B.Spinner animation="border" size="sm" />
-              )}
-            </span>
-          </Link>
-        )}
+        {board.tagline && <div className={styles._tagline}>{board.tagline}</div>}
       </B.Card.Body>
+
+      <B.Card.Footer className={styles._infobar}>
+        <span className={styles._date}>
+          Created <ReactTimeAgo date={board.createdAt} />
+        </span>
+        {kind === 'other-board' && (
+          <Query size="sm" queries={{ boardOwnerQuery }}>
+            {({ boardOwnerQuery: { user } }) => (
+              <Link href={userRoute(board.ownerId)}>
+                {user.displayName}
+                <em className="ms-2">@{user.handle}</em>
+              </Link>
+            )}
+          </Query>
+        )}
+      </B.Card.Footer>
     </B.Card>
   )
 }

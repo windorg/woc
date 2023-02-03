@@ -8,7 +8,7 @@ import { CreateBoardModal } from './createBoardModal'
 export function BoardsList(props: {
   allowNewBoard: boolean
   heading: string
-  boards: Pick<GQL.Card, 'id' | 'createdAt' | 'title' | 'ownerId' | 'visibility'>[]
+  boards: Pick<GQL.Card, 'id' | 'createdAt' | 'title' | 'tagline' | 'ownerId' | 'visibility'>[]
   // If other-board, we will show user handles
   kind: 'own-board' | 'other-board'
 }) {

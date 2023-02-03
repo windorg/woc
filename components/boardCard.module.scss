@@ -1,0 +1,25 @@
+._card {
+  margin: 1.25rem 0;
+  position: relative;
+
+  ._tagline {
+    line-height: 130%;
+    margin-top: 0.2em;
+    font-weight: 400;
+    font-size: 0.9rem;
+    color: #888;
+  }
+
+  ._infobar {
+    display: flex;
+    direction: row;
+    gap: 1rem;
+    font-size: 75%;
+    & > * {
+      opacity: 75%;
+    }
+    ._date {
+      color: #444;
+    }
+  }
+}
