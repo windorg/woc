@@ -5,11 +5,11 @@ import React from 'react'
 import * as B from 'react-bootstrap'
 import { BoardsCrumb, InboxCrumb } from '../components/breadcrumbs'
 import { useSession } from 'next-auth/react'
-import _ from 'lodash'
 import styles from './ShowInbox.module.scss'
 import { InboxItemComponent } from 'components/inboxItem'
 import { InboxItem } from 'lib/inbox'
 import { useInbox } from 'lib/queries/inbox'
+import { orderBy } from '@lib/array'
 
 const ShowInbox: NextPage = () => {
   const { data: session } = useSession()
@@ -42,7 +42,7 @@ const ShowInbox: NextPage = () => {
 
       {session ? (
         <div className={`${styles.inboxItems} mb-5`}>
-          {_.orderBy(inboxItems, ['createdAt'], ['desc']).map((x) => (
+          {orderBy(inboxItems, (x) => x.reply.createdAt, 'desc').map((x) => (
             <InboxItemComponent key={x.id} item={x} />
           ))}
         </div>

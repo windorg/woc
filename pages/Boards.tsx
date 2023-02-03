@@ -17,6 +17,7 @@ const useGetTopLevelCards = () => {
       query getTopLevelCards {
         topLevelCards {
           id
+          createdAt
           title
           ownerId
           visibility

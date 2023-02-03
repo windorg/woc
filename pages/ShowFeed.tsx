@@ -5,11 +5,11 @@ import * as B from 'react-bootstrap'
 import { BoardsCrumb, FeedCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
 import { getSession, useSession } from 'next-auth/react'
-import _ from 'lodash'
 import { FeedItemComponent } from 'components/feedItem'
 import styles from './ShowFeed.module.scss'
 import { signIn } from 'next-auth/react'
 import { useFeed } from 'lib/queries/feed'
+import { orderBy } from '@lib/array'
 
 const ShowFeed: NextPage = () => {
   const { data: session } = useSession()
@@ -42,7 +42,7 @@ const ShowFeed: NextPage = () => {
 
       {session ? (
         <div className={`${styles.feedItems} mb-5`}>
-          {_.orderBy(feedItems, ['createdAt'], ['desc']).map((x) => (
+          {orderBy(feedItems, 'createdAt', 'desc').map((x) => (
             <FeedItemComponent key={x.id} item={x} />
           ))}
         </div>

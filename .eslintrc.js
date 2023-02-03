@@ -60,7 +60,11 @@ module.exports = {
       1, // warning
       {
         name: ['_', 'reverse'],
-        message: "'reverse' mutates the array in-place; use R.reverse",
+        message: '_.reverse mutates the array in-place; use R.reverse',
+      },
+      {
+        name: ['_', 'orderBy'],
+        message: '_.orderBy has bad typings, use the version from lib/array',
       },
     ],
     'react/no-unstable-nested-components': ['error'],

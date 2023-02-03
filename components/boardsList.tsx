@@ -1,5 +1,5 @@
+import { orderBy } from '@lib/array'
 import type * as GQL from 'generated/graphql/graphql'
-import _ from 'lodash'
 import { useState } from 'react'
 import * as B from 'react-bootstrap'
 import { BoardCard } from './boardCard'
@@ -8,7 +8,7 @@ import { CreateBoardModal } from './createBoardModal'
 export function BoardsList(props: {
   allowNewBoard: boolean
   heading: string
-  boards: Pick<GQL.Card, 'id' | 'title' | 'ownerId' | 'visibility'>[]
+  boards: Pick<GQL.Card, 'id' | 'createdAt' | 'title' | 'ownerId' | 'visibility'>[]
   // If other-board, we will show user handles
   kind: 'own-board' | 'other-board'
 }) {
@@ -39,7 +39,7 @@ export function BoardsList(props: {
         )}
       </h1>
       <div>
-        {_.orderBy(props.boards, ['createdAt'], ['desc']).map((board) => (
+        {orderBy(props.boards, 'createdAt', 'desc').map((board) => (
           <BoardCard key={board.id} board={board} kind={props.kind} />
         ))}
       </div>
