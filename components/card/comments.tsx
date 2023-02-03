@@ -1,30 +1,38 @@
-import { filterSync } from '@lib/array'
-import { cardSettings, commentSettings } from '@lib/model-settings'
+import type * as GQL from 'generated/graphql/graphql'
 import { AddCommentForm } from 'components/addCommentForm'
 import { CommentComponent } from 'components/commentComponent'
 import _ from 'lodash'
-import { GetCardData } from 'pages/api/cards/get'
-import { ListCommentsData } from 'pages/api/comments/list'
-import { ListRepliesData } from 'pages/api/replies/list'
 import * as R from 'ramda'
 import styles from './shared.module.scss'
 
-export function Comments(props: { card: GetCardData; comments: ListCommentsData; replies: ListRepliesData }) {
-  const { card, comments, replies } = props
+type Reply_ = Pick<
+  GQL.Reply,
+  'id' | 'createdAt' | 'content' | 'visibility' | 'canEdit' | 'canDelete'
+> & {
+  author: Pick<GQL.User, 'id' | 'displayName' | 'userpicUrl'> | undefined
+}
 
-  const renderCommentList = (comments) =>
+type Comment_ = Pick<
+  GQL.Comment,
+  'id' | 'createdAt' | 'pinned' | 'visibility' | 'content' | 'canEdit'
+> & {
+  replies: Reply_[]
+}
+
+export function Comments(props: {
+  card: Pick<GQL.Card, 'id' | 'canEdit' | 'reverseOrder'>
+  comments: Comment_[]
+}) {
+  const { card, comments } = props
+
+  const renderCommentList = (comments: typeof props.comments) =>
     comments.map((comment) => (
-      <CommentComponent
-        key={comment.id}
-        card={card}
-        comment={{ ...comment, canEdit: card.canEdit }}
-        replies={filterSync(replies, (reply) => reply.commentId === comment.id)}
-      />
+      <CommentComponent key={comment.id} card={card} comment={comment} replies={comment.replies} />
     ))
 
   const [pinnedComments, otherComments] = _.partition(
     _.orderBy(comments, ['createdAt'], ['desc']),
-    (comment) => commentSettings(comment).pinned
+    (comment) => comment.pinned
   )
 
   // Note: we only use autoFocus for 'normalOrderComments' because for 'reverseOrderComments' it's annoying that the focus always jumps to the end of
@@ -39,7 +47,9 @@ export function Comments(props: { card: GetCardData; comments: ListCommentsData;
   const reverseOrderComments = () => (
     <>
       <p className="text-muted small">Comment order: oldest to newest.</p>
-      <div className="mb-3">{renderCommentList(_.concat(R.reverse(pinnedComments), R.reverse(otherComments)))}</div>
+      <div className="mb-3">
+        {renderCommentList(_.concat(R.reverse(pinnedComments), R.reverse(otherComments)))}
+      </div>
       {card.canEdit && <AddCommentForm cardId={card.id} />}
     </>
   )
@@ -50,7 +60,7 @@ export function Comments(props: { card: GetCardData; comments: ListCommentsData;
         <div className={styles._label}>Comments ({comments.length})</div>
       </div>
       <div className={styles._list}>
-        {cardSettings(card).reverseOrder ? reverseOrderComments() : normalOrderComments()}
+        {card.reverseOrder ? reverseOrderComments() : normalOrderComments()}
       </div>
     </div>
   )

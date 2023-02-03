@@ -1,15 +1,39 @@
-import { Card, Reply } from '@prisma/client'
+import type * as GQL from 'generated/graphql/graphql'
 import * as B from 'react-bootstrap'
 import React from 'react'
 import { BiDotsHorizontal, BiTrashAlt, BiShareAlt } from 'react-icons/bi'
 import actionMenuStyles from './actionMenu.module.scss'
 import copy from 'copy-to-clipboard'
-import { replySettings } from '../lib/model-settings'
 import { replyRoute } from 'lib/routes'
-import { useDeleteReply } from 'lib/queries/replies'
+import { useMutation } from '@apollo/client'
+import { graphql } from 'generated/graphql'
+import { evictCommentReplies } from '@lib/graphql/cache'
 
-function MenuCopyLink(props: { card: Card; reply: Reply }) {
-  const link = `https://windofchange.me${replyRoute({ cardId: props.card.id, replyId: props.reply.id })}`
+const useDeleteReply = () => {
+  const [action, result] = useMutation(
+    graphql(`
+      mutation deleteReply($id: UUID!) {
+        deleteReply(id: $id) {
+          comment {
+            id
+          }
+        }
+      }
+    `),
+    {
+      update: (cache, { data }) => {
+        evictCommentReplies(cache, { commentId: data!.deleteReply.comment.id })
+      },
+    }
+  )
+  return { do: action, result }
+}
+
+function MenuCopyLink(props: { card: Pick<GQL.Card, 'id'>; reply: Pick<GQL.Reply, 'id'> }) {
+  const link = `https://windofchange.me${replyRoute({
+    cardId: props.card.id,
+    replyId: props.reply.id,
+  })}`
   return (
     <B.Dropdown.Item
       onClick={() => {
@@ -44,21 +68,19 @@ function MenuDelete(props: { deleteReply }) {
 }
 
 export function ReplyMenu(props: {
-  card: Card
-  reply: Reply & { canEdit: boolean; canDelete: boolean }
+  card: Pick<GQL.Card, 'id'>
+  reply: Pick<GQL.Reply, 'id' | 'canEdit' | 'canDelete'>
   afterDelete?: () => void
 }) {
   const { card, reply } = props
-  const settings = replySettings(reply)
   const deleteReplyMutation = useDeleteReply()
 
   const deleteReply = async () => {
-    await deleteReplyMutation.mutateAsync({ replyId: reply.id })
+    await deleteReplyMutation.do({ variables: { id: reply.id } })
     if (props.afterDelete) props.afterDelete()
   }
 
   // TODO confirmation dialog for deletion
-  // TODO should not call 'deleteReply' on the DOM if deletion actually fails
   return (
     <B.Dropdown className="link-button d-flex align-items-center">
       <B.Dropdown.Toggle as="span" className="d-flex align-items-center">

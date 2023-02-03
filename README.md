@@ -18,6 +18,12 @@ dotenv -- psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
 npx prisma db push
 ```
 
+You should also run the GraphQL codegen watcher, at least until https://github.com/capaj/graphql-codegen-vscode/issues/21 is fixed:
+
+```
+npm run gql:watch
+```
+
 ## Local development - Tauri
 
 ```
@@ -60,7 +66,28 @@ npx playwright install  # install browsers; only needed once
 To run:
 
 ```
-dotenv -- npx playwright test --workers=1
+dotenv -e .env.development -- npx playwright test --workers=1
 ```
 
 The server must be running for the tests to work. `--workers=1` runs tests without parallelism — this is necessary because otherwise hot reloading messes things up.
+
+## Upgrading Tiptap
+
+```bash
+cd tiptap
+git fetch --all
+git rebase upstream/main
+
+# Kill the commit that adds @ts-nocheck
+git reset HEAD^ --hard
+
+# Add @ts-nocheck
+(cd ..; npm run tiptap-nocheck)
+
+# Commit and update the submodule
+git add .
+git commit -m "Add @ts-nocheck"
+git push origin HEAD:main --force
+cd ..
+git submodule update --remote tiptap
+```

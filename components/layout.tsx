@@ -48,14 +48,16 @@ function InboxLink() {
   const { data } = useInboxCount({ refetchInterval: 5000 })
   return (
     <Link href={inboxRoute()}>
-      <a>
-        Inbox
-        {data !== undefined && (
-          <B.Badge className="ms-2" id="inbox-badge" bg={data.itemCount === 0 ? 'secondary' : 'danger'}>
-            {data.itemCount}
-          </B.Badge>
-        )}
-      </a>
+      Inbox
+      {data !== undefined && (
+        <B.Badge
+          className="ms-2"
+          id="inbox-badge"
+          bg={data.itemCount === 0 ? 'secondary' : 'danger'}
+        >
+          {data.itemCount}
+        </B.Badge>
+      )}
     </Link>
   )
 }
@@ -76,8 +78,8 @@ function NavHeader() {
     </B.Dropdown>
   ) : (
     <>
-      <Link href="/Signup">
-        <a className="me-4">Sign up</a>
+      <Link href="/Signup" className="me-4">
+        Sign up
       </Link>
       <a href="#" onClick={async () => signIn()}>
         Log in
@@ -87,28 +89,24 @@ function NavHeader() {
   return (
     <div className="d-flex justify-content-end align-items-center align-self-center mb-3">
       <div style={{ position: 'relative' }}>
-        <Link href="/">
-          <a className="stretched-link text-reset woc-logo-link">
-            {/* Using img instead of Image because for some reason with Image the logo text isn't centered */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/favicon-large.png"
-              width="50"
-              height="50"
-              className="me-2 woc-logo-icon"
-              alt="wind of change logo"
-            />
-            <span className="woc-logo-text">wind of change</span>
-          </a>
+        <Link href="/" className="stretched-link text-reset woc-logo-link">
+          {/* Using img instead of Image because for some reason with Image the logo text isn't centered */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/favicon-large.png"
+            width="50"
+            height="50"
+            className="me-2 woc-logo-icon"
+            alt="wind of change logo"
+          />
+          <span className="woc-logo-text">wind of change</span>
         </Link>
       </div>
       <div className="d-flex" style={{ flex: '1' }}></div>
       <ChangelogButton />
       {session ? (
         <div className="me-4">
-          <Link href={feedRoute()}>
-            <a>Feed</a>
-          </Link>
+          <Link href={feedRoute()}>Feed</Link>
         </div>
       ) : null}
       {session ? (

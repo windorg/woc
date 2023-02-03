@@ -1,6 +1,6 @@
-import { Card, Comment, Reply, User } from '@prisma/client'
-import { commentSettings } from '../lib/model-settings'
-import React, { createRef, RefObject, useState } from 'react'
+import * as GQL from 'generated/graphql/graphql'
+import { Reply, User } from '@prisma/client'
+import React, { RefObject, useState } from 'react'
 import Link from 'next/link'
 import { RenderedMarkdown, markdownToHtml } from '../lib/markdown'
 import ReactTimeAgo from 'react-time-ago'
@@ -15,23 +15,40 @@ import { LinkButton } from './linkButton'
 import { CreateReplyModal } from './createReplyModal'
 import { commentRoute } from 'lib/routes'
 import { Formik } from 'formik'
-import { useUpdateComment } from 'lib/queries/comments'
+import { useMutation } from '@apollo/client'
+import { graphql } from 'generated/graphql'
 
-export type Comment_ = Comment & {
-  canEdit: boolean
+const useUpdateCommentContent = () => {
+  const [action, result] = useMutation(
+    graphql(`
+      mutation updateCommentContent($id: UUID!, $content: String!) {
+        updateComment(input: { id: $id, content: $content }) {
+          comment {
+            id
+            content
+          }
+        }
+      }
+    `)
+    // We don't have to evict anything from the cache because Apollo will automatically update the cache with newly fetched data.
+  )
+  return { do: action, result }
 }
 
 // Timestamp & the little lock
-function InfoHeader(props: { card: Card; comment: Comment_ }) {
-  const settings = commentSettings(props.comment)
-  const isPrivate = settings.visibility === 'private'
+function InfoHeader(props: {
+  card: Pick<GQL.Card, 'id'>
+  comment: Pick<GQL.Comment, 'id' | 'visibility' | 'createdAt'>
+}) {
+  const isPrivate = props.comment.visibility === GQL.Visibility.Private
   return (
     <span className="small d-flex">
-      <Link href={commentRoute({ cardId: props.card.id, commentId: props.comment.id })}>
-        <a className="d-flex align-items-center">
-          <BiLink className="me-1" />
-          <ReactTimeAgo timeStyle="twitter-minute-now" date={props.comment.createdAt} />
-        </a>
+      <Link
+        href={commentRoute({ cardId: props.card.id, commentId: props.comment.id })}
+        className="d-flex align-items-center"
+      >
+        <BiLink className="me-1" />
+        <ReactTimeAgo timeStyle="twitter-minute-now" date={props.comment.createdAt} />
       </Link>
       {isPrivate && <span className="ms-2">🔒</span>}
     </span>
@@ -40,8 +57,8 @@ function InfoHeader(props: { card: Card; comment: Comment_ }) {
 
 // Comment in "normal" mode
 function ShowCommentBody(props: {
-  card: Card
-  comment: Comment_
+  card: Pick<GQL.Card, 'id'>
+  comment: Pick<GQL.Comment, 'id' | 'content' | 'visibility' | 'pinned' | 'createdAt' | 'canEdit'>
   afterDelete?: () => void
   startEditing: () => void
   openReplyModal: () => void
@@ -76,10 +93,14 @@ function ShowCommentBody(props: {
 }
 
 // Comment in "edit" mode
-function EditCommentBody(props: { card: Card; comment: Comment_; stopEditing: () => void }) {
+function EditCommentBody(props: {
+  card: Pick<GQL.Card, 'id'>
+  comment: Pick<GQL.Comment, 'id' | 'content' | 'visibility' | 'createdAt' | 'canEdit'>
+  stopEditing: () => void
+}) {
   const { comment } = props
   const editorRef: RefObject<TiptapMethods> = React.useRef(null)
-  const updateCommentMutation = useUpdateComment()
+  const updateCommentContentMutation = useUpdateCommentContent()
   return (
     <>
       <div className="d-flex justify-content-between" style={{ marginBottom: '.3em' }}>
@@ -89,9 +110,11 @@ function EditCommentBody(props: { card: Card; comment: Comment_; stopEditing: ()
         initialValues={{}}
         onSubmit={async () => {
           if (!editorRef.current) throw Error('Editor is not initialized')
-          await updateCommentMutation.mutateAsync({
-            commentId: comment.id,
-            content: editorRef.current.getMarkdown(),
+          await updateCommentContentMutation.do({
+            variables: {
+              id: comment.id,
+              content: editorRef.current.getMarkdown(),
+            },
           })
           props.stopEditing()
         }}
@@ -108,9 +131,17 @@ function EditCommentBody(props: { card: Card; comment: Comment_; stopEditing: ()
             </div>
             <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
               Save
-              {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+              {formik.isSubmitting && (
+                <B.Spinner className="ms-2" size="sm" animation="border" role="status" />
+              )}
             </B.Button>
-            <B.Button size="sm" variant="secondary" type="button" className="ms-2" onClick={props.stopEditing}>
+            <B.Button
+              size="sm"
+              variant="secondary"
+              type="button"
+              className="ms-2"
+              onClick={props.stopEditing}
+            >
               Cancel
             </B.Button>
           </B.Form>
@@ -120,7 +151,11 @@ function EditCommentBody(props: { card: Card; comment: Comment_; stopEditing: ()
   )
 }
 
-function Replies(props: { card; replies; afterDelete?: (id: Reply['id']) => void }) {
+function Replies(props: {
+  card: Pick<GQL.Card, 'id'>
+  replies
+  afterDelete?: (id: Reply['id']) => void
+}) {
   const replies = _.orderBy(props.replies, ['createdAt'], ['asc'])
   return (
     <div className="woc-comment-replies">
@@ -138,16 +173,19 @@ function Replies(props: { card; replies; afterDelete?: (id: Reply['id']) => void
   )
 }
 
-export function CommentComponent(props: { card: Card; comment: Comment_; replies: Reply_[] }) {
+export function CommentComponent(props: {
+  card: Pick<GQL.Card, 'id'>
+  comment: Pick<GQL.Comment, 'id' | 'visibility' | 'pinned' | 'content' | 'createdAt' | 'canEdit'>
+  replies: Reply_[]
+}) {
   const { comment } = props
 
-  const settings = commentSettings(comment)
-  const isPrivate = settings.visibility === 'private'
+  const isPrivate = comment.visibility === GQL.Visibility.Private
   const classes = `
     woc-comment
     ${styles.comment}
     ${isPrivate ? styles.commentPrivate : ''}
-    ${settings.pinned ? styles.commentPinned : ''}
+    ${comment.pinned ? styles.commentPinned : ''}
     `
 
   // Is the comment itself (not the replies) in the editing mode now?

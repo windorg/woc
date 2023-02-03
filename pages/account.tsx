@@ -3,31 +3,30 @@ import Head from 'next/head'
 import React from 'react'
 import { AccountCrumb } from '../components/breadcrumbs'
 import Link from 'next/link'
-import { getSession, signIn, useSession } from 'next-auth/react'
-import { SuperJSONResult } from 'superjson/dist/types'
-import { deserialize, serialize } from 'superjson'
+import { useSession } from 'next-auth/react'
 import _ from 'lodash'
 import * as B from 'react-bootstrap'
 import { beeminderAuthUrl } from 'lib/beeminder'
-import { userSettings } from '@lib/model-settings'
-import { useUser } from '@lib/queries/user'
-import { GetUserData } from './api/users/get'
-import { User } from '@prisma/client'
+import { graphql } from 'generated/graphql'
+import { useQuery } from '@apollo/client'
 
-type Props = Record<string, never>
+const _getLoggedInUser = graphql(`
+  query getLoggedInUser($userId: UUID!) {
+    user(id: $userId) {
+      id
+      displayName
+      handle
+      beeminderUsername
+    }
+  }
+`)
 
-async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
-  const props: Props = {}
-  return serialize(props)
-}
-
-const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
+const Account: NextPage = () => {
   const { data: session } = useSession()
   const userId = session?.userId ?? null
-  const initialProps = deserialize<Props>(serializedInitialProps)
 
-  const userQuery = useUser({ userId: userId! })
-  const user = userQuery.data ? (userQuery.data as GetUserData & { settings: User['settings'] }) : null
+  const userQuery = useQuery(_getLoggedInUser)
+  const user = userQuery.data ? userQuery.data.user : null
 
   return (
     <>
@@ -43,12 +42,10 @@ const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
         <>
           <ul>
             <li>
-              <Link href={beeminderAuthUrl()}>
-                <a>Connect to Beeminder</a>
-              </Link>
+              <Link href={beeminderAuthUrl()}>Connect to Beeminder</Link>
               {user
-                ? userSettings(user).beeminderUsername
-                  ? ` (connected as ${userSettings(user).beeminderUsername!})`
+                ? user?.beeminderUsername
+                  ? ` (connected as ${user.beeminderUsername})`
                   : ''
                 : ' (...)'}
             </li>
@@ -62,7 +59,5 @@ const Account: NextPage<SuperJSONResult> = (serializedInitialProps) => {
     </>
   )
 }
-
-Account.getInitialProps = getInitialProps
 
 export default Account

@@ -44,5 +44,10 @@
   "exclude": [
     "node_modules",
     "tiptap"
-  ]
+  ],
+  "ts-node": {
+    "require": [
+      "tsconfig-paths/register"
+    ]
+  }
 }

@@ -1,7 +1,7 @@
-import gravatar from 'gravatar'
+import { getUserpicUrl } from '@lib/userpic'
 
-export function Gravatar(props: { email: string; size: 'small' | 'tiny' }) {
-  const url = gravatar.url(props.email, { protocol: 'https', size: '64', default: 'mp' })
+export function Gravatar(props: { url?: string; size: 'small' | 'tiny' }) {
   const size = props.size === 'small' ? '32' : '16'
+  const url = props.url || getUserpicUrl(null)
   return <img className="userpic" width={size} height={size} src={url} alt="Profile picture" />
 }

@@ -48,14 +48,6 @@ module.exports = {
     '@typescript-eslint/no-namespace': ['off'],
     '@typescript-eslint/ban-ts-comment': ['off'],
     'prefer-const': ['off'],
-    'no-unused-expressions': [
-      'error',
-      {
-        allowShortCircuit: false,
-        allowTernary: false,
-        allowTaggedTemplates: false,
-      },
-    ],
     'no-implicit-globals': 'off',
     'no-restricted-syntax': [
       'warn',
