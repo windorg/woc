@@ -1,6 +1,5 @@
-import { Card, Reply, User } from '@prisma/client'
-import { replySettings } from '../lib/model-settings'
-import React, { createRef, RefObject, useState } from 'react'
+import * as GQL from 'generated/graphql/graphql'
+import React, { RefObject, useState } from 'react'
 import Link from 'next/link'
 import { RenderedMarkdown, markdownToHtml } from '../lib/markdown'
 import ReactTimeAgo from 'react-time-ago'
@@ -12,52 +11,49 @@ import { LinkButton } from './linkButton'
 import { ReplyMenu } from './replyMenu'
 import { replyRoute, userRoute } from 'lib/routes'
 import { Formik } from 'formik'
-import { useUpdateReply } from 'lib/queries/replies'
+import { useMutation } from '@apollo/client'
+import { graphql } from 'generated/graphql'
 
-export type Reply_ = Reply & {
-  // The author can be 'null' if it was deleted. We don't delete replies if the author's account is gone.
-  author: Pick<User, 'id' | 'email' | 'displayName'> | null
-  canEdit: boolean
-  // Unlike other entities, canEdit ≠ canDelete for replies. Comment owners can always delete replies, even ones left by
-  // other people.
-  canDelete: boolean
+export type Reply_ = Pick<
+  GQL.Reply,
+  'id' | 'content' | 'createdAt' | 'canEdit' | 'canDelete' | 'visibility'
+> & {
+  // The author can be 'undefined' if it was deleted.
+  // We don't delete replies if the author's account is gone.
+  author: Pick<GQL.User, 'id' | 'displayName' | 'userpicUrl'> | undefined
 }
 
-function AuthorPic(props: { author: Pick<User, 'id' | 'email'> | null }) {
+function AuthorPic(props: { author: Pick<GQL.User, 'id' | 'userpicUrl'> | undefined }) {
   return props.author ? (
     <Link href={userRoute(props.author.id)}>
-      <a>
-        <Gravatar email={props.author.email} size="tiny" />
-      </a>
+      <Gravatar url={props.author.userpicUrl} size="tiny" />
     </Link>
   ) : (
-    <Gravatar email="" size="tiny" />
+    <Gravatar size="tiny" />
   )
 }
 
 // Timestamp & the little lock
-function InfoHeader(props: { card: Card; reply: Reply_ }) {
+function InfoHeader(props: { card: Pick<GQL.Card, 'id'>; reply: Reply_ }) {
   const { reply } = props
-  const settings = replySettings(reply)
-  const isPrivate = settings.visibility === 'private'
+  const isPrivate = reply.visibility === GQL.Visibility.Private
   // TODO when we implement private replies, check that the lock can be shown
   return (
     <span className="small d-inline-flex">
       <strong>
         {reply.author ? (
-          <Link href={userRoute(reply.author.id)}>
-            <a>{reply.author.displayName}</a>
-          </Link>
+          <Link href={userRoute(reply.author.id)}>{reply.author.displayName}</Link>
         ) : (
           '[deleted]'
         )}
       </strong>
       <span className="ms-2" />
-      <Link href={replyRoute({ cardId: props.card.id, replyId: reply.id })}>
-        <a className="d-flex align-items-center">
-          <BiLink className="me-1" />
-          <ReactTimeAgo timeStyle="twitter-minute-now" date={reply.createdAt} />
-        </a>
+      <Link
+        href={replyRoute({ cardId: props.card.id, replyId: reply.id })}
+        className="d-flex align-items-center"
+      >
+        <BiLink className="me-1" />
+        <ReactTimeAgo timeStyle="twitter-minute-now" date={reply.createdAt} />
       </Link>
       {isPrivate && <span className="ms-2">🔒</span>}
     </span>
@@ -65,10 +61,14 @@ function InfoHeader(props: { card: Card; reply: Reply_ }) {
 }
 
 // Component in "normal" mode
-function ShowReply(props: { card: Card; reply: Reply_; afterDelete?: () => void; startEditing: () => void }) {
+function ShowReply(props: {
+  card: Pick<GQL.Card, 'id'>
+  reply: Reply_
+  afterDelete?: () => void
+  startEditing: () => void
+}) {
   const { card, reply } = props
-  const settings = replySettings(reply)
-  const isPrivate = settings.visibility === 'private'
+  const isPrivate = reply.visibility === GQL.Visibility.Private
   const classes = `
     woc-reply
     d-flex
@@ -85,7 +85,10 @@ function ShowReply(props: { card: Card; reply: Reply_; afterDelete?: () => void;
       </div>
       {/* All the align-items-* is necessary for the edit button to align with the info header */}
       <div className="flex-grow-1 ms-1" style={{ marginTop: '3px' }}>
-        <div className="d-flex align-items-center" style={{ lineHeight: '100%', marginBottom: '.3em' }}>
+        <div
+          className="d-flex align-items-center"
+          style={{ lineHeight: '100%', marginBottom: '.3em' }}
+        >
           <InfoHeader {...props} />
           <div className="d-inline-flex small text-muted ms-4 align-items-end">
             {props.reply.canEdit && (
@@ -99,20 +102,39 @@ function ShowReply(props: { card: Card; reply: Reply_; afterDelete?: () => void;
             <ReplyMenu {...props} />
           </div>
         </div>
-        <RenderedMarkdown className="woc-reply-content rendered-content small" markdown={reply.content} />
+        <RenderedMarkdown
+          className="woc-reply-content rendered-content small"
+          markdown={reply.content}
+        />
       </div>
     </div>
   )
 }
 
+const useUpdateReplyContent = () => {
+  const [action, result] = useMutation(
+    graphql(`
+      mutation updateReplyContent($id: UUID!, $content: String!) {
+        updateReply(input: { id: $id, content: $content }) {
+          reply {
+            id
+            content
+          }
+        }
+      }
+    `)
+    // We don't have to evict anything from the cache because Apollo will automatically update the cache with newly fetched data.
+  )
+  return { do: action, result }
+}
+
 // Component in "edit" mode
-function EditReply(props: { card: Card; reply: Reply_; stopEditing: () => void }) {
+function EditReply(props: { card: Pick<GQL.Card, 'id'>; reply: Reply_; stopEditing: () => void }) {
   const editorRef: RefObject<TiptapMethods> = React.useRef(null)
-  const updateReplyMutation = useUpdateReply()
+  const updateReplyMutation = useUpdateReplyContent()
 
   const { card, reply } = props
-  const settings = replySettings(reply)
-  const isPrivate = settings.visibility === 'private'
+  const isPrivate = reply.visibility === GQL.Visibility.Private
   const classes = `
       woc-reply
       d-flex
@@ -126,16 +148,21 @@ function EditReply(props: { card: Card; reply: Reply_; stopEditing: () => void }
         <AuthorPic author={reply.author} />
       </div>
       <div className="flex-grow-1 ms-1" style={{ marginTop: '3px' }}>
-        <div className="d-flex align-items-center" style={{ lineHeight: '100%', marginBottom: '.3em' }}>
+        <div
+          className="d-flex align-items-center"
+          style={{ lineHeight: '100%', marginBottom: '.3em' }}
+        >
           <InfoHeader {...props} />
         </div>
         <Formik
           initialValues={{}}
           onSubmit={async () => {
             if (!editorRef.current) throw Error('Editor is not initialized')
-            await updateReplyMutation.mutateAsync({
-              replyId: reply.id,
-              content: editorRef.current.getMarkdown(),
+            await updateReplyMutation.do({
+              variables: {
+                id: reply.id,
+                content: editorRef.current.getMarkdown(),
+              },
             })
             props.stopEditing()
           }}
@@ -153,9 +180,17 @@ function EditReply(props: { card: Card; reply: Reply_; stopEditing: () => void }
               </div>
               <B.Button size="sm" variant="primary" type="submit" disabled={formik.isSubmitting}>
                 Save
-                {formik.isSubmitting && <B.Spinner className="ms-2" size="sm" animation="border" role="status" />}
+                {formik.isSubmitting && (
+                  <B.Spinner className="ms-2" size="sm" animation="border" role="status" />
+                )}
               </B.Button>
-              <B.Button size="sm" variant="secondary" type="button" className="ms-2" onClick={props.stopEditing}>
+              <B.Button
+                size="sm"
+                variant="secondary"
+                type="button"
+                className="ms-2"
+                onClick={props.stopEditing}
+              >
                 Cancel
               </B.Button>
             </B.Form>
@@ -166,7 +201,11 @@ function EditReply(props: { card: Card; reply: Reply_; stopEditing: () => void }
   )
 }
 
-export function ReplyComponent(props: { card: Card; reply: Reply_; afterDelete?: () => void }) {
+export function ReplyComponent(props: {
+  card: Pick<GQL.Card, 'id'>
+  reply: Reply_
+  afterDelete?: () => void
+}) {
   const [editing, setEditing] = useState(false)
   return editing ? (
     <EditReply {...props} stopEditing={() => setEditing(false)} />

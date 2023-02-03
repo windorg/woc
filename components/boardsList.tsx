@@ -1,16 +1,14 @@
-import { Card } from '@prisma/client'
+import type * as GQL from 'generated/graphql/graphql'
 import _ from 'lodash'
 import { useState } from 'react'
 import * as B from 'react-bootstrap'
 import { BoardCard } from './boardCard'
 import { CreateBoardModal } from './createBoardModal'
 
-type Board_ = Omit<Card, 'childrenOrder'>
-
 export function BoardsList(props: {
   allowNewBoard: boolean
   heading: string
-  boards: Board_[]
+  boards: Pick<GQL.Card, 'id' | 'title' | 'ownerId' | 'visibility'>[]
   // If other-board, we will show user handles
   kind: 'own-board' | 'other-board'
 }) {
@@ -29,7 +27,12 @@ export function BoardsList(props: {
         {props.heading}
         {props.allowNewBoard && (
           <>
-            <B.Button className="ms-4" size="sm" variant="outline-primary" onClick={() => setCreateBoardShown(true)}>
+            <B.Button
+              className="ms-4"
+              size="sm"
+              variant="outline-primary"
+              onClick={() => setCreateBoardShown(true)}
+            >
               + New
             </B.Button>
           </>

@@ -1,7 +1,6 @@
 import * as React from 'react'
 import * as B from 'react-bootstrap'
 import { useSession } from 'next-auth/react'
-import { useCards } from 'lib/queries/cards'
 import { Key } from 'ts-key-enum'
 import { filterSync } from 'lib/array'
 import _ from 'lodash'
@@ -10,6 +9,8 @@ import { useRouter } from 'next/router'
 import styles from './switcherModal.module.scss'
 import scrollIntoView from 'scroll-into-view-if-needed'
 import Link from 'next/link'
+import { graphql } from 'generated/graphql'
+import { useQuery } from '@apollo/client'
 
 // Note: we can't use forwardRef, see https://stackoverflow.com/questions/58469229/react-with-typescript-generics-while-using-react-forwardref/58473012
 
@@ -22,11 +23,12 @@ function FilterBox<Item>(props: {
   renderItem: (item: Item) => React.ReactNode
   // What to do when Enter is pressed or an item is clicked
   onSelect: (item: Item) => void
-  searchInputRef?: React.RefObject<HTMLInputElement>
 }) {
   const [searchText, setSearchText] = React.useState('')
   const filteredItems = (
-    !_.isUndefined(props.items) ? filterSync(props.items, (item) => props.match(searchText, item)) : []
+    !_.isUndefined(props.items)
+      ? filterSync(props.items, (item) => props.match(searchText, item))
+      : []
   ).map((item) => ({ ...item, ref: React.createRef<HTMLAnchorElement>() }))
   const [activeItemIndex, setActiveItemIndex] = React.useState(0)
   // Don't allow mouse events when we are navigating with the keyboard
@@ -97,10 +99,10 @@ function FilterBox<Item>(props: {
           name="search"
           id="search"
           autoComplete="off"
+          autoFocus
           value={searchText}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          ref={props.searchInputRef}
         />
         <div className={`mt-3 ${styles.results}`}>
           {props.items ? (
@@ -127,29 +129,48 @@ function FilterBox<Item>(props: {
   )
 }
 
+const _getAllCards = graphql(`
+  query getAllCards($userId: UUID!) {
+    user(id: $userId) {
+      id
+      allCards {
+        id
+        title
+        createdAt
+      }
+    }
+  }
+`)
+
 export function useSwitcherModal() {
   const router = useRouter()
-
-  // NB: autoFocus is broken inside modals so we use a ref and onEntered instead.
-  // See https://github.com/react-bootstrap/react-bootstrap/issues/5102
-  const searchInputRef: React.RefObject<HTMLInputElement> = React.useRef(null)
   const session = useSession().data
-  // This gets both boards and cards now
-  const cardsQuery = useCards({ owners: session ? [session.userId] : [] }, { enabled: session !== null })
 
+  // If focus was on Tiptap, for some reason just doing '.focus()' doesn't work. So we blur the previously focused element, and focus it back when the modal closes. The actual focusing is done via 'autoFocus' on the input.
+  const previousFocus = React.useRef<HTMLElement | null>(null)
   const [isOpen, setIsOpen] = React.useState(false)
+
   const open = React.useCallback(() => {
     setIsOpen(true)
-    searchInputRef.current?.focus()
+    if (document.activeElement instanceof HTMLElement) {
+      previousFocus.current = document.activeElement
+      document.activeElement.blur()
+    }
   }, [setIsOpen])
+
   const close = React.useCallback(() => {
     setIsOpen(false)
+    previousFocus.current?.focus()
+    previousFocus.current = null
   }, [setIsOpen])
-  const focus = () => {
-    searchInputRef.current?.focus()
-  }
 
   const Component = () => {
+    const cardsQuery = useQuery(_getAllCards, {
+      variables: { userId: session?.userId || '' },
+      skip: !session,
+      fetchPolicy: 'cache-and-network',
+      nextFetchPolicy: 'cache-and-network',
+    })
     return (
       session && (
         <B.Modal className={styles.modal} size="lg" show={isOpen} onHide={close}>
@@ -160,14 +181,17 @@ export function useSwitcherModal() {
           <B.Modal.Body>
             <FilterBox
               className={styles.filterBox}
-              items={_.isUndefined(cardsQuery.data) ? undefined : _.orderBy(cardsQuery.data, ['createdAt'], ['desc'])}
+              items={
+                _.isUndefined(cardsQuery.data)
+                  ? undefined
+                  : _.orderBy(cardsQuery.data.user.allCards, ['createdAt'], ['desc'])
+              }
               match={(text, card) => card.title.toLowerCase().includes(text.toLowerCase())}
               renderItem={(card) => <span>{card.title}</span>}
               onSelect={async (card) => {
                 close()
                 await router.push(cardRoute(card.id))
               }}
-              searchInputRef={searchInputRef}
             />
           </B.Modal.Body>
         </B.Modal>
@@ -175,5 +199,5 @@ export function useSwitcherModal() {
     )
   }
 
-  return { Component, isOpen, open, close, focus }
+  return { Component, isOpen, open, close }
 }

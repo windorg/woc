@@ -1,188 +1,197 @@
+import * as GQL from 'generated/graphql/graphql'
 import type { NextPage, NextPageContext } from 'next'
 import Head from 'next/head'
-import type { User, Card, Comment, Reply } from '@prisma/client'
-import { cardSettings, commentSettings } from '../lib/model-settings'
 import * as B from 'react-bootstrap'
 import { BoardsCrumb, UserCrumb, CardCrumb, CardCrumbFetch } from '../components/breadcrumbs'
 import React, { useEffect, useState } from 'react'
 import _ from 'lodash'
-import { SuperJSONResult } from 'superjson/dist/types'
-import { deserialize, serialize } from 'superjson'
-import { getSession } from 'next-auth/react'
 import { EditCardModal } from 'components/editCardModal'
 import { CardActions } from 'components/cardActions'
 import { useRouter } from 'next/router'
 import { cardRoute, boardsRoute } from 'lib/routes'
-import { GetCardData, serverGetCard } from './api/cards/get'
-import { ListCommentsData, serverListComments } from './api/comments/list'
-import { ListRepliesData, serverListReplies } from './api/replies/list'
-import { useCard, useCards } from 'lib/queries/cards'
-import { useComments } from 'lib/queries/comments'
-import { useReplies } from 'lib/queries/replies'
 import { SocialTags } from 'components/socialTags'
 import { MoveCardModal } from 'components/moveCardModal'
-import { isNextExport } from 'lib/export'
-import { ListCardsData, serverListCards } from './api/cards/list'
 import { Subcards } from 'components/card/subcards'
 import { Comments } from 'components/card/comments'
+import { graphql } from 'generated/graphql'
+import { useQuery } from '@apollo/client'
+import { Query } from '@components/query'
 
-type Props = {
-  cardId: Card['id']
-  card?: GetCardData
-  children?: ListCardsData
-  comments?: ListCommentsData
-  replies?: ListRepliesData
-}
-
-async function getInitialProps(context: NextPageContext): Promise<SuperJSONResult> {
-  const cardId = context.query.id as string
-  const props: Props = { cardId }
-  if (typeof window === 'undefined') {
-    if (!isNextExport(context)) {
-      const session = await getSession(context)
-      await serverGetCard(session, { cardId }).then((result) => {
-        if (result.success) props.card = result.data
-      })
-      await serverListCards(session, { parents: [cardId] }).then((result) => {
-        if (result.success) props.children = result.data
-      })
-      await serverListComments(session, { cards: [cardId] }).then((result) => {
-        if (result.success) props.comments = result.data
-      })
-      await serverListReplies(session, { cards: [cardId] }).then((result) => {
-        if (result.success) props.replies = result.data
-      })
-    }
-  }
-  return serialize(props)
-}
-
-const CardPage: NextPage<SuperJSONResult> = (serializedInitialProps) => {
-  const initialProps = deserialize<Props>(serializedInitialProps)
-  const { cardId } = initialProps
-
-  const router = useRouter()
-  const [editing, setEditing] = useState(false)
-  const [moving, setMoving] = useState(false)
-
-  const cardQuery = useCard({ cardId }, { initialData: initialProps.card })
-  const childrenQuery = useCards({ parents: [cardId] }, { initialData: initialProps.children })
-  const commentsQuery = useComments({ cards: [cardId] }, { initialData: initialProps.comments })
-  const repliesQuery = useReplies({ cards: [cardId] }, { initialData: initialProps.replies })
-
-  // TODO all of this is boilerplate
-  if (cardQuery.status === 'loading' || cardQuery.status === 'idle')
-    return (
-      <div className="d-flex mt-5 justify-content-center">
-        <B.Spinner animation="border" />
-      </div>
-    )
-  if (cardQuery.status === 'error') return <B.Alert variant="danger">{(cardQuery.error as Error).message}</B.Alert>
-
-  if (childrenQuery.status === 'loading' || childrenQuery.status === 'idle')
-    return (
-      <div className="d-flex mt-5 justify-content-center">
-        <B.Spinner animation="border" />
-      </div>
-    )
-  if (childrenQuery.status === 'error')
-    return <B.Alert variant="danger">{(childrenQuery.error as Error).message}</B.Alert>
-
-  if (commentsQuery.status === 'loading' || commentsQuery.status === 'idle')
-    return (
-      <div className="d-flex mt-5 justify-content-center">
-        <B.Spinner animation="border" />
-      </div>
-    )
-  if (commentsQuery.status === 'error')
-    return <B.Alert variant="danger">{(commentsQuery.error as Error).message}</B.Alert>
-
-  // TODO we can show the comments before loading the replies
-  if (repliesQuery.status === 'loading' || repliesQuery.status === 'idle')
-    return (
-      <div className="d-flex mt-5 justify-content-center">
-        <B.Spinner animation="border" />
-      </div>
-    )
-  if (repliesQuery.status === 'error')
-    return <B.Alert variant="danger">{(repliesQuery.error as Error).message}</B.Alert>
-
-  const card = cardQuery.data
-  const children = childrenQuery.data
-  const comments = commentsQuery.data
-  const replies = repliesQuery.data
-
-  const isPrivate = cardSettings(card).visibility === 'private'
-
-  return (
-    <>
-      <Head>
-        <title>{card.title} / WOC</title>
-      </Head>
-      <SocialTags
-        title={card.title}
-        description={card.tagline ? `${card.tagline}\n\n— by @${card.owner.handle}` : `— by @${card.owner.handle}`}
-      />
-
-      <B.Breadcrumb>
-        <BoardsCrumb />
-        <UserCrumb user={card.owner} />
-        {card.parentChain.map((id) => (
-          <CardCrumbFetch key={id} cardId={id} />
-        ))}
-        <CardCrumb card={card} active />
-      </B.Breadcrumb>
-
-      {card.canEdit && (
-        <>
-          <EditCardModal
-            card={card}
-            show={editing}
-            onHide={() => setEditing(false)}
-            afterSave={() => setEditing(false)}
-          />
-          <MoveCardModal card={card} show={moving} onHide={() => setMoving(false)} afterMove={() => setMoving(false)} />
-        </>
-      )}
-
-      <h1>
-        {cardSettings(card).archived && (
-          <B.Badge bg="secondary" className="me-2">
-            Archived
-          </B.Badge>
-        )}
-        {isPrivate && '🔒 '}
-        {card.title}
-      </h1>
-
-      {card.tagline && (
-        <div>
-          <span className="text-muted">{card.tagline}</span>
-        </div>
-      )}
-
-      <div className="mb-5" style={{ marginTop: 'calc(0.9rem + 0.3vw)', fontSize: 'calc(0.9rem + 0.3vw)' }}>
-        <CardActions
-          card={card}
-          onEdit={() => setEditing(true)}
-          onMove={() => setMoving(true)}
-          afterDelete={async () => {
-            if (card.parentId) {
-              await router.replace(cardRoute(card.parentId))
-            } else {
-              await router.replace(boardsRoute())
-            }
-          }}
-        />
-      </div>
-
-      <Subcards parent={card} cards={children} />
-
-      <Comments card={card} comments={comments} replies={replies} />
-    </>
+const useGetCard = (variables: { id: string }) => {
+  return useQuery(
+    graphql(`
+      query getCard($id: UUID!) {
+        card(id: $id) {
+          id
+          title
+          tagline
+          visibility
+          parentId
+          canEdit
+          archived
+          reverseOrder
+          parentChain
+          childrenOrder
+          children {
+            id
+            title
+            visibility
+            tagline
+            archived
+            commentCount
+          }
+          owner {
+            id
+            handle
+          }
+        }
+      }
+    `),
+    { variables }
   )
 }
 
-CardPage.getInitialProps = getInitialProps
+const useGetComments = (variables: { cardId: string }) => {
+  return useQuery(
+    graphql(`
+      query getComments($cardId: UUID!) {
+        card(id: $cardId) {
+          id
+          comments {
+            id
+            content
+            createdAt
+            visibility
+            pinned
+            canEdit
+            replies {
+              id
+              content
+              visibility
+              canEdit
+              createdAt
+              canDelete
+              author {
+                id
+                displayName
+                userpicUrl
+              }
+            }
+          }
+        }
+      }
+    `),
+    { variables }
+  )
+}
+
+const CardPage: NextPage = () => {
+  const router = useRouter()
+
+  const cardId = router.query.id as string
+
+  const [editing, setEditing] = useState(false)
+  const [moving, setMoving] = useState(false)
+
+  const cardQuery = useGetCard({ id: cardId })
+  const commentsQuery = useGetComments({ cardId })
+
+  return (
+    <>
+      <Query queries={{ cardQuery }}>
+        {({ cardQuery: { card } }) => (
+          <>
+            {/* Page <head> */}
+            <Head>
+              <title>{card.title} / WOC</title>
+            </Head>
+            <SocialTags
+              title={card.title}
+              description={
+                card.tagline
+                  ? `${card.tagline}\n\n— by @${card.owner.handle}`
+                  : `— by @${card.owner.handle}`
+              }
+            />
+
+            {/* Breadcrumbs bar */}
+            <B.Breadcrumb>
+              <BoardsCrumb />
+              <UserCrumb user={card.owner} />
+              {card.parentChain.map((id) => (
+                <CardCrumbFetch key={id} cardId={id} />
+              ))}
+              <CardCrumb card={card} active />
+            </B.Breadcrumb>
+
+            {/* Modals */}
+            {card.canEdit && (
+              <>
+                <EditCardModal
+                  card={card}
+                  show={editing}
+                  onHide={() => setEditing(false)}
+                  afterSave={() => setEditing(false)}
+                />
+                <MoveCardModal
+                  card={card}
+                  show={moving}
+                  onHide={() => setMoving(false)}
+                  afterMove={() => setMoving(false)}
+                />
+              </>
+            )}
+
+            {/* Card title and tagline */}
+            <h1>
+              {card.archived && (
+                <B.Badge bg="secondary" className="me-2">
+                  Archived
+                </B.Badge>
+              )}
+              {card.visibility === GQL.Visibility.Private && '🔒 '}
+              {card.title}
+            </h1>
+            {card.tagline && (
+              <div>
+                <span className="text-muted">{card.tagline}</span>
+              </div>
+            )}
+
+            {/* Card actions */}
+            <div
+              className="mb-5"
+              style={{ marginTop: 'calc(0.9rem + 0.3vw)', fontSize: 'calc(0.9rem + 0.3vw)' }}
+            >
+              <CardActions
+                card={card}
+                onEdit={() => setEditing(true)}
+                onMove={() => setMoving(true)}
+                afterDelete={async () =>
+                  router.replace(card.parentId ? cardRoute(card.parentId) : boardsRoute())
+                }
+              />
+            </div>
+
+            {/* List of child cards */}
+            <Subcards parent={card} cards={card.children} />
+          </>
+        )}
+      </Query>
+
+      {/* Comments with replies */}
+      <Query queries={{ cardQuery, commentsQuery }}>
+        {({
+          cardQuery: { card },
+          commentsQuery: {
+            card: { comments },
+          },
+        }) => {
+          return <Comments card={card} comments={comments} />
+        }}
+      </Query>
+    </>
+  )
+}
 
 export default CardPage

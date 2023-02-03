@@ -1,16 +1,57 @@
 import * as Dnd from '@dnd-kit/core'
 import * as DndSort from '@dnd-kit/sortable'
 import * as DndModifiers from '@dnd-kit/modifiers'
-import { Card } from '@prisma/client'
+import type * as GQL from 'generated/graphql/graphql'
 import { CardsListItem } from './cardsListItem'
 import { CSS } from '@dnd-kit/utilities'
-import { useReorderCards } from 'lib/queries/cards'
-import { filterSync, insertPosition } from 'lib/array'
+import { deleteSync, insertPosition } from 'lib/array'
+import { graphql } from 'generated/graphql'
+import { useApolloClient, useMutation } from '@apollo/client'
+import { evictCardChildren } from '@lib/graphql/cache'
+import { reorderCardChildren } from '@lib/reorderCardChildren'
+import _ from 'lodash'
 
-type Card_ = Omit<Card, 'childrenOrder'> & { _count: { comments: number } }
+const useReorderChild = () => {
+  const cache = useApolloClient().cache
+  const [action, result] = useMutation(
+    graphql(`
+      mutation reorderChild($id: UUID!, $childId: UUID!, $before: UUID, $after: UUID) {
+        reorderCardChildren(input: { id: $id, childId: $childId, before: $before, after: $after }) {
+          card {
+            id
+            childrenOrder
+          }
+        }
+      }
+    `),
+    {
+      update: (cache, { data }, { variables }) => {
+        evictCardChildren(cache, { cardId: data!.reorderCardChildren.card.id })
+      },
+    }
+  )
+  return {
+    do: (async (options) => {
+      cache.modify({
+        optimistic: true,
+        id: cache.identify({ __typename: 'Card', id: options!.variables!.id }),
+        fields: {
+          childrenOrder: (previousChildrenOrder) =>
+            reorderCardChildren(options!.variables!, previousChildrenOrder, console.error),
+        },
+      })
+      return action(options)
+    }) satisfies typeof action,
+    result,
+  }
+}
 
 // A list of cards, supporting drag-and-drop
-export function CardsList(props: { parentId: Card['id']; cards: Card_[]; allowEdit: boolean }) {
+export function CardsList(props: {
+  parentId: GQL.Card['id']
+  cards: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'visibility' | 'commentCount'>[]
+  allowEdit: boolean
+}) {
   const sensors = Dnd.useSensors(
     Dnd.useSensor(Dnd.MouseSensor, {
       activationConstraint: {
@@ -28,29 +69,28 @@ export function CardsList(props: { parentId: Card['id']; cards: Card_[]; allowEd
     })
   )
 
-  const reorderCardsMutation = useReorderCards()
+  const reorderChildMutation = useReorderChild()
 
   const handleDragEnd = async (event: Dnd.DragEndEvent) => {
     const { active, over } = event
     if (!over) return
     const ids = props.cards.map((x) => x.id)
-    // The semantics of 'over' is weird — it's the element before if we're dragging back, and element after
-    // if we're dragging forward. However, I've checked and the index of over == the resulting index in the list.
+    // The semantics of 'over' is weird — it's the element before if we're dragging back, and
+    // element after if we're dragging forward. However, I've checked and the index of over == the
+    // resulting index in the list.
     const newIndex = ids.indexOf(over.id)
-    // If we know the resulting index, we can just apply the reordering and then look at before/after. Note: we
-    // can't use 'position' because it ignores archived cards.
-    const newOrder = insertPosition(
-      active.id,
-      filterSync(ids, (id) => id !== active.id),
-      newIndex
-    )
-    const prev: Card['id'] | undefined = newOrder[newIndex - 1]
-    const next: Card['id'] | undefined = newOrder[newIndex + 1]
+    // If we know the resulting index, we can just apply the reordering and then look at
+    // before/after. Note: we can't use 'position' because it ignores archived cards.
+    const newOrder = insertPosition(active.id, deleteSync(ids, active.id), newIndex)
+    const prev: GQL.Card['id'] | undefined = newOrder[newIndex - 1]
+    const next: GQL.Card['id'] | undefined = newOrder[newIndex + 1]
     if (active.id !== over.id) {
-      await reorderCardsMutation.mutateAsync({
-        parentId: props.parentId,
-        cardId: active.id,
-        ...(next ? { before: next } : { after: prev }),
+      await reorderChildMutation.do({
+        variables: {
+          id: props.parentId,
+          childId: active.id,
+          ...(next ? { before: next } : { after: prev }),
+        },
       })
     }
   }
@@ -91,11 +131,14 @@ function animateLayoutChanges(args) {
   return true
 }
 
-function Sortable(props: { card: Card_ }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = DndSort.useSortable({
-    animateLayoutChanges,
-    id: props.card.id,
-  })
+function Sortable(props: {
+  card: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'visibility' | 'commentCount'>
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    DndSort.useSortable({
+      animateLayoutChanges,
+      id: props.card.id,
+    })
 
   const style = {
     transform: CSS.Translate.toString(transform),
