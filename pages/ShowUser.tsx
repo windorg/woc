@@ -77,6 +77,7 @@ const useGetUser = (variables: { userId: string }) => {
             id
             createdAt
             title
+            tagline
             ownerId
             visibility
           }

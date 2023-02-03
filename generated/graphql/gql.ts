@@ -14,7 +14,7 @@ import { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/
  */
 const documents = {
     "\n      mutation createComment($cardId: UUID!, $content: String!, $private: Boolean!) {\n        createComment(cardId: $cardId, content: $content, private: $private) {\n          id\n        }\n      }\n    ": types.CreateCommentDocument,
-    "\n  query getBoardOwner($userId: UUID!) {\n    user(id: $userId) {\n      id\n      displayName\n      handle\n    }\n  }\n": types.GetBoardOwnerDocument,
+    "\n      query getBoardOwner($userId: UUID!) {\n        user(id: $userId) {\n          id\n          displayName\n          handle\n        }\n      }\n    ": types.GetBoardOwnerDocument,
     "\n  query getCardInfo($id: UUID!) {\n    card(id: $id) {\n      title\n      visibility\n    }\n  }\n": types.GetCardInfoDocument,
     "\n      mutation createCard($parentId: UUID!, $title: String!, $private: Boolean!) {\n        createCard(parentId: $parentId, title: $title, private: $private) {\n          id\n        }\n      }\n    ": types.CreateCardDocument,
     "\n      mutation reorderChild($id: UUID!, $childId: UUID!, $before: UUID, $after: UUID) {\n        reorderCardChildren(input: { id: $id, childId: $childId, before: $before, after: $after }) {\n          card {\n            id\n            childrenOrder\n          }\n        }\n      }\n    ": types.ReorderChildDocument,
@@ -31,10 +31,10 @@ const documents = {
     "\n      mutation updateReplyContent($id: UUID!, $content: String!) {\n        updateReply(input: { id: $id, content: $content }) {\n          reply {\n            id\n            content\n          }\n        }\n      }\n    ": types.UpdateReplyContentDocument,
     "\n      mutation deleteReply($id: UUID!) {\n        deleteReply(id: $id) {\n          comment {\n            id\n          }\n        }\n      }\n    ": types.DeleteReplyDocument,
     "\n  query getAllCards($userId: UUID!) {\n    user(id: $userId) {\n      id\n      allCards {\n        id\n        title\n        createdAt\n      }\n    }\n  }\n": types.GetAllCardsDocument,
-    "\n      query getTopLevelCards {\n        topLevelCards {\n          id\n          createdAt\n          title\n          ownerId\n          visibility\n        }\n      }\n    ": types.GetTopLevelCardsDocument,
+    "\n      query getTopLevelCards {\n        topLevelCards {\n          id\n          createdAt\n          title\n          tagline\n          ownerId\n          visibility\n        }\n      }\n    ": types.GetTopLevelCardsDocument,
     "\n  mutation followUser($userId: UUID!) {\n    followUser(id: $userId) {\n      id\n      followed\n    }\n  }\n": types.FollowUserDocument,
     "\n  mutation unfollowUser($userId: UUID!) {\n    unfollowUser(id: $userId) {\n      id\n      followed\n    }\n  }\n": types.UnfollowUserDocument,
-    "\n      query getUser($userId: UUID!) {\n        user(id: $userId) {\n          id\n          displayName\n          handle\n          followed\n          topLevelCards {\n            id\n            createdAt\n            title\n            ownerId\n            visibility\n          }\n        }\n      }\n    ": types.GetUserDocument,
+    "\n      query getUser($userId: UUID!) {\n        user(id: $userId) {\n          id\n          displayName\n          handle\n          followed\n          topLevelCards {\n            id\n            createdAt\n            title\n            tagline\n            ownerId\n            visibility\n          }\n        }\n      }\n    ": types.GetUserDocument,
     "\n  query getLoggedInUser($userId: UUID!) {\n    user(id: $userId) {\n      id\n      displayName\n      handle\n      beeminderUsername\n    }\n  }\n": types.GetLoggedInUserDocument,
     "\n      query getCard($id: UUID!) {\n        card(id: $id) {\n          id\n          title\n          tagline\n          visibility\n          parentId\n          canEdit\n          archived\n          reverseOrder\n          parentChain\n          childrenOrder\n          children {\n            id\n            title\n            visibility\n            tagline\n            archived\n            commentCount\n          }\n          owner {\n            id\n            handle\n          }\n        }\n      }\n    ": types.GetCardDocument,
     "\n      query getComments($cardId: UUID!) {\n        card(id: $cardId) {\n          id\n          comments {\n            id\n            content\n            createdAt\n            visibility\n            pinned\n            canEdit\n            replies {\n              id\n              content\n              visibility\n              canEdit\n              createdAt\n              canDelete\n              author {\n                id\n                displayName\n                userpicUrl\n              }\n            }\n          }\n        }\n      }\n    ": types.GetCommentsDocument,
@@ -61,7 +61,7 @@ export function graphql(source: "\n      mutation createComment($cardId: UUID!, 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query getBoardOwner($userId: UUID!) {\n    user(id: $userId) {\n      id\n      displayName\n      handle\n    }\n  }\n"): (typeof documents)["\n  query getBoardOwner($userId: UUID!) {\n    user(id: $userId) {\n      id\n      displayName\n      handle\n    }\n  }\n"];
+export function graphql(source: "\n      query getBoardOwner($userId: UUID!) {\n        user(id: $userId) {\n          id\n          displayName\n          handle\n        }\n      }\n    "): (typeof documents)["\n      query getBoardOwner($userId: UUID!) {\n        user(id: $userId) {\n          id\n          displayName\n          handle\n        }\n      }\n    "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -129,7 +129,7 @@ export function graphql(source: "\n  query getAllCards($userId: UUID!) {\n    us
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n      query getTopLevelCards {\n        topLevelCards {\n          id\n          createdAt\n          title\n          ownerId\n          visibility\n        }\n      }\n    "): (typeof documents)["\n      query getTopLevelCards {\n        topLevelCards {\n          id\n          createdAt\n          title\n          ownerId\n          visibility\n        }\n      }\n    "];
+export function graphql(source: "\n      query getTopLevelCards {\n        topLevelCards {\n          id\n          createdAt\n          title\n          tagline\n          ownerId\n          visibility\n        }\n      }\n    "): (typeof documents)["\n      query getTopLevelCards {\n        topLevelCards {\n          id\n          createdAt\n          title\n          tagline\n          ownerId\n          visibility\n        }\n      }\n    "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -141,7 +141,7 @@ export function graphql(source: "\n  mutation unfollowUser($userId: UUID!) {\n  
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n      query getUser($userId: UUID!) {\n        user(id: $userId) {\n          id\n          displayName\n          handle\n          followed\n          topLevelCards {\n            id\n            createdAt\n            title\n            ownerId\n            visibility\n          }\n        }\n      }\n    "): (typeof documents)["\n      query getUser($userId: UUID!) {\n        user(id: $userId) {\n          id\n          displayName\n          handle\n          followed\n          topLevelCards {\n            id\n            createdAt\n            title\n            ownerId\n            visibility\n          }\n        }\n      }\n    "];
+export function graphql(source: "\n      query getUser($userId: UUID!) {\n        user(id: $userId) {\n          id\n          displayName\n          handle\n          followed\n          topLevelCards {\n            id\n            createdAt\n            title\n            tagline\n            ownerId\n            visibility\n          }\n        }\n      }\n    "): (typeof documents)["\n      query getUser($userId: UUID!) {\n        user(id: $userId) {\n          id\n          displayName\n          handle\n          followed\n          topLevelCards {\n            id\n            createdAt\n            title\n            tagline\n            ownerId\n            visibility\n          }\n        }\n      }\n    "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

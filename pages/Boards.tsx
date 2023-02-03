@@ -19,6 +19,7 @@ const useGetTopLevelCards = () => {
           id
           createdAt
           title
+          tagline
           ownerId
           visibility
         }
