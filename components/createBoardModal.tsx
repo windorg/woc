@@ -31,6 +31,7 @@ export function CreateBoardModal(props: {
 }) {
   const titleInputRef: React.RefObject<HTMLInputElement> = useRef(null)
   const createTopLevelCardMutation = useCreateTopLevelCard()
+  const formId = React.useId()
   return (
     <B.Modal
       size="lg"
@@ -57,7 +58,7 @@ export function CreateBoardModal(props: {
               <B.Form.Group className="mb-3">
                 <B.Form.Control
                   name="title"
-                  id="title"
+                  id={`title-${formId}`}
                   value={formik.values.title}
                   onChange={formik.handleChange}
                   type="text"
@@ -78,7 +79,7 @@ export function CreateBoardModal(props: {
               </B.Button>
               <B.Form.Check
                 name="private"
-                id="private"
+                id={`private-${formId}`}
                 checked={formik.values.private}
                 onChange={formik.handleChange}
                 type="checkbox"
