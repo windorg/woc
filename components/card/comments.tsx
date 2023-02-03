@@ -4,6 +4,7 @@ import { CommentComponent } from 'components/commentComponent'
 import _ from 'lodash'
 import * as R from 'ramda'
 import styles from './shared.module.scss'
+import { orderBy } from '@lib/array'
 
 type Reply_ = Pick<
   GQL.Reply,
@@ -31,7 +32,7 @@ export function Comments(props: {
     ))
 
   const [pinnedComments, otherComments] = _.partition(
-    _.orderBy(comments, ['createdAt'], ['desc']),
+    orderBy(comments, 'createdAt', 'desc'),
     (comment) => comment.pinned
   )
 

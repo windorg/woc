@@ -75,6 +75,7 @@ const useGetUser = (variables: { userId: string }) => {
           followed
           topLevelCards {
             id
+            createdAt
             title
             ownerId
             visibility

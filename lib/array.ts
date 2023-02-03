@@ -99,3 +99,15 @@ export const insertAfter = <T>(val: T, order: T[], after: T) => {
   const anchorIndex = _.findIndex(order, (x) => x === after)
   return insertPosition(val, order, anchorIndex === -1 ? order.length : anchorIndex + 1)
 }
+
+/**
+ * Order objects by a key.
+ *
+ * Use this instead of `_.orderBy` because it has better typings.
+ */
+export function orderBy<T>(xs: T[], key: keyof T, order: 'asc' | 'desc'): T[]
+export function orderBy<T, S>(xs: T[], key: (x: T) => S, order: 'asc' | 'desc'): T[]
+export function orderBy<T, S>(xs: T[], key: keyof T | ((x: T) => S), order: 'asc' | 'desc'): T[] {
+  // eslint-disable-next-line ban/ban
+  return _.orderBy(xs, key, order)
+}

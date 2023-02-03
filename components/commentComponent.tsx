@@ -9,7 +9,6 @@ import * as B from 'react-bootstrap'
 import styles from './commentComponent.module.scss'
 import { Tiptap, TiptapMethods } from './tiptap'
 import { CommentMenu } from './commentMenu'
-import _ from 'lodash'
 import { ReplyComponent, Reply_ } from './replyComponent'
 import { LinkButton } from './linkButton'
 import { CreateReplyModal } from './createReplyModal'
@@ -17,6 +16,7 @@ import { commentRoute } from 'lib/routes'
 import { Formik } from 'formik'
 import { useMutation } from '@apollo/client'
 import { graphql } from 'generated/graphql'
+import { orderBy } from '@lib/array'
 
 const useUpdateCommentContent = () => {
   const [action, result] = useMutation(
@@ -153,10 +153,10 @@ function EditCommentBody(props: {
 
 function Replies(props: {
   card: Pick<GQL.Card, 'id'>
-  replies
+  replies: Reply_[]
   afterDelete?: (id: Reply['id']) => void
 }) {
-  const replies = _.orderBy(props.replies, ['createdAt'], ['asc'])
+  const replies = orderBy(props.replies, 'createdAt', 'asc')
   return (
     <div className="woc-comment-replies">
       {replies.map((reply) => (

@@ -2,7 +2,7 @@ import * as React from 'react'
 import * as B from 'react-bootstrap'
 import { useSession } from 'next-auth/react'
 import { Key } from 'ts-key-enum'
-import { filterSync } from 'lib/array'
+import { filterSync, orderBy } from 'lib/array'
 import _ from 'lodash'
 import { cardRoute } from 'lib/routes'
 import { useRouter } from 'next/router'
@@ -184,7 +184,7 @@ export function useSwitcherModal() {
               items={
                 _.isUndefined(cardsQuery.data)
                   ? undefined
-                  : _.orderBy(cardsQuery.data.user.allCards, ['createdAt'], ['desc'])
+                  : orderBy(cardsQuery.data.user.allCards, 'createdAt', 'desc')
               }
               match={(text, card) => card.title.toLowerCase().includes(text.toLowerCase())}
               renderItem={(card) => <span>{card.title}</span>}
