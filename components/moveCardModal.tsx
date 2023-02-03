@@ -84,6 +84,9 @@ export function MoveCardModal(props: {
   // selected object is actually an object (a card).
 
   const { card } = props
+
+  const formId = React.useId()
+
   return (
     <B.Modal size="lg" backdrop="static" keyboard={false} show={props.show} onHide={hide}>
       <B.Modal.Header closeButton>
@@ -142,7 +145,7 @@ export function MoveCardModal(props: {
                 <B.Form.Check className="mb-3" name="moveToTopLevel" id="moveToTopLevel">
                   <B.Form.Check.Input
                     name="moveToTopLevel"
-                    id="moveToTopLevel"
+                    id={`moveToTopLevel-${formId}`}
                     checked={formik.values.moveToTopLevel}
                     disabled={card.parentId === null}
                     onChange={formik.handleChange}

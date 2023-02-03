@@ -46,6 +46,9 @@ export function EditCardModal(props: {
   const titleInputRef: React.RefObject<HTMLInputElement> = React.useRef(null)
   const [updateCard, updateCardMutation] = useMutation(_updateCard_EditCardModal)
   const { card } = props
+
+  const formId = React.useId()
+
   return (
     <B.Modal
       size="lg"
@@ -89,7 +92,7 @@ export function EditCardModal(props: {
                       <B.Form.Label>Title</B.Form.Label>
                       <B.Form.Control
                         name="title"
-                        id="title"
+                        id={`title-${formId}`}
                         value={formik.values.title}
                         onChange={formik.handleChange}
                         type="text"
@@ -106,7 +109,7 @@ export function EditCardModal(props: {
                       <B.Form.Label>Tagline</B.Form.Label>
                       <B.Form.Control
                         name="tagline"
-                        id="tagline"
+                        id={`tagline-${formId}`}
                         value={formik.values.tagline}
                         onChange={formik.handleChange}
                         type="text"
@@ -118,10 +121,10 @@ export function EditCardModal(props: {
                       />
                     </B.Form.Group>
 
-                    <B.Form.Check name="reverseOrder" id="reverseOrder" className="mb-3">
+                    <B.Form.Check name="reverseOrder" id={`reverse-${formId}`} className="mb-3">
                       <B.Form.Check.Input
                         name="reverseOrder"
-                        id="reverseOrder"
+                        id={`reverse-${formId}`}
                         checked={formik.values.reverseOrder}
                         onChange={formik.handleChange}
                         type="checkbox"
@@ -148,7 +151,7 @@ export function EditCardModal(props: {
                       <B.Form.Label>Beeminder goal slug</B.Form.Label>
                       <B.Form.Control
                         name="beeminderGoal"
-                        id="beeminderGoal"
+                        id={`beeminderGoal-${formId}`}
                         value={formik.values.beeminderGoal}
                         onChange={formik.handleChange}
                         type="text"

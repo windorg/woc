@@ -1,6 +1,6 @@
 import { Card, Comment } from '@prisma/client'
 import * as B from 'react-bootstrap'
-import React from 'react'
+import React, { useId } from 'react'
 import { Tiptap, TiptapMethods } from '../components/tiptap'
 import { Formik } from 'formik'
 import { useMutation } from '@apollo/client'
@@ -33,6 +33,7 @@ export function AddCommentForm(props: {
 }) {
   const editorRef = React.useRef<TiptapMethods>(null)
   const createCommentMutation = useCreateComment()
+  const formId = useId()
   return (
     <Formik
       initialValues={{ private: false }}
@@ -68,7 +69,7 @@ export function AddCommentForm(props: {
           </B.Button>
           <B.Form.Check
             name="private"
-            id="private"
+            id={`private-${formId}`}
             checked={formik.values.private}
             onChange={formik.handleChange}
             type="checkbox"

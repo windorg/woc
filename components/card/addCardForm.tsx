@@ -30,6 +30,9 @@ export function AddCardForm(props: { parentId: GQL.Card['id'] }) {
   const [focused, setFocused] = React.useState(false)
   const inputRef: React.RefObject<HTMLTextAreaElement> = useRef(null)
   const createCardMutation = useCreateCard()
+
+  const formId = React.useId()
+
   return (
     <Formik
       initialValues={{
@@ -68,7 +71,7 @@ export function AddCardForm(props: { parentId: GQL.Card['id'] }) {
               }}
               as={TextareaAutosize}
               name="title"
-              id="title"
+              id={`title-${formId}`}
               value={formik.values.title}
               onChange={formik.handleChange}
               type="text"
@@ -77,7 +80,7 @@ export function AddCardForm(props: { parentId: GQL.Card['id'] }) {
             <div className={styles._controls}>
               <B.Form.Check
                 name="private"
-                id="private"
+                id={`private-${formId}`}
                 checked={formik.values.private}
                 onChange={formik.handleChange}
                 type="checkbox"
