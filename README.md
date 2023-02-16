@@ -28,6 +28,8 @@ npm run gql:watch
 
 ```
 curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
+
+rustup target add x86_64-apple-darwin aarch64-apple-darwin
 ```
 
 Building the prod app:
@@ -35,10 +37,16 @@ Building the prod app:
 ```bash
 # This is not necessary right now because we're building the app simply as a wrapper.
 # rm .env
-# ODE_ENV=production npm run build
+# NODE_ENV=production npm run build
 # DATABASE_URL="postgresql://user:password@localhost:3999/db_dev" NODE_ENV=production npx next export
 
 npx tauri build --debug                # --debug for the web inspector to work
+```
+
+Building a universal macOS binary:
+
+```bash
+npx tauri build --target universal-apple-darwin
 ```
 
 Upgrading Tauri:
