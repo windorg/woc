@@ -49,7 +49,7 @@ const useReorderChild = () => {
 // A list of cards, supporting drag-and-drop
 export function CardsList(props: {
   parentId: GQL.Card['id']
-  cards: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'visibility' | 'commentCount'>[]
+  cards: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'visibility' | 'commentCount' | 'firedAt'>[]
   allowEdit: boolean
 }) {
   const sensors = Dnd.useSensors(
@@ -89,7 +89,7 @@ export function CardsList(props: {
         variables: {
           id: props.parentId,
           childId: active.id,
-          ...(next ? { before: next } : { after: prev }),
+          ...(next ? { before: next, after: null } : { after: prev, before: null }),
         },
       })
     }
@@ -132,7 +132,7 @@ function animateLayoutChanges(args) {
 }
 
 function Sortable(props: {
-  card: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'visibility' | 'commentCount'>
+  card: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'visibility' | 'commentCount' | 'firedAt'>
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     DndSort.useSortable({

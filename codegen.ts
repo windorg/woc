@@ -15,9 +15,17 @@ const config: CodegenConfig = {
     },
   },
   config: {
+    avoidOptionals: {
+      field: true,
+      inputValue: false,
+      object: true,
+      defaultValue: true,
+    },
     scalars: {
       UUID: 'string',
-      DateTime: 'Date',
+      // Doesn't work properly due to https://github.com/apollographql/apollo-client/issues/8857
+      // DateTime: 'Date',
+      DateTime: 'string',
     },
   },
 }

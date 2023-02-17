@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from 'react-query'
 import { ReactQueryDevtools } from 'react-query/devtools'
 import React from 'react'
 import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client'
+import { CurrentUserProvider } from '@components/currentUserContext'
 
 const apolloClient = new ApolloClient({
   cache: new InMemoryCache(),
@@ -27,9 +28,11 @@ function MyApp(props) {
       <SessionProvider>
         <QueryClientProvider client={queryClient}>
           <ApolloProvider client={apolloClient}>
-            <Layout>
-              <Component {...pageProps} />
-            </Layout>
+            <CurrentUserProvider>
+              <Layout>
+                <Component {...pageProps} />
+              </Layout>
+            </CurrentUserProvider>
           </ApolloProvider>
           <ReactQueryDevtools />
         </QueryClientProvider>

@@ -14,14 +14,16 @@ datasource db {
 }
 
 model Card {
-  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  title         String   @default("")
-  tagline       String   @default("")
-  parentId      String?  @map("parent_id") @db.Uuid
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  id            String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title         String    @default("")
+  tagline       String    @default("")
+  parentId      String?   @map("parent_id") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   settings      Json
-  childrenOrder String[] @map("children_order") @db.Uuid // List of card IDs
-  ownerId       String   @map("owner_id") @db.Uuid
+  childrenOrder String[]  @map("children_order") @db.Uuid
+  ownerId       String    @map("owner_id") @db.Uuid
+  /// The date of the last time this card was fire-d
+  firedAt       DateTime? @map("fired_at") @db.Timestamptz(6)
 
   parent              Card?                @relation(name: "parent-child", fields: [parentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cards_ref_parent_id")
   owner               User                 @relation(fields: [ownerId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cards_ref_owner_id")
@@ -30,6 +32,7 @@ model Card {
   subscriptionUpdates SubscriptionUpdate[]
 
   @@index([ownerId], map: "cards_owner_id_index")
+  @@index([firedAt], map: "cards_fired_at_index")
   @@map("cards")
 }
 

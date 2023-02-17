@@ -13,7 +13,7 @@ export type Scalars = {
   Int: number;
   Float: number;
   /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
-  DateTime: Date;
+  DateTime: string;
   /** A field whose value is a generic Universally Unique Identifier: https://en.wikipedia.org/wiki/Universally_unique_identifier. */
   UUID: string;
 };
@@ -24,9 +24,9 @@ export type Card = {
   /**
    * Beeminder goal to sync with (goal name in the current user's connected Beeminder account).
    *
-   * Can't be queried unless you have edit access to the card.
+   * _Will only be visible if you can edit the card. Otherwise you will always get `null`._
    */
-  beeminderGoal?: Maybe<Scalars['String']>;
+  beeminderGoal: Maybe<Scalars['String']>;
   /** Whether the current user can edit this card. */
   canEdit: Scalars['Boolean'];
   /**
@@ -44,14 +44,16 @@ export type Card = {
   commentCount: Scalars['Int'];
   comments: Array<Comment>;
   createdAt: Scalars['DateTime'];
+  /** The last time this card was fire-d, if at all. */
+  firedAt: Maybe<Scalars['DateTime']>;
   id: Scalars['UUID'];
   owner: User;
   ownerId: Scalars['UUID'];
   parent: Card;
   /** IDs of all cards in the parent chain (first = toplevel), will be `[]` if `parent === null` */
   parentChain: Array<Scalars['UUID']>;
-  parentId?: Maybe<Scalars['UUID']>;
-  /** Whether to show updates from oldest to newest */
+  parentId: Maybe<Scalars['UUID']>;
+  /** Whether to show updates from oldest to newest. */
   reverseOrder: Scalars['Boolean'];
   tagline: Scalars['String'];
   title: Scalars['String'];
@@ -79,7 +81,7 @@ export type Comment = {
 export type DeleteCardResult = {
   __typename?: 'DeleteCardResult';
   ownerId: Scalars['UUID'];
-  parent?: Maybe<Card>;
+  parent: Maybe<Card>;
 };
 
 export type DeleteCommentResult = {
@@ -92,11 +94,17 @@ export type DeleteReplyResult = {
   comment: Comment;
 };
 
+export type FireCardResult = {
+  __typename?: 'FireCardResult';
+  card: Card;
+  parent: Maybe<Card>;
+};
+
 export type MoveCardResult = {
   __typename?: 'MoveCardResult';
   card: Card;
-  newParent?: Maybe<Card>;
-  oldParent?: Maybe<Card>;
+  newParent: Maybe<Card>;
+  oldParent: Maybe<Card>;
 };
 
 export type Mutation = {
@@ -107,6 +115,7 @@ export type Mutation = {
   deleteCard: DeleteCardResult;
   deleteComment: DeleteCommentResult;
   deleteReply: DeleteReplyResult;
+  fireCard: FireCardResult;
   /** Follow a user. */
   followUser: User;
   moveCard: MoveCardResult;
@@ -116,12 +125,13 @@ export type Mutation = {
   updateCard: UpdateCardResult;
   updateComment: UpdateCommentResult;
   updateReply: UpdateReplyResult;
+  updateUser: UpdateUserResult;
 };
 
 
 export type MutationCreateCardArgs = {
-  parentId?: InputMaybe<Scalars['UUID']>;
-  private?: InputMaybe<Scalars['Boolean']>;
+  parentId: InputMaybe<Scalars['UUID']>;
+  private: InputMaybe<Scalars['Boolean']>;
   title: Scalars['String'];
 };
 
@@ -129,7 +139,7 @@ export type MutationCreateCardArgs = {
 export type MutationCreateCommentArgs = {
   cardId: Scalars['UUID'];
   content: Scalars['String'];
-  private?: InputMaybe<Scalars['Boolean']>;
+  private: InputMaybe<Scalars['Boolean']>;
 };
 
 
@@ -154,6 +164,11 @@ export type MutationDeleteReplyArgs = {
 };
 
 
+export type MutationFireCardArgs = {
+  id: Scalars['UUID'];
+};
+
+
 export type MutationFollowUserArgs = {
   id: Scalars['UUID'];
 };
@@ -161,7 +176,7 @@ export type MutationFollowUserArgs = {
 
 export type MutationMoveCardArgs = {
   id: Scalars['UUID'];
-  newParentId?: InputMaybe<Scalars['UUID']>;
+  newParentId: InputMaybe<Scalars['UUID']>;
 };
 
 
@@ -187,6 +202,11 @@ export type MutationUpdateCommentArgs = {
 
 export type MutationUpdateReplyArgs = {
   input: UpdateReplyInput;
+};
+
+
+export type MutationUpdateUserArgs = {
+  input: UpdateUserInput;
 };
 
 export type Query = {
@@ -243,7 +263,7 @@ export type Reply = {
   /** The user who posted the reply. Can be `undefined` if the user has been deleted. */
   author: User;
   /** The user who posted the reply. Can be `null` if the user has been deleted. */
-  authorId?: Maybe<Scalars['UUID']>;
+  authorId: Maybe<Scalars['UUID']>;
   /**
    * Whether the current user can delete this reply.
    *
@@ -298,17 +318,33 @@ export type UpdateReplyResult = {
   reply: Reply;
 };
 
+export type UpdateUserInput = {
+  betaAccess?: InputMaybe<Scalars['Boolean']>;
+  id: Scalars['UUID'];
+};
+
+export type UpdateUserResult = {
+  __typename?: 'UpdateUserResult';
+  user: User;
+};
+
 export type User = {
   __typename?: 'User';
   /** All cards owned by this user, including subcards. */
   allCards: Array<Card>;
   /** The user's Beeminder username. Only available to the user themselves. */
-  beeminderUsername?: Maybe<Scalars['String']>;
+  beeminderUsername: Maybe<Scalars['String']>;
+  /**
+   * Whether the user can access beta features.
+   *
+   * Only available to the user themselves, returns `null` for other users.
+   */
+  betaAccess: Maybe<Scalars['Boolean']>;
   displayName: Scalars['String'];
   /** The user's email address. Only available to the user themselves. */
   email: Scalars['String'];
   /** Whether the currently logged-in user is following this user. */
-  followed?: Maybe<Scalars['Boolean']>;
+  followed: Maybe<Scalars['Boolean']>;
   handle: Scalars['String'];
   id: Scalars['UUID'];
   /** Cards that are directly owned by this user. */
@@ -357,17 +393,24 @@ export type CreateCardMutation = { __typename?: 'Mutation', createCard: { __type
 export type ReorderChildMutationVariables = Exact<{
   id: Scalars['UUID'];
   childId: Scalars['UUID'];
-  before?: InputMaybe<Scalars['UUID']>;
-  after?: InputMaybe<Scalars['UUID']>;
+  before: InputMaybe<Scalars['UUID']>;
+  after: InputMaybe<Scalars['UUID']>;
 }>;
 
 
 export type ReorderChildMutation = { __typename?: 'Mutation', reorderCardChildren: { __typename?: 'ReorderCardChildrenResult', card: { __typename?: 'Card', id: string, childrenOrder: Array<string> } } };
 
+export type FireCardMutationVariables = Exact<{
+  id: Scalars['UUID'];
+}>;
+
+
+export type FireCardMutation = { __typename?: 'Mutation', fireCard: { __typename?: 'FireCardResult', card: { __typename?: 'Card', id: string, firedAt: string | null }, parent: { __typename?: 'Card', id: string, childrenOrder: Array<string> } | null } };
+
 export type UpdateCardMutationVariables = Exact<{
   id: Scalars['UUID'];
-  archived?: InputMaybe<Scalars['Boolean']>;
-  private?: InputMaybe<Scalars['Boolean']>;
+  archived: InputMaybe<Scalars['Boolean']>;
+  private: InputMaybe<Scalars['Boolean']>;
 }>;
 
 
@@ -378,7 +421,7 @@ export type DeleteCardMutationVariables = Exact<{
 }>;
 
 
-export type DeleteCardMutation = { __typename?: 'Mutation', deleteCard: { __typename?: 'DeleteCardResult', ownerId: string, parent?: { __typename?: 'Card', id: string } | null } };
+export type DeleteCardMutation = { __typename?: 'Mutation', deleteCard: { __typename?: 'DeleteCardResult', ownerId: string, parent: { __typename?: 'Card', id: string } | null } };
 
 export type UpdateCommentContentMutationVariables = Exact<{
   id: Scalars['UUID'];
@@ -390,8 +433,8 @@ export type UpdateCommentContentMutation = { __typename?: 'Mutation', updateComm
 
 export type UpdateCommentMutationVariables = Exact<{
   id: Scalars['UUID'];
-  pinned?: InputMaybe<Scalars['Boolean']>;
-  private?: InputMaybe<Scalars['Boolean']>;
+  pinned: InputMaybe<Scalars['Boolean']>;
+  private: InputMaybe<Scalars['Boolean']>;
 }>;
 
 
@@ -420,16 +463,23 @@ export type CreateReplyMutationVariables = Exact<{
 
 export type CreateReplyMutation = { __typename?: 'Mutation', createReply: { __typename?: 'Reply', id: string } };
 
-export type UpdateCard_EditCardModalMutationVariables = Exact<{
-  id: Scalars['UUID'];
-  title?: InputMaybe<Scalars['String']>;
-  tagline?: InputMaybe<Scalars['String']>;
-  reverseOrder?: InputMaybe<Scalars['Boolean']>;
-  beeminderGoal?: InputMaybe<Scalars['String']>;
+export type GetCurrentUserInfoQueryVariables = Exact<{
+  userId: Scalars['UUID'];
 }>;
 
 
-export type UpdateCard_EditCardModalMutation = { __typename?: 'Mutation', updateCard: { __typename?: 'UpdateCardResult', card: { __typename?: 'Card', id: string, title: string, tagline: string, reverseOrder: boolean, beeminderGoal?: string | null } } };
+export type GetCurrentUserInfoQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, betaAccess: boolean | null } };
+
+export type UpdateCard_EditCardModalMutationVariables = Exact<{
+  id: Scalars['UUID'];
+  title: InputMaybe<Scalars['String']>;
+  tagline: InputMaybe<Scalars['String']>;
+  reverseOrder: InputMaybe<Scalars['Boolean']>;
+  beeminderGoal: InputMaybe<Scalars['String']>;
+}>;
+
+
+export type UpdateCard_EditCardModalMutation = { __typename?: 'Mutation', updateCard: { __typename?: 'UpdateCardResult', card: { __typename?: 'Card', id: string, title: string, tagline: string, reverseOrder: boolean, beeminderGoal: string | null } } };
 
 export type GetCardsQueryVariables = Exact<{
   userId: Scalars['UUID'];
@@ -440,11 +490,11 @@ export type GetCardsQuery = { __typename?: 'Query', user: { __typename?: 'User',
 
 export type MoveCardMutationVariables = Exact<{
   id: Scalars['UUID'];
-  newParentId?: InputMaybe<Scalars['UUID']>;
+  newParentId: InputMaybe<Scalars['UUID']>;
 }>;
 
 
-export type MoveCardMutation = { __typename?: 'Mutation', moveCard: { __typename?: 'MoveCardResult', card: { __typename?: 'Card', id: string, ownerId: string, parentChain: Array<string> }, oldParent?: { __typename?: 'Card', id: string } | null, newParent?: { __typename?: 'Card', id: string } | null } };
+export type MoveCardMutation = { __typename?: 'Mutation', moveCard: { __typename?: 'MoveCardResult', card: { __typename?: 'Card', id: string, ownerId: string, parentChain: Array<string> }, oldParent: { __typename?: 'Card', id: string } | null, newParent: { __typename?: 'Card', id: string } | null } };
 
 export type UpdateReplyContentMutationVariables = Exact<{
   id: Scalars['UUID'];
@@ -466,54 +516,54 @@ export type GetAllCardsQueryVariables = Exact<{
 }>;
 
 
-export type GetAllCardsQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, allCards: Array<{ __typename?: 'Card', id: string, title: string, createdAt: Date }> } };
+export type GetAllCardsQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, allCards: Array<{ __typename?: 'Card', id: string, title: string, createdAt: string }> } };
 
 export type GetTopLevelCardsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type GetTopLevelCardsQuery = { __typename?: 'Query', topLevelCards: Array<{ __typename?: 'Card', id: string, createdAt: Date, title: string, tagline: string, ownerId: string, visibility: Visibility }> };
+export type GetTopLevelCardsQuery = { __typename?: 'Query', topLevelCards: Array<{ __typename?: 'Card', id: string, createdAt: string, title: string, tagline: string, ownerId: string, visibility: Visibility }> };
 
 export type FollowUserMutationVariables = Exact<{
   userId: Scalars['UUID'];
 }>;
 
 
-export type FollowUserMutation = { __typename?: 'Mutation', followUser: { __typename?: 'User', id: string, followed?: boolean | null } };
+export type FollowUserMutation = { __typename?: 'Mutation', followUser: { __typename?: 'User', id: string, followed: boolean | null } };
 
 export type UnfollowUserMutationVariables = Exact<{
   userId: Scalars['UUID'];
 }>;
 
 
-export type UnfollowUserMutation = { __typename?: 'Mutation', unfollowUser: { __typename?: 'User', id: string, followed?: boolean | null } };
+export type UnfollowUserMutation = { __typename?: 'Mutation', unfollowUser: { __typename?: 'User', id: string, followed: boolean | null } };
 
 export type GetUserQueryVariables = Exact<{
   userId: Scalars['UUID'];
 }>;
 
 
-export type GetUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, displayName: string, handle: string, followed?: boolean | null, topLevelCards: Array<{ __typename?: 'Card', id: string, createdAt: Date, title: string, tagline: string, ownerId: string, visibility: Visibility }> } };
+export type GetUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, displayName: string, handle: string, followed: boolean | null, topLevelCards: Array<{ __typename?: 'Card', id: string, createdAt: string, title: string, tagline: string, ownerId: string, visibility: Visibility }> } };
 
 export type GetLoggedInUserQueryVariables = Exact<{
   userId: Scalars['UUID'];
 }>;
 
 
-export type GetLoggedInUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, displayName: string, handle: string, beeminderUsername?: string | null } };
+export type GetLoggedInUserQuery = { __typename?: 'Query', user: { __typename?: 'User', id: string, displayName: string, handle: string, beeminderUsername: string | null } };
 
 export type GetCardQueryVariables = Exact<{
   id: Scalars['UUID'];
 }>;
 
 
-export type GetCardQuery = { __typename?: 'Query', card: { __typename?: 'Card', id: string, title: string, tagline: string, visibility: Visibility, parentId?: string | null, canEdit: boolean, archived: boolean, reverseOrder: boolean, parentChain: Array<string>, childrenOrder: Array<string>, children: Array<{ __typename?: 'Card', id: string, title: string, visibility: Visibility, tagline: string, archived: boolean, commentCount: number }>, owner: { __typename?: 'User', id: string, handle: string } } };
+export type GetCardQuery = { __typename?: 'Query', card: { __typename?: 'Card', id: string, title: string, tagline: string, visibility: Visibility, parentId: string | null, canEdit: boolean, archived: boolean, reverseOrder: boolean, beeminderGoal: string | null, parentChain: Array<string>, childrenOrder: Array<string>, children: Array<{ __typename?: 'Card', id: string, title: string, visibility: Visibility, tagline: string, archived: boolean, commentCount: number, firedAt: string | null }>, owner: { __typename?: 'User', id: string, handle: string } } };
 
 export type GetCommentsQueryVariables = Exact<{
   cardId: Scalars['UUID'];
 }>;
 
 
-export type GetCommentsQuery = { __typename?: 'Query', card: { __typename?: 'Card', id: string, comments: Array<{ __typename?: 'Comment', id: string, content: string, createdAt: Date, visibility: Visibility, pinned: boolean, canEdit: boolean, replies: Array<{ __typename?: 'Reply', id: string, content: string, visibility: Visibility, canEdit: boolean, createdAt: Date, canDelete: boolean, author: { __typename?: 'User', id: string, displayName: string, userpicUrl: string } }> }> } };
+export type GetCommentsQuery = { __typename?: 'Query', card: { __typename?: 'Card', id: string, comments: Array<{ __typename?: 'Comment', id: string, content: string, createdAt: string, visibility: Visibility, pinned: boolean, canEdit: boolean, replies: Array<{ __typename?: 'Reply', id: string, content: string, visibility: Visibility, canEdit: boolean, createdAt: string, canDelete: boolean, author: { __typename?: 'User', id: string, displayName: string, userpicUrl: string } }> }> } };
 
 
 export const CreateCommentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createComment"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"cardId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"content"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"private"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createComment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"cardId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"cardId"}}},{"kind":"Argument","name":{"kind":"Name","value":"content"},"value":{"kind":"Variable","name":{"kind":"Name","value":"content"}}},{"kind":"Argument","name":{"kind":"Name","value":"private"},"value":{"kind":"Variable","name":{"kind":"Name","value":"private"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<CreateCommentMutation, CreateCommentMutationVariables>;
@@ -521,6 +571,7 @@ export const GetBoardOwnerDocument = {"kind":"Document","definitions":[{"kind":"
 export const GetCardInfoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getCardInfo"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"card"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}}]}}]}}]} as unknown as DocumentNode<GetCardInfoQuery, GetCardInfoQueryVariables>;
 export const CreateCardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createCard"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"parentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"title"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"private"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCard"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"parentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"parentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"title"},"value":{"kind":"Variable","name":{"kind":"Name","value":"title"}}},{"kind":"Argument","name":{"kind":"Name","value":"private"},"value":{"kind":"Variable","name":{"kind":"Name","value":"private"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<CreateCardMutation, CreateCardMutationVariables>;
 export const ReorderChildDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"reorderChild"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"childId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"before"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"after"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"reorderCardChildren"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"childId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"childId"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"before"},"value":{"kind":"Variable","name":{"kind":"Name","value":"before"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"after"},"value":{"kind":"Variable","name":{"kind":"Name","value":"after"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"card"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"childrenOrder"}}]}}]}}]}}]} as unknown as DocumentNode<ReorderChildMutation, ReorderChildMutationVariables>;
+export const FireCardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"fireCard"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fireCard"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"card"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"parent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"childrenOrder"}}]}}]}}]}}]} as unknown as DocumentNode<FireCardMutation, FireCardMutationVariables>;
 export const UpdateCardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"updateCard"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"archived"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"private"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCard"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"archived"},"value":{"kind":"Variable","name":{"kind":"Name","value":"archived"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"private"},"value":{"kind":"Variable","name":{"kind":"Name","value":"private"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"card"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"archived"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}}]}}]}}]}}]} as unknown as DocumentNode<UpdateCardMutation, UpdateCardMutationVariables>;
 export const DeleteCardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"deleteCard"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteCard"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"parent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"ownerId"}}]}}]}}]} as unknown as DocumentNode<DeleteCardMutation, DeleteCardMutationVariables>;
 export const UpdateCommentContentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"updateCommentContent"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"content"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateComment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"content"},"value":{"kind":"Variable","name":{"kind":"Name","value":"content"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"comment"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"content"}}]}}]}}]}}]} as unknown as DocumentNode<UpdateCommentContentMutation, UpdateCommentContentMutationVariables>;
@@ -528,6 +579,7 @@ export const UpdateCommentDocument = {"kind":"Document","definitions":[{"kind":"
 export const DeleteCommentDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"deleteComment"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteComment"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"card"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<DeleteCommentMutation, DeleteCommentMutationVariables>;
 export const CreateTopLevelCardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createTopLevelCard"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"title"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"private"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createCard"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"title"},"value":{"kind":"Variable","name":{"kind":"Name","value":"title"}}},{"kind":"Argument","name":{"kind":"Name","value":"private"},"value":{"kind":"Variable","name":{"kind":"Name","value":"private"}}},{"kind":"Argument","name":{"kind":"Name","value":"parentId"},"value":{"kind":"NullValue"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"ownerId"}}]}}]}}]} as unknown as DocumentNode<CreateTopLevelCardMutation, CreateTopLevelCardMutationVariables>;
 export const CreateReplyDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"createReply"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"commentId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"content"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createReply"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"commentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"commentId"}}},{"kind":"Argument","name":{"kind":"Name","value":"content"},"value":{"kind":"Variable","name":{"kind":"Name","value":"content"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<CreateReplyMutation, CreateReplyMutationVariables>;
+export const GetCurrentUserInfoDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getCurrentUserInfo"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"betaAccess"}}]}}]}}]} as unknown as DocumentNode<GetCurrentUserInfoQuery, GetCurrentUserInfoQueryVariables>;
 export const UpdateCard_EditCardModalDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"updateCard_EditCardModal"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"title"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"tagline"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"reverseOrder"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"beeminderGoal"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateCard"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"ObjectValue","fields":[{"kind":"ObjectField","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"title"},"value":{"kind":"Variable","name":{"kind":"Name","value":"title"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"tagline"},"value":{"kind":"Variable","name":{"kind":"Name","value":"tagline"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"reverseOrder"},"value":{"kind":"Variable","name":{"kind":"Name","value":"reverseOrder"}}},{"kind":"ObjectField","name":{"kind":"Name","value":"beeminderGoal"},"value":{"kind":"Variable","name":{"kind":"Name","value":"beeminderGoal"}}}]}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"card"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"tagline"}},{"kind":"Field","name":{"kind":"Name","value":"reverseOrder"}},{"kind":"Field","name":{"kind":"Name","value":"beeminderGoal"}}]}}]}}]}}]} as unknown as DocumentNode<UpdateCard_EditCardModalMutation, UpdateCard_EditCardModalMutationVariables>;
 export const GetCardsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getCards"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"allCards"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}}]}}]}}]}}]} as unknown as DocumentNode<GetCardsQuery, GetCardsQueryVariables>;
 export const MoveCardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"moveCard"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"newParentId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"moveCard"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"newParentId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"newParentId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"card"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"ownerId"}},{"kind":"Field","name":{"kind":"Name","value":"parentChain"}}]}},{"kind":"Field","name":{"kind":"Name","value":"oldParent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"newParent"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]}}]} as unknown as DocumentNode<MoveCardMutation, MoveCardMutationVariables>;
@@ -539,5 +591,5 @@ export const FollowUserDocument = {"kind":"Document","definitions":[{"kind":"Ope
 export const UnfollowUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"unfollowUser"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"unfollowUser"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"followed"}}]}}]}}]} as unknown as DocumentNode<UnfollowUserMutation, UnfollowUserMutationVariables>;
 export const GetUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getUser"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"handle"}},{"kind":"Field","name":{"kind":"Name","value":"followed"}},{"kind":"Field","name":{"kind":"Name","value":"topLevelCards"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"tagline"}},{"kind":"Field","name":{"kind":"Name","value":"ownerId"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}}]}}]}}]}}]} as unknown as DocumentNode<GetUserQuery, GetUserQueryVariables>;
 export const GetLoggedInUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getLoggedInUser"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"user"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"handle"}},{"kind":"Field","name":{"kind":"Name","value":"beeminderUsername"}}]}}]}}]} as unknown as DocumentNode<GetLoggedInUserQuery, GetLoggedInUserQueryVariables>;
-export const GetCardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getCard"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"card"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"tagline"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"canEdit"}},{"kind":"Field","name":{"kind":"Name","value":"archived"}},{"kind":"Field","name":{"kind":"Name","value":"reverseOrder"}},{"kind":"Field","name":{"kind":"Name","value":"parentChain"}},{"kind":"Field","name":{"kind":"Name","value":"childrenOrder"}},{"kind":"Field","name":{"kind":"Name","value":"children"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"tagline"}},{"kind":"Field","name":{"kind":"Name","value":"archived"}},{"kind":"Field","name":{"kind":"Name","value":"commentCount"}}]}},{"kind":"Field","name":{"kind":"Name","value":"owner"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"handle"}}]}}]}}]}}]} as unknown as DocumentNode<GetCardQuery, GetCardQueryVariables>;
+export const GetCardDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getCard"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"card"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"tagline"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"parentId"}},{"kind":"Field","name":{"kind":"Name","value":"canEdit"}},{"kind":"Field","name":{"kind":"Name","value":"archived"}},{"kind":"Field","name":{"kind":"Name","value":"reverseOrder"}},{"kind":"Field","name":{"kind":"Name","value":"beeminderGoal"}},{"kind":"Field","name":{"kind":"Name","value":"parentChain"}},{"kind":"Field","name":{"kind":"Name","value":"childrenOrder"}},{"kind":"Field","name":{"kind":"Name","value":"children"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"tagline"}},{"kind":"Field","name":{"kind":"Name","value":"archived"}},{"kind":"Field","name":{"kind":"Name","value":"commentCount"}},{"kind":"Field","name":{"kind":"Name","value":"firedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"owner"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"handle"}}]}}]}}]}}]} as unknown as DocumentNode<GetCardQuery, GetCardQueryVariables>;
 export const GetCommentsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"getComments"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"cardId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UUID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"card"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"cardId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"comments"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"content"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"pinned"}},{"kind":"Field","name":{"kind":"Name","value":"canEdit"}},{"kind":"Field","name":{"kind":"Name","value":"replies"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"content"}},{"kind":"Field","name":{"kind":"Name","value":"visibility"}},{"kind":"Field","name":{"kind":"Name","value":"canEdit"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"canDelete"}},{"kind":"Field","name":{"kind":"Name","value":"author"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"displayName"}},{"kind":"Field","name":{"kind":"Name","value":"userpicUrl"}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<GetCommentsQuery, GetCommentsQueryVariables>;

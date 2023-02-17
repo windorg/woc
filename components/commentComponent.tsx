@@ -48,7 +48,7 @@ function InfoHeader(props: {
         className="d-flex align-items-center"
       >
         <BiLink className="me-1" />
-        <ReactTimeAgo timeStyle="twitter-minute-now" date={props.comment.createdAt} />
+        <ReactTimeAgo timeStyle="twitter-minute-now" date={new Date(props.comment.createdAt)} />
       </Link>
       {isPrivate && <span className="ms-2">🔒</span>}
     </span>

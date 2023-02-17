@@ -51,7 +51,7 @@ export function BoardCard(props: {
 
       <B.Card.Footer className={styles._infobar}>
         <span className={styles._date}>
-          Created <ReactTimeAgo date={board.createdAt} />
+          Created <ReactTimeAgo date={new Date(board.createdAt)} />
         </span>
         {kind === 'other-board' && (
           <Query size="sm" queries={{ boardOwnerQuery }}>
