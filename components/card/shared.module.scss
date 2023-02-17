@@ -81,12 +81,40 @@
     // But still try to center
     line-height: 170%;
   }
-  ._tagline {
-    line-height: 130%;
-    margin-top: 0.2em;
-    font-weight: 400;
-    font-size: 0.8rem;
-    color: #888;
+  ._body {
+    width: 100%;
+    ._tagline {
+      line-height: 130%;
+      margin-top: 0.2em;
+      font-weight: 400;
+      font-size: 0.8rem;
+      color: #888;
+    }
+    ._title {
+      display: flex;
+      flex-direction: row;
+      ._fire {
+        &._notRecentlyFired {
+          color: #6c757d;
+        }
+        margin-left: auto;
+        // TODO: this is suffering and it'd be better to just create a PNG or smth
+        box-sizing: content-box;
+        padding: 3px;
+        height: 1.2rem;
+        width: 1.2rem;
+        border: none;
+        font-size: 1.2rem;
+        * {
+          position: relative;
+          left: 0.5px;
+          bottom: 7px;
+        }
+        // Overrule the stretched link thing
+        position: relative;
+        z-index: 5000;
+      }
+    }
   }
 }
 

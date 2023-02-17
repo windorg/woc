@@ -42,6 +42,18 @@ export const User = builder.prismaObject('User', {
       resolve: (user) => userSettings(user).beeminderUsername,
     }),
     // beeminderAccessToken is not exposed on purpose — it's a secret
+    betaAccess: t.boolean({
+      nullable: true,
+      description: endent`
+        Whether the user can access beta features.
+
+        Only available to the user themselves, returns \`null\` for other users.
+      `,
+      resolve: async (user, args, context) => {
+        if (context.userId !== user.id) return null
+        return userSettings(user).betaAccess
+      },
+    }),
   }),
 })
 
@@ -61,6 +73,8 @@ builder.queryField('user', (t) =>
       }),
   })
 )
+
+// TODO: move to the mutations folder
 
 builder.mutationField('followUser', (t) =>
   t.prismaField({

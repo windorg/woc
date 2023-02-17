@@ -1,5 +1,4 @@
 import { builder } from '../builder'
-import { Comment } from './comment'
 import { prisma } from '@lib/db'
 import endent from 'endent'
 import { cardSettings } from '@lib/model-settings'
@@ -28,6 +27,14 @@ export const Card = builder.prismaObject('Card', {
         )
       },
     }),
+    firedAt: t.expose('firedAt', {
+      type: 'DateTime',
+      nullable: true,
+      description: endent`
+        The last time this card was fire-d, if at all.
+      `,
+    }),
+
     parent: t.relation('parent'),
     owner: t.relation('owner'),
     children: t.prismaField({
@@ -84,7 +91,7 @@ export const Card = builder.prismaObject('Card', {
     }),
     reverseOrder: t.boolean({
       description: endent`
-        Whether to show updates from oldest to newest
+        Whether to show updates from oldest to newest.
       `,
       resolve: (card, args, context) => cardSettings(card).reverseOrder,
     }),
@@ -96,11 +103,10 @@ export const Card = builder.prismaObject('Card', {
       description: endent`
         Beeminder goal to sync with (goal name in the current user's connected Beeminder account).
 
-        Can't be queried unless you have edit access to the card.
+        _Will only be visible if you can edit the card. Otherwise you will always get \`null\`._
       `,
       resolve: async (card, args, context) => {
-        if (!(await canEditCard(context.userId, card)))
-          throw new GraphQLError('You do not have permission to access `beeminderGoal`')
+        if (!(await canEditCard(context.userId, card))) return null
         return cardSettings(card).beeminderGoal
       },
     }),

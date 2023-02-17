@@ -11,7 +11,10 @@ import styles from './shared.module.scss'
 
 export function Subcards(props: {
   parent: Pick<GQL.Card, 'id' | 'childrenOrder' | 'canEdit'>
-  cards: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'archived' | 'visibility' | 'commentCount'>[]
+  cards: Pick<
+    GQL.Card,
+    'id' | 'title' | 'tagline' | 'archived' | 'visibility' | 'commentCount' | 'firedAt'
+  >[]
 }) {
   const { parent, cards } = props
   const [normalCards, archivedCards] = _.partition(
@@ -46,18 +49,5 @@ export function Subcards(props: {
         />
       </div>
     </div>
-    //   {
-    //   (archivedCards.length > 0) &&
-    //     <B.Accordion className="mt-5">
-    //       <B.Accordion.Item eventKey="0">
-    //         <B.Accordion.Header>
-    //           <B.Badge bg="secondary">Archived cards</B.Badge>
-    //         </B.Accordion.Header>
-    //         <B.Accordion.Body>
-    //           <CardsList parentId={card.id} cards={archivedCards} allowEdit={card.canEdit} />
-    //         </B.Accordion.Body>
-    //       </B.Accordion.Item>
-    //     </B.Accordion>
-    // }
   )
 }

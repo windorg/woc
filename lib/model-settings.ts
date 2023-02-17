@@ -15,11 +15,13 @@ export enum Visibility {
 export type UserSettings = {
   beeminderUsername: string | null
   beeminderAccessToken: string | null
+  betaAccess: boolean
 }
 export function userSettings(user: Pick<User, 'settings'>): UserSettings {
   const def: UserSettings = {
     beeminderUsername: null,
     beeminderAccessToken: null,
+    betaAccess: false,
   }
   return { ...def, ...(user.settings as object) }
 }

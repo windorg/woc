@@ -4,7 +4,7 @@ type Card {
   """
   Beeminder goal to sync with (goal name in the current user's connected Beeminder account).
   
-  Can't be queried unless you have edit access to the card.
+  _Will only be visible if you can edit the card. Otherwise you will always get `null`._
   """
   beeminderGoal: String
 
@@ -27,6 +27,9 @@ type Card {
   commentCount: Int!
   comments: [Comment!]!
   createdAt: DateTime!
+
+  """The last time this card was fire-d, if at all."""
+  firedAt: DateTime
   id: UUID!
   owner: User!
   ownerId: UUID!
@@ -38,7 +41,7 @@ type Card {
   parentChain: [UUID!]!
   parentId: UUID
 
-  """Whether to show updates from oldest to newest"""
+  """Whether to show updates from oldest to newest."""
   reverseOrder: Boolean!
   tagline: String!
   title: String!
@@ -85,6 +88,11 @@ type DeleteReplyResult {
   comment: Comment!
 }
 
+type FireCardResult {
+  card: Card!
+  parent: Card
+}
+
 type MoveCardResult {
   card: Card!
   newParent: Card
@@ -98,6 +106,7 @@ type Mutation {
   deleteCard(id: UUID!): DeleteCardResult!
   deleteComment(id: UUID!): DeleteCommentResult!
   deleteReply(id: UUID!): DeleteReplyResult!
+  fireCard(id: UUID!): FireCardResult!
 
   """Follow a user."""
   followUser(id: UUID!): User!
@@ -109,6 +118,7 @@ type Mutation {
   updateCard(input: UpdateCardInput!): UpdateCardResult!
   updateComment(input: UpdateCommentInput!): UpdateCommentResult!
   updateReply(input: UpdateReplyInput!): UpdateReplyResult!
+  updateUser(input: UpdateUserInput!): UpdateUserResult!
 }
 
 type Query {
@@ -222,12 +232,28 @@ type UpdateReplyResult {
   reply: Reply!
 }
 
+input UpdateUserInput {
+  betaAccess: Boolean
+  id: UUID!
+}
+
+type UpdateUserResult {
+  user: User!
+}
+
 type User {
   """All cards owned by this user, including subcards."""
   allCards: [Card!]!
 
   """The user's Beeminder username. Only available to the user themselves."""
   beeminderUsername: String
+
+  """
+  Whether the user can access beta features.
+  
+  Only available to the user themselves, returns `null` for other users.
+  """
+  betaAccess: Boolean
   displayName: String!
 
   """The user's email address. Only available to the user themselves."""

@@ -8,11 +8,14 @@ import './schema/reply'
 
 import './queries/user'
 
+import './mutations/user/update'
+
 import './mutations/card/create'
 import './mutations/card/delete'
 import './mutations/card/move'
 import './mutations/card/update'
 import './mutations/card/reorder'
+import './mutations/card/fire'
 
 import './mutations/comment/create'
 import './mutations/comment/delete'

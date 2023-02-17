@@ -53,7 +53,7 @@ function InfoHeader(props: { card: Pick<GQL.Card, 'id'>; reply: Reply_ }) {
         className="d-flex align-items-center"
       >
         <BiLink className="me-1" />
-        <ReactTimeAgo timeStyle="twitter-minute-now" date={reply.createdAt} />
+        <ReactTimeAgo timeStyle="twitter-minute-now" date={new Date(reply.createdAt)} />
       </Link>
       {isPrivate && <span className="ms-2">🔒</span>}
     </span>
