@@ -127,9 +127,9 @@ export function MoveCardModal(props: {
                   disabled={formik.values.moveToTopLevel}
                   options={deleteById(data.user.allCards, [card.id, card.parentId])}
                   onChange={(selected) =>
-                    formik.setFieldValue('newParent', selected.length > 0 ? selected[0] : '')
+                    void formik.setFieldValue('newParent', selected.length > 0 ? selected[0] : '')
                   }
-                  onInputChange={(text) => formik.setFieldValue('newParent', text)}
+                  onInputChange={(text) => void formik.setFieldValue('newParent', text)}
                   ref={searchRef}
                 />
               ))
