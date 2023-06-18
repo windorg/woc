@@ -32,5 +32,6 @@
   "graphql-codegen.fileExtensionsDeclaringGraphQLDocuments": [
     "ts",
     "tsx"
-  ]
+  ],
+  "files.insertFinalNewline": true
 }

@@ -104,6 +104,26 @@ Tests use the following users:
 
 As of Jun 2023, the tests are flaky. You might be getting `waiting for locator('text=Account') to be visible` and then you try again several times and suddenly it works.
 
+## Upgrading dependencies
+
+List outdated:
+
+```bash
+npm outdated
+```
+
+Do an interactive upgrade:
+
+```bash
+npx npm-upgrade
+```
+
+Read changelogs for major version upgrades — some things are not going to be caught by TypeScript, eg. the `command -> meta` change in react-hotkeys-hook.
+
+Don't upgrade ProseMirror stuff or @types/node.
+
+Run `npm i`. Run `npm run build` (lint is not enough!).
+
 ## Upgrading Tiptap
 
 ```bash
