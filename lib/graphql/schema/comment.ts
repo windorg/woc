@@ -7,6 +7,7 @@ import { filterAsync, filterSync } from '@lib/array'
 import { GraphQLError } from 'graphql'
 import { Reply } from './reply'
 import { Visibility } from './visibility'
+import { User } from './user'
 
 export const Comment = builder.prismaObject('Comment', {
   authScopes: async (comment, context) => {

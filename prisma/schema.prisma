@@ -126,8 +126,25 @@ model User {
   subscriberRefs      FollowedUser[]       @relation("followed_users_subscriber_idTousers")
   replies             Reply[]
   subscriptionUpdates SubscriptionUpdate[]
+  assets              Asset[]
 
   @@map("users")
+}
+
+/// Raw assets uploaded by users. Can be images, etc.
+///
+/// This does not include any kind of resizing or processing (e.g. thumbnails). If we want to do thumbnails, we might use a separate table or a micro-service for that.
+model Asset {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  blob      Bytes
+  mimeType  String?  @map("mime_type")
+  ownerId   String?  @map("owner_id") @db.Uuid
+  settings  Json
+
+  owner User? @relation(fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "assets_ref_owner_id")
+
+  @@map("assets")
 }
 
 enum subscription_update_kind {
