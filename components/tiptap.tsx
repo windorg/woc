@@ -170,6 +170,12 @@ let Tiptap = forwardRef(
       content: props.content || '',
       ...(props.autoFocus ? { autofocus: 'end' } : {}),
     })
+    // https://github.com/ueberdosis/tiptap/issues/3566#issuecomment-1517365072
+    React.useEffect(() => {
+      if (props.autoFocus && editor) {
+        editor.commands.focus()
+      }
+    }, [props.autoFocus, editor])
     useImperativeHandle(ref, () => ({
       focus: () => {
         editor?.commands.focus()
