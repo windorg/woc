@@ -11,6 +11,7 @@ import TurndownService from 'turndown'
 import { TiptapBubbleMenu } from './tiptapBubbleMenu'
 import styles from './tiptap.module.scss'
 import HorizontalRule from '@tiptap/extension-horizontal-rule'
+import Heading from '@tiptap/extension-heading'
 
 const turndownService = new TurndownService({
   headingStyle: 'atx', // # headers
@@ -146,9 +147,13 @@ let Tiptap = forwardRef(
     const editor = useEditor({
       extensions: [
         StarterKit.configure({
-          heading: { levels: [1, 2, 3] },
-          horizontalRule: false,
+          heading: false,
         }),
+        Heading.extend({
+          // Forbid bold from appearing in headings. The full list of available marks can be fetched with:
+          // rg -l 'Mark.create' tiptap/packages/ | xargs rg 'name:'
+          marks: 'italic code strike link',
+        }).configure({ levels: [1, 2, 3] }),
         Typography,
         LinkWithDialog.configure({
           onLinkCommand: () => setLinkDialogOpen(true),
@@ -158,7 +163,6 @@ let Tiptap = forwardRef(
           },
         }),
         TrailingNode,
-        HorizontalRule,
         SubmitShortcut.configure({ onSubmit: props.onSubmit }),
       ],
       editorProps: {
