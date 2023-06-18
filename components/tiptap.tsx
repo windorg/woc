@@ -12,7 +12,11 @@ import { TiptapBubbleMenu } from './tiptapBubbleMenu'
 import styles from './tiptap.module.scss'
 import HorizontalRule from '@tiptap/extension-horizontal-rule'
 
-const turndownService = new TurndownService()
+const turndownService = new TurndownService({
+  headingStyle: 'atx', // # headers
+  codeBlockStyle: 'fenced', // ``` code blocks ```
+  hr: '---', // --- horizontal rules
+})
 
 const SubmitShortcut = Extension.create<{ onSubmit: () => void }>({
   name: 'SubmitShortcut',
@@ -166,6 +170,12 @@ let Tiptap = forwardRef(
       content: props.content || '',
       ...(props.autoFocus ? { autofocus: 'end' } : {}),
     })
+    // https://github.com/ueberdosis/tiptap/issues/3566#issuecomment-1517365072
+    React.useEffect(() => {
+      if (props.autoFocus && editor) {
+        editor.commands.focus()
+      }
+    }, [props.autoFocus, editor])
     useImperativeHandle(ref, () => ({
       focus: () => {
         editor?.commands.focus()

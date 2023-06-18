@@ -123,14 +123,14 @@ function Switcher() {
   const switcherModal = useSwitcherModal()
   const session = useSession().data
   useHotkeys(
-    'ctrl+k, command+k',
+    'ctrl+k, meta+k',
     () => {
       if (!switcherModal.isOpen) {
         switcherModal.open()
       }
     },
     {
-      enableOnTags: ['INPUT', 'TEXTAREA', 'SELECT'],
+      enableOnFormTags: ['INPUT', 'TEXTAREA', 'SELECT'],
       enableOnContentEditable: true,
     }
   )

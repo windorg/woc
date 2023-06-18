@@ -78,17 +78,17 @@ export function CardsList(props: {
     // The semantics of 'over' is weird — it's the element before if we're dragging back, and
     // element after if we're dragging forward. However, I've checked and the index of over == the
     // resulting index in the list.
-    const newIndex = ids.indexOf(over.id)
+    const newIndex = ids.indexOf(over.id.toString())
     // If we know the resulting index, we can just apply the reordering and then look at
     // before/after. Note: we can't use 'position' because it ignores archived cards.
     const newOrder = insertPosition(active.id, deleteSync(ids, active.id), newIndex)
-    const prev: GQL.Card['id'] | undefined = newOrder[newIndex - 1]
-    const next: GQL.Card['id'] | undefined = newOrder[newIndex + 1]
+    const prev: GQL.Card['id'] | undefined = newOrder[newIndex - 1]?.toString()
+    const next: GQL.Card['id'] | undefined = newOrder[newIndex + 1]?.toString()
     if (active.id !== over.id) {
       await reorderChildMutation.do({
         variables: {
           id: props.parentId,
-          childId: active.id,
+          childId: active.id.toString(),
           ...(next ? { before: next, after: null } : { after: prev, before: null }),
         },
       })

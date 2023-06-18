@@ -13,7 +13,10 @@ const jobQueue = new Queue('jobs', {
   connection: redisConnection,
 })
 
-export async function addJob(job: 'beeminder-sync-card', payload: BeeminderSyncCardPayload): Promise<Job>
+export async function addJob(
+  job: 'beeminder-sync-card',
+  payload: BeeminderSyncCardPayload
+): Promise<Job>
 export async function addJob(job: string, payload: any) {
   return await jobQueue.add(job, payload)
 }
@@ -40,7 +43,7 @@ export async function startJobQueueProcessing() {
     console.error(`job-queue worker failed: ${err.message}`)
   })
   worker.on('failed', (job, err) => {
-    console.error(`Job ${job.name} failed: ${err.message}`)
+    console.error(`Job ${job?.name || '<undefined>'} failed: ${err.message}`)
   })
   // Wait for the queue to actually get connected
   await jobQueue.waitUntilReady()

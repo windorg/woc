@@ -25,6 +25,9 @@
       "@tiptap/*": [
         "tiptap/packages/*/src"
       ],
+      "@tiptap/pm/*": [
+        "tiptap/packages/pm/*/"
+      ],
       "@components/*": [
         "components/*"
       ],

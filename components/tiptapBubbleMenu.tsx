@@ -1,6 +1,6 @@
 // Based on https://github.com/ueberdosis/tiptap/issues/2305#issuecomment-1020665146
 
-import Popper from '@mui/base/PopperUnstyled'
+import Popper from '@mui/base/Popper'
 import { Editor, isNodeSelection, posToDOMRect } from '@tiptap/core'
 
 type Props = {
@@ -9,7 +9,12 @@ type Props = {
   className?: string
 }
 
-export function TiptapBubbleMenu({ editor, open, children, className }: React.PropsWithChildren<Props>) {
+export function TiptapBubbleMenu({
+  editor,
+  open,
+  children,
+  className,
+}: React.PropsWithChildren<Props>) {
   // NB: without disablePortal it doesn't work in modals
   return (
     <Popper
