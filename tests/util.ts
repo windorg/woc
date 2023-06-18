@@ -5,7 +5,11 @@ import { hashPassword } from '../lib/password'
 import { filterSync } from '../lib/array'
 
 // A helper for Bootstrap modals. Waits for the modal to appear & disappear fully. Should help w/ flaky tests.
-export async function withBootstrapModal(page: Page, open: () => Promise<void>, action: () => Promise<void>) {
+export async function withBootstrapModal(
+  page: Page,
+  open: () => Promise<void>,
+  action: () => Promise<void>
+) {
   // Unfortunately this is still flaky, so I'm using a timeout instead
 
   // await Promise.all([
