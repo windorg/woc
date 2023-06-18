@@ -104,6 +104,12 @@ Tests use the following users:
 
 As of Jun 2023, the tests are flaky. You might be getting `waiting for locator('text=Account') to be visible` and then you try again several times and suddenly it works.
 
+## Connecting to local database
+
+```bash
+dotenv -e .env.development -- npx prisma studio
+```
+
 ## Upgrading dependencies
 
 List outdated:
@@ -129,18 +135,40 @@ Run `npm i`. Run `npm run build` (lint is not enough!).
 ```bash
 cd tiptap
 git fetch --all
+```
+
+Note the commits in our fork:
+
+```bash
+git log --oneline
+```
+
+Kill our commits with `git reset ... --hard`. (For example, smth like the unused-packages commit is hard to rebase. The `@ts-nocheck` commit has to be repeated every time anyway.)
+
+Get upstream changes:
+
+```bash
 git rebase upstream/main
+```
 
-# Kill the commit that adds @ts-nocheck
-git reset HEAD^ --hard
+Copy all dependencies from `tiptap/packages/pm/package.json` into our `package.json`, and run `npm i`.
 
+```bash
 # Add @ts-nocheck
 (cd ..; npm run tiptap-nocheck)
-
-# Commit and update the submodule
 git add .
-git commit -m "Add @ts-nocheck"
+git commit -m "WOC: Add @ts-nocheck"
+```
+
+`git cherry-pick` our commits back.
+
+Check that things build: `npm run build`. Do `npm run dev` and check that the editor works.
+
+NOTE: `rm -rf tiptap/node_modules` if you get weird errors.
+
+```bash
+# Commit and update the submodule
+
 git push origin HEAD:main --force
-cd ..
-git submodule update --remote tiptap
+(cd ..; git submodule update --remote tiptap)
 ```

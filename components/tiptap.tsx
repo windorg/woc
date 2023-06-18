@@ -12,7 +12,11 @@ import { TiptapBubbleMenu } from './tiptapBubbleMenu'
 import styles from './tiptap.module.scss'
 import HorizontalRule from '@tiptap/extension-horizontal-rule'
 
-const turndownService = new TurndownService()
+const turndownService = new TurndownService({
+  headingStyle: 'atx', // # headers
+  codeBlockStyle: 'fenced', // ``` code blocks ```
+  hr: '---', // --- horizontal rules
+})
 
 const SubmitShortcut = Extension.create<{ onSubmit: () => void }>({
   name: 'SubmitShortcut',
