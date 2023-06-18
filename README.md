@@ -4,7 +4,7 @@
 
 * [Feature status](docs/feature-status.md)
 
-## Local development
+## Local development setup
 
 Install Docker, if you don't have it yet.
 
@@ -26,6 +26,20 @@ You should also run the GraphQL codegen watcher, at least until https://github.c
 
 ```
 npm run gql:watch
+```
+
+## Local development - running the app
+
+Check that the services are running:
+
+```bash
+docker compose ps
+```
+
+Then:
+
+```bash
+npm run dev
 ```
 
 ## Local development - Tauri
@@ -71,17 +85,24 @@ npm run tauri icon public/icon-macos.png
 
 ## Running tests locally
 
-```
+```bash
 npx playwright install  # install browsers; only needed once
 ```
 
 To run:
 
-```
+```bash
 dotenv -e .env.development -- npx playwright test --workers=1
 ```
 
 The server must be running for the tests to work. `--workers=1` runs tests without parallelism — this is necessary because otherwise hot reloading messes things up.
+
+Tests use the following users:
+
+  * `alice@woc.test`, password `test`
+  * `bob@woc.test`, password `test`
+
+As of Jun 2023, the tests are flaky. You might be getting `waiting for locator('text=Account') to be visible` and then you try again several times and suddenly it works.
 
 ## Upgrading Tiptap
 
