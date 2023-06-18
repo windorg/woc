@@ -53,6 +53,7 @@ export function CardsListItem(props: {
       <div className={styles._counter}>{card.commentCount || '−'}</div>
       <div className={styles._body}>
         <div className={styles._title}>
+          {/* TODO: perhaps move lock+title into a separate div so that the lock icon is "inline" */}
           <span>{isPrivate ? '🔒 ' : ''}</span>
           {dragged ? (
             <a className="stretched-link">{card.title}</a>

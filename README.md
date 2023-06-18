@@ -1,5 +1,9 @@
 # WOC
 
+## Doc links
+
+* [Feature status](docs/feature-status.md)
+
 ## Local development
 
 Install Docker, if you don't have it yet.
