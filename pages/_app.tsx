@@ -14,6 +14,12 @@ import { CurrentUserProvider } from '@components/currentUserContext'
 const apolloClient = new ApolloClient({
   cache: new InMemoryCache(),
   uri: `${process.env.NEXT_PUBLIC_APP_URL!}/api/graphql`,
+  defaultOptions: {
+    watchQuery: {
+      // Use cached data, but always fetch new data in the background. When you navigate to a page, you'll see cached data first, then the page will update when the query completes.
+      fetchPolicy: 'cache-and-network',
+    },
+  },
 })
 
 TimeAgo.setDefaultLocale(en.locale)
