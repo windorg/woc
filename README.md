@@ -138,7 +138,7 @@ Read changelogs for major version upgrades — some things are not going to be c
 
 Don't upgrade ProseMirror stuff or @types/node.
 
-Run `npm i`. Run `npm run build` (lint is not enough!).
+Run `npm i`. Run `npm run check`.
 
 ## Upgrading Tiptap
 
