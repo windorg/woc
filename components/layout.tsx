@@ -160,6 +160,26 @@ type Props = {
 }
 
 function Layout(props: Props): JSX.Element {
+  useHotkeys(
+    'ctrl+[, meta+[',
+    () => {
+      window.history.back()
+    },
+    {
+      enableOnFormTags: ['INPUT', 'TEXTAREA', 'SELECT'],
+      enableOnContentEditable: true,
+    }
+  )
+  useHotkeys(
+    'ctrl+], meta+]',
+    () => {
+      window.history.forward()
+    },
+    {
+      enableOnFormTags: ['INPUT', 'TEXTAREA', 'SELECT'],
+      enableOnContentEditable: true,
+    }
+  )
   return (
     <>
       <Head>

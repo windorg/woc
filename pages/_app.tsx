@@ -10,6 +10,8 @@ import { ReactQueryDevtools } from 'react-query/devtools'
 import React from 'react'
 import { ApolloClient, ApolloProvider, InMemoryCache } from '@apollo/client'
 import { CurrentUserProvider } from '@components/currentUserContext'
+// import * as tauriGlobalShortcut from '@tauri-apps/api/globalShortcut'
+// import * as tauri from '@tauri-apps/api/tauri'
 
 const apolloClient = new ApolloClient({
   cache: new InMemoryCache(),
@@ -24,6 +26,13 @@ const apolloClient = new ApolloClient({
 
 TimeAgo.setDefaultLocale(en.locale)
 TimeAgo.addLocale(en)
+
+// Enable some shortcuts in Tauri (not needed for now!)
+// if (typeof window !== 'undefined') {
+//   void tauriGlobalShortcut.register('CmdOrCtrl+[', async () => {
+//     await tauri.invoke('navigate-back')
+//   })
+// }
 
 function MyApp(props) {
   const [queryClient] = React.useState(() => new QueryClient())

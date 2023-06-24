@@ -24,6 +24,7 @@
     "@pothos/plugin-scope-auth": "^3.19.2",
     "@pothos/plugin-simple-objects": "^3.7.0",
     "@prisma/client": "4.15.0",
+    "@tauri-apps/api": "^1.4.0",
     "axios": "^1.4.0",
     "bootstrap": "^5.3.0",
     "bullmq": "^3.15.8",
