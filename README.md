@@ -44,7 +44,9 @@ npm run dev
 
 ## Local development - Tauri
 
-```
+Setting up:
+
+```bash
 curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
 
 rustup target add x86_64-apple-darwin aarch64-apple-darwin

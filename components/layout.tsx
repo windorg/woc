@@ -185,7 +185,7 @@ function Layout(props: Props): JSX.Element {
         </div>
         <footer className="container py-4">
           <div className="text-center text-muted small">
-            made by <a href="https://github.com/neongreen">Artyom Kazak</a> • favicon by{' '}
+            made by <a href="https://github.com/neongreen">Emily</a> • favicon by{' '}
             <a href="https://loading.io/">loading.io</a>
           </div>
         </footer>
