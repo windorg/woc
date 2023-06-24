@@ -10,7 +10,7 @@ Install Docker, if you don't have it yet.
 
 Then:
 
-```
+```bash
 git submodule update --init --recursive   # pull submodules
 volta install dotenv-cli                  # install dotenv
 brew install postgres                     # install psql
@@ -24,7 +24,7 @@ npx prisma db push
 
 You should also run the GraphQL codegen watcher, at least until https://github.com/capaj/graphql-codegen-vscode/issues/21 is fixed:
 
-```
+```bash
 npm run gql:watch
 ```
 
@@ -51,6 +51,14 @@ curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf | sh
 
 rustup target add x86_64-apple-darwin aarch64-apple-darwin
 ```
+
+Running in dev mode:
+
+```bash
+npm run dev
+npm run tauri dev
+```
+
 
 Building the prod app:
 
