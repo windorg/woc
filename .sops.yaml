@@ -1,0 +1,7 @@
+keys:
+  - &emily age1ejkeqvu8cmsvtrphrf3fexfdqrh97v48nq86u3k8untpv226ayqsxz6tu0
+
+creation_rules:
+  - path_regex: \.env\.(development|production)\.enc$
+    key_groups:
+      - age: [*emily]
