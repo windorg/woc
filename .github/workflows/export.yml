@@ -11,10 +11,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+
+    - uses: actions/checkout@v3
       with:
         submodules: true
-    - uses: actions/cache@v2
+
+    - uses: actions/cache@v3
       with:
         path: |
           ~/.npm
@@ -24,15 +26,20 @@ jobs:
         # If source files changed but packages didn't, rebuild from a prior cache.
         restore-keys: |
           ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
-    - uses: actions/setup-node@v2
+
+    - uses: actions/setup-node@v3
       with:
         node-version: '16.x' # Same as in package.json
+
     - name: Use .env.development
       # NB: copying instead of symlinking due to https://github.com/vercel/next.js/issues/53086
       run: cp .env.development .env
+
     - name: Install dependencies
       run: npm ci
+
     - name: Build the app
       run: npm run build
+      
     - name: Run 'next export'
       run: npx next export
