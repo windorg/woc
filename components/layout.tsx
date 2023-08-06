@@ -213,6 +213,10 @@ function Layout(props: Props): JSX.Element {
             <a href="https://loading.io/" target="_blank">
               loading.io
             </a>
+            •{' '}
+            <a href="https://github.com/windorg/woc" target="_blank">
+              GitHub
+            </a>
           </div>
         </footer>
       </div>
