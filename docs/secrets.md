@@ -2,11 +2,13 @@
 
 ## Overview
 
-Most values in `.env.development` and `.env.production` aren't secret. The ones that are secret, live in `*.enc` files encrypted with Sops.
+Most values in `.env.development` aren't secret. The ones that are secret, live in `*.enc` files encrypted with Sops.
 
 Some features (eg. Beeminder integration) can only be tested in development mode if you have access to secrets. However, the app should remain runnable in development even without secrets.
 
-The primary reason for using Sops is that eg. development secrets don't belong in DigitalOcean, but they should live somewhere instead of being copied between developers' machines. So we use Sops. Secrets that relate to DigitalOcean infrastructure, like database passwords, live in DigitalOcean settings; else is in Sops.
+The primary reason for using Sops is that eg. development secrets don't belong in DigitalOcean, but they should live somewhere instead of being copied between developers' machines. So we use Sops.
+
+Production secrets still live in DigitalOcean because there is no particularly easy way to add Sops to the DigitalOcean app builder.
 
 ## Setting up sops
 
@@ -27,7 +29,6 @@ age-keygen -o "$HOME/Library/Application Support/sops/age/keys.txt"
 
 ```bash
 sops --encrypt --in-place .env.development.enc
-sops --encrypt --in-place .env.production.enc
 ```
 
 ## Editing encrypted files

@@ -33,6 +33,7 @@ jobs:
 
     - name: Use .env.development
       # NB: copying instead of symlinking due to https://github.com/vercel/next.js/issues/53086
+      # NB 2: we don't decrypt secrets here on purpose — don't want them to potentially leak out in PR build logs
       run: cp .env.development .env
 
     - name: Install dependencies
