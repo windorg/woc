@@ -38,7 +38,8 @@ jobs:
 
     - name: Use .env.development
       run: |
-        ln -s .env.development .env
+        # NB: copying instead of symlinking due to https://github.com/vercel/next.js/issues/53086
+        cp .env.development .env
         # Kill .env.production because the server likes grabbing it when using 'npm next build'
         rm .env.production
 
