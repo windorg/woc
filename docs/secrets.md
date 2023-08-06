@@ -40,4 +40,4 @@ sops <file name>
 
 Secrets can be detected across commits with `gitleaks detect -v`.
 
-Secrets can be removed with `bfg `
+Secrets can be removed with `bfg --replace-text <(echo "...secret...")`. Before doing this operation, you need to make a commit that also actually removes the secret — `bfg` doesn't touch the last commit.
