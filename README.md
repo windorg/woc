@@ -59,7 +59,6 @@ npm run dev
 npm run tauri dev
 ```
 
-
 Building the prod app:
 
 ```bash
@@ -134,11 +133,17 @@ Do an interactive upgrade:
 npx npm-upgrade
 ```
 
-Read changelogs for major version upgrades — some things are not going to be caught by TypeScript, eg. the `command -> meta` change in react-hotkeys-hook.
+Rules:
 
-Don't upgrade ProseMirror stuff or @types/node.
+* Read changelogs for major version upgrades — some things are not going to be caught by TypeScript, eg. the `command -> meta` change in react-hotkeys-hook.
 
-Run `npm i`. Run `npm run check`.
+* Don't upgrade ProseMirror stuff or @types/node.
+
+Run `npm i`. Run `npm run check`. NOTE THAT THIS PROJECT DOES NOT USE YARN.
+
+Troubleshooting:
+
+* "peer dependencies" with typescript-eslint: `rm -rf package-lock.json node_modules/`
 
 ## Upgrading Tiptap
 
@@ -150,10 +155,10 @@ git fetch --all
 Note the commits in our fork:
 
 ```bash
-git log --oneline
+git log --oneline | grep WOC:
 ```
 
-Kill our commits with `git reset ... --hard`. (For example, smth like the unused-packages commit is hard to rebase. The `@ts-nocheck` commit has to be repeated every time anyway.)
+Kill our commits with `git reset <commit before our changes> --hard`. (For example, smth like the unused-packages commit is hard to rebase. The `@ts-nocheck` commit has to be repeated every time anyway.)
 
 Get upstream changes:
 
@@ -161,10 +166,19 @@ Get upstream changes:
 git rebase upstream/main
 ```
 
-Copy all dependencies from `tiptap/packages/pm/package.json` into our `package.json`, and run `npm i`.
+Copy all dependencies from `tiptap/packages/pm/package.json` into our `package.json`, and run `npm i` in the root.
+
+Remove git hooks:
 
 ```bash
-# Add @ts-nocheck
+rm -rf .husky
+git add .
+git commit -m "WOC: Remove git hooks"
+```
+
+Add `@ts-nocheck`:
+
+```bash
 (cd ..; npm run tiptap-nocheck)
 git add .
 git commit -m "WOC: Add @ts-nocheck"
@@ -172,13 +186,13 @@ git commit -m "WOC: Add @ts-nocheck"
 
 `git cherry-pick` our commits back.
 
-Check that things build: `npm run build`. Do `npm run dev` and check that the editor works.
+At the root, check that things build: `npm run build`. Do `npm run dev` and check that the editor works.
 
 NOTE: `rm -rf tiptap/node_modules` if you get weird errors.
 
-```bash
-# Commit and update the submodule
+Commit and update the submodule:
 
+```bash
 git push origin HEAD:main --force
 (cd ..; git submodule update --remote tiptap)
 ```

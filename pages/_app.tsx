@@ -4,7 +4,6 @@ import Layout from '../components/layout'
 import { SessionProvider } from 'next-auth/react'
 import TimeAgo from 'javascript-time-ago'
 import en from 'javascript-time-ago/locale/en.json'
-import SSRProvider from 'react-bootstrap/SSRProvider'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { ReactQueryDevtools } from 'react-query/devtools'
 import React from 'react'
@@ -39,20 +38,18 @@ function MyApp(props) {
 
   const { Component, pageProps } = props
   return (
-    <SSRProvider>
-      <SessionProvider>
-        <QueryClientProvider client={queryClient}>
-          <ApolloProvider client={apolloClient}>
-            <CurrentUserProvider>
-              <Layout>
-                <Component {...pageProps} />
-              </Layout>
-            </CurrentUserProvider>
-          </ApolloProvider>
-          <ReactQueryDevtools />
-        </QueryClientProvider>
-      </SessionProvider>
-    </SSRProvider>
+    <SessionProvider>
+      <QueryClientProvider client={queryClient}>
+        <ApolloProvider client={apolloClient}>
+          <CurrentUserProvider>
+            <Layout>
+              <Component {...pageProps} />
+            </Layout>
+          </CurrentUserProvider>
+        </ApolloProvider>
+        <ReactQueryDevtools />
+      </QueryClientProvider>
+    </SessionProvider>
   )
 }
 
