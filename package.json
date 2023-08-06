@@ -1,6 +1,7 @@
 {
   "name": "woc",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "dev": "node server.js",
     "build": "prisma generate && next build",
