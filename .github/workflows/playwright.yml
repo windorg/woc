@@ -51,9 +51,7 @@ jobs:
       run: npm ci
 
     - name: Create DB tables
-      run: |
-        echo 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";' | npx prisma db execute --preview-feature --schema=prisma/schema.prisma --stdin
-        npx prisma db push
+      run: npx prisma db push
 
     # Note: we always install Chromium because we use it in playwright-setup.ts, but ideally it should be fixed
     - name: Install Playwright

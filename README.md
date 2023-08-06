@@ -14,18 +14,23 @@ Then:
 git submodule update --init --recursive   # pull submodules
 volta install dotenv-cli                  # install dotenv
 brew install postgres                     # install psql
-docker-compose up -d                      # run services
-ln -s .env.development .env               # for convenience
+docker compose up -d                      # run services
 
 # Initialize the DB if it's empty
-dotenv -- psql -c 'CREATE EXTENSION IF NOT EXISTS "uuid-ossp";'
-npx prisma db push
+dotenv -e .env.development -- npx prisma db push
 ```
 
 You should also run the GraphQL codegen watcher, at least until https://github.com/capaj/graphql-codegen-vscode/issues/21 is fixed:
 
 ```bash
 npm run gql:watch
+```
+
+If you want to remove the databases, run:
+
+```bash
+docker compose down
+docker volume rm $(docker volume ls -q | grep woc_)
 ```
 
 ## Local development - running the app
