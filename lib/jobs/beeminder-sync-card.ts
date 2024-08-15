@@ -24,12 +24,15 @@ export async function beeminderSyncCard(payload: BeeminderSyncCardPayload) {
   if (!beeminderAccessToken) throw new Error(`No Beeminder access token for user ${card.owner.id}`)
   if (!beeminderGoal) throw new Error(`No Beeminder goal for card ${card.id}`)
   await axios
-    .post(`https://www.beeminder.com/api/v1/users/${beeminderUsername}/goals/${beeminderGoal}/datapoints.json`, {
-      access_token: beeminderAccessToken,
-      value: payload.commentCount,
-      timestamp: Math.floor(payload.timestamp / 1000),
-      comment: 'Auto-posted by WOC',
-    })
+    .post(
+      `https://www.beeminder.com/api/v1/users/${beeminderUsername}/goals/${beeminderGoal}/datapoints.json`,
+      {
+        access_token: beeminderAccessToken,
+        value: payload.commentCount,
+        timestamp: Math.floor(payload.timestamp / 1000),
+        comment: 'Auto-posted by WOC',
+      }
+    )
     .catch((error) => {
       if (error.response) {
         throw new Error(

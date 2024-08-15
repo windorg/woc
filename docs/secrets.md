@@ -41,4 +41,6 @@ sops <file name>
 
 Secrets can be detected across commits with `gitleaks detect -v`.
 
+Don't use `gitleaks:allow` in .env files, since dotenv doesn't strip the comments for whatever reason.
+
 Secrets can be removed with `bfg --replace-text <(echo "...secret...")`. Before doing this operation, you need to make a commit that also actually removes the secret — `bfg` doesn't touch the last commit.

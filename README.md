@@ -121,7 +121,8 @@ As of Jun 2023, the tests are flaky. You might be getting `waiting for locator('
 ## Connecting to local database
 
 ```bash
-dotenv -e .env.development -- npx prisma studio
+dotenv -e .env.development -- npx prisma studio    # GUI
+dotenv -e .env.development -- psql                 # psql
 ```
 
 ## Upgrading dependencies

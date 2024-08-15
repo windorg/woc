@@ -12,16 +12,5 @@ services:
       - "pg:/var/lib/postgresql/data"
     restart: "always"
 
-  redis:
-    image: "redis"
-    container_name: "woc-redis"
-    command: "redis-server --save 10 1 --loglevel warning --requirepass password"
-    ports:
-      - "8999:6379"
-    volumes:
-      - "redis:/data"
-    restart: "always"
-
 volumes:
   pg: null
-  redis: null
