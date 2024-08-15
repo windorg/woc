@@ -1,13 +1,21 @@
 import PgBoss from 'pg-boss'
 import { beeminderSyncCard, BeeminderSyncCardPayload } from './jobs/beeminder-sync-card'
-import { error } from 'console'
 
 type Job = {
   tag: 'beeminder-sync-card'
   payload: BeeminderSyncCardPayload
 }
 
-const boss = new PgBoss(process.env.DATABASE_URL!)
+const boss = new PgBoss({
+  user: process.env.POSTGRES_USER,
+  host: process.env.POSTGRES_HOST,
+  port: parseInt(process.env.POSTGRES_PORT!),
+  database: process.env.POSTGRES_DB,
+  password: process.env.POSTGRES_PASSWORD,
+  ...('POSTGRES_CA_CERT' in process.env
+    ? { ssl: { rejectUnauthorized: true, ca: process.env.POSTGRES_CA_CERT } }
+    : {}),
+})
 
 export async function addJob<T extends Job['tag']>(
   tag: T,
