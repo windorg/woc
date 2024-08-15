@@ -46,7 +46,7 @@ jobs:
     - name: Run databases
       run: |
         # Doesn't wait for startup but should be fine hopefully
-        docker-compose up -d
+        docker compose up -d
 
     - name: Install dependencies
       run: npm ci
