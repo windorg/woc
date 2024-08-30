@@ -10,7 +10,7 @@ let initCalled = false
 export default async function handler(req, res: NextApiResponse) {
   if (!initCalled) {
     initCalled = true
-    await startJobQueueProcessing()
+    // await startJobQueueProcessing()
   }
   res.send('OK')
 }
