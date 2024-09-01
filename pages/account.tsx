@@ -25,7 +25,10 @@ const Account: NextPage = () => {
   const { data: session } = useSession()
   const userId = session?.userId ?? null
 
-  const userQuery = useQuery(_getLoggedInUser)
+  const userQuery = useQuery(_getLoggedInUser, {
+    skip: userId === null,
+    variables: { userId: userId! },
+  })
   const user = userQuery.data ? userQuery.data.user : null
 
   return (
