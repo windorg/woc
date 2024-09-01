@@ -1,4 +1,4 @@
-version: '3.8'
+# docker-compose for running WOC locally
 
 services:
   pg:

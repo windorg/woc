@@ -7,13 +7,13 @@ type Job = {
 }
 
 const boss = new PgBoss({
-  user: process.env.POSTGRES_USER,
-  host: process.env.POSTGRES_HOST,
-  port: parseInt(process.env.POSTGRES_PORT!),
-  database: process.env.POSTGRES_DB,
-  password: process.env.POSTGRES_PASSWORD,
-  ...('POSTGRES_CA_CERT' in process.env
-    ? { ssl: { rejectUnauthorized: true, ca: process.env.POSTGRES_CA_CERT } }
+  user: process.env.PGUSER,
+  host: process.env.PGHOST,
+  port: parseInt(process.env.PGPORT!),
+  database: process.env.PGDATABASE,
+  password: process.env.PGPASSWORD,
+  ...('PGCACERT' in process.env
+    ? { ssl: { rejectUnauthorized: true, ca: process.env.PGCACERT } }
     : {}),
 })
 
