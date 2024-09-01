@@ -52,7 +52,7 @@ jobs:
       run: npm ci
 
     - name: Create DB tables
-      run: npx prisma db push
+      run: npx dotenv -e .env -- prisma db push
 
     # Note: we always install Chromium because we use it in playwright-setup.ts, but ideally it should be fixed
     - name: Install Playwright
@@ -63,7 +63,7 @@ jobs:
 
     # Note: Playwright will start the server by itself, see playwright.config.ts
     - name: Run Playwright tests
-      run: npx playwright test --browser ${{ matrix.browser }}
+      run: npx dotenv -e .env -- playwright test --browser ${{ matrix.browser }}
 
     - uses: actions/upload-artifact@v3
       if: always()
