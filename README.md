@@ -26,6 +26,12 @@ You should also run the GraphQL codegen watcher, at least until https://github.c
 npm run gql:watch
 ```
 
+Just in case:
+
+```bash
+npx prisma generate
+```
+
 If you want to remove the databases, run:
 
 ```bash
