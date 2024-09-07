@@ -105,11 +105,10 @@ export function CardsListItemExpanded(props: {
   const recentlyFired =
     card.firedAt && new Date(card.firedAt).getTime() > Date.now() - 1000 * 60 * 60 * 24
   return (
-    // NB: .position-relative is needed for .stretched-link to work properly
-    <div className={`${styles.cardsListItem} woc-card `}>
-      <div className={styles._counter}>{card.commentCount || '−'}</div>
+    <div className={`${styles.cardsListItem} ${styles._expanded} woc-card `}>
       <div className={styles._body}>
-        <div className="position-relative">
+        {/* NB: .position-relative is needed for .stretched-link to work properly -- it specifies which parent element will be the 'link' */}
+        <div className={`${styles._titleWithTagline} position-relative`}>
           <div className={styles._title}>
             {/* TODO: perhaps move lock+title into a separate div so that the lock icon is "inline" */}
             <span>{isPrivate ? '🔒 ' : ''}</span>
@@ -130,7 +129,7 @@ export function CardsListItemExpanded(props: {
           </div>
           {card.tagline && <div className={styles._tagline}>{card.tagline}</div>}
         </div>
-        <Comments card={props.card} comments={props.comments} />
+        <Comments card={props.card} comments={props.comments} compact />
       </div>
     </div>
   )

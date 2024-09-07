@@ -23,8 +23,11 @@ type Comment_ = Pick<
 export function Comments(props: {
   card: Pick<GQL.Card, 'id' | 'canEdit' | 'reverseOrder'>
   comments: Comment_[]
+  /** If true: remove the 'Comments' header */
+  compact?: boolean
 }) {
   const { card, comments } = props
+  const compact = props?.compact ?? false
 
   const renderCommentList = (comments: typeof props.comments) =>
     comments.map((comment) => (
@@ -56,10 +59,12 @@ export function Comments(props: {
   )
 
   return (
-    <div className={styles.comments}>
-      <div className={styles.sectionHeader}>
-        <div className={styles._label}>Comments ({comments.length})</div>
-      </div>
+    <div className={`${styles.comments} ${compact ? styles._compact : ''}`}>
+      {!compact && (
+        <div className={styles.sectionHeader}>
+          <div className={styles._label}>Comments ({comments.length})</div>
+        </div>
+      )}
       <div className={styles._list}>
         {card.reverseOrder ? reverseOrderComments() : normalOrderComments()}
       </div>
