@@ -7,6 +7,7 @@ import { HiFire } from 'react-icons/hi'
 import { useMutation } from '@apollo/client'
 import { graphql } from 'generated/graphql'
 import { useCurrentUser } from '@components/currentUserContext'
+import { Comments } from './comments'
 
 const useFireCard = () => {
   const [action, result] = useMutation(
@@ -31,8 +32,8 @@ const useFireCard = () => {
 /**
  * A card in the children list.
  */
-export function CardsListItem(props: {
-  // Whether the card is being dragged in a list
+export function CardsListItemCollapsed(props: {
+  /** Whether the card is being dragged in a list */
   dragged?: boolean
   card: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'visibility' | 'commentCount' | 'firedAt'>
 }) {
@@ -75,6 +76,61 @@ export function CardsListItem(props: {
           )}
         </div>
         {card.tagline && <div className={styles._tagline}>{card.tagline}</div>}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * A card in the children list, expanded to show all comments and to allow adding new comments.
+ */
+export function CardsListItemExpanded(props: {
+  card: Pick<
+    GQL.Card,
+    | 'id'
+    | 'title'
+    | 'tagline'
+    | 'visibility'
+    | 'commentCount'
+    | 'firedAt'
+    | 'canEdit'
+    | 'reverseOrder'
+  >
+  comments: React.ComponentProps<typeof Comments>['comments']
+}) {
+  const currentUser = useCurrentUser()
+  const { card } = props
+  const isPrivate = card.visibility === GQL.Visibility.Private
+  const fireCardMutation = useFireCard()
+  const recentlyFired =
+    card.firedAt && new Date(card.firedAt).getTime() > Date.now() - 1000 * 60 * 60 * 24
+  return (
+    // NB: .position-relative is needed for .stretched-link to work properly
+    <div className={`${styles.cardsListItem} woc-card `}>
+      <div className={styles._counter}>{card.commentCount || '−'}</div>
+      <div className={styles._body}>
+        <div className="position-relative">
+          <div className={styles._title}>
+            {/* TODO: perhaps move lock+title into a separate div so that the lock icon is "inline" */}
+            <span>{isPrivate ? '🔒 ' : ''}</span>
+            <Link href={cardRoute(card.id)} className="stretched-link">
+              {card.title}
+            </Link>
+            {currentUser?.betaAccess && (
+              <B.Button
+                variant="outline-warning"
+                size="sm"
+                className={`${styles._fire} ${!recentlyFired ? styles._notRecentlyFired : ''}`}
+                onClick={async () => fireCardMutation.do({ variables: { id: card.id } })}
+                // TODO spinner?
+              >
+                <HiFire />
+              </B.Button>
+            )}
+          </div>
+          {card.tagline && <div className={styles._tagline}>{card.tagline}</div>}
+        </div>
+        <Comments card={props.card} comments={props.comments} />
       </div>
     </div>
   )

@@ -19,10 +19,11 @@ model Card {
   tagline       String    @default("")
   parentId      String?   @map("parent_id") @db.Uuid
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  /// JSON object with extra settings for the card that are bothersome to put in the DB model; see `CardSettings`
   settings      Json
   childrenOrder String[]  @map("children_order") @db.Uuid
   ownerId       String    @map("owner_id") @db.Uuid
-  /// The date of the last time this card was fire-d
+  /// The last time this card was fire-d
   firedAt       DateTime? @map("fired_at") @db.Timestamptz(6)
 
   parent              Card?                @relation(name: "parent-child", fields: [parentId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "cards_ref_parent_id")

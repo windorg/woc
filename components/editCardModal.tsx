@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { accountRoute } from 'lib/routes'
 import { graphql } from 'generated/graphql'
 import { useMutation } from '@apollo/client'
+import { useCurrentUser } from './currentUserContext'
 
 const _updateCard_EditCardModal = graphql(`
   mutation updateCard_EditCardModal(
@@ -13,6 +14,7 @@ const _updateCard_EditCardModal = graphql(`
     $title: String
     $tagline: String
     $reverseOrder: Boolean
+    $expandChildren: Boolean
     $beeminderGoal: String
   ) {
     updateCard(
@@ -21,6 +23,7 @@ const _updateCard_EditCardModal = graphql(`
         title: $title
         tagline: $tagline
         reverseOrder: $reverseOrder
+        expandChildren: $expandChildren
         beeminderGoal: $beeminderGoal
       }
     ) {
@@ -29,6 +32,7 @@ const _updateCard_EditCardModal = graphql(`
         title
         tagline
         reverseOrder
+        expandChildren
         beeminderGoal
       }
     }
@@ -36,7 +40,10 @@ const _updateCard_EditCardModal = graphql(`
 `)
 
 export function EditCardModal(props: {
-  card: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'reverseOrder' | 'beeminderGoal'>
+  card: Pick<
+    GQL.Card,
+    'id' | 'title' | 'tagline' | 'reverseOrder' | 'beeminderGoal' | 'expandChildren'
+  >
   show: boolean
   onHide: () => void
   afterSave?: () => void
@@ -45,6 +52,7 @@ export function EditCardModal(props: {
   // See https://github.com/react-bootstrap/react-bootstrap/issues/5102
   const titleInputRef: React.RefObject<HTMLInputElement> = React.useRef(null)
   const [updateCard, updateCardMutation] = useMutation(_updateCard_EditCardModal)
+  const currentUser = useCurrentUser()
   const { card } = props
 
   const formId = React.useId()
@@ -67,6 +75,7 @@ export function EditCardModal(props: {
             title: card.title,
             tagline: card.tagline,
             reverseOrder: card.reverseOrder,
+            expandChildren: card.expandChildren,
             beeminderGoal: card.beeminderGoal || '',
           }}
           onSubmit={async (values, formik) => {
@@ -120,6 +129,29 @@ export function EditCardModal(props: {
                         }}
                       />
                     </B.Form.Group>
+
+                    {currentUser?.betaAccess && (
+                      <B.Form.Check
+                        name="expandChildren"
+                        id={`expandChildren-${formId}`}
+                        className="mb-3"
+                      >
+                        <B.Form.Check.Input
+                          name="expandChildren"
+                          id={`expandChildren-${formId}`}
+                          checked={formik.values.expandChildren}
+                          onChange={formik.handleChange}
+                          type="checkbox"
+                        />
+                        <B.Form.Check.Label>
+                          Show child cards{"'"} comments
+                          <br />
+                          <span className="text-muted small">
+                            Good if you want to see everything at once.
+                          </span>
+                        </B.Form.Check.Label>
+                      </B.Form.Check>
+                    )}
 
                     <B.Form.Check name="reverseOrder" id={`reverse-${formId}`} className="mb-3">
                       <B.Form.Check.Input

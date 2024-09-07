@@ -1,6 +1,5 @@
 import type * as GQL from 'generated/graphql/graphql'
 import { sortByIdOrder } from '@lib/array'
-import { cardSettings } from '@lib/model-settings'
 import { LinkButton } from 'components/linkButton'
 import _ from 'lodash'
 import * as React from 'react'
@@ -10,10 +9,18 @@ import { BiArchive } from 'react-icons/bi'
 import styles from './shared.module.scss'
 
 export function Subcards(props: {
-  parent: Pick<GQL.Card, 'id' | 'childrenOrder' | 'canEdit'>
+  parent: Pick<GQL.Card, 'id' | 'childrenOrder' | 'canEdit' | 'expandChildren'>
   cards: Pick<
     GQL.Card,
-    'id' | 'title' | 'tagline' | 'archived' | 'visibility' | 'commentCount' | 'firedAt'
+    | 'id'
+    | 'title'
+    | 'tagline'
+    | 'archived'
+    | 'visibility'
+    | 'commentCount'
+    | 'firedAt'
+    | 'canEdit'
+    | 'reverseOrder'
   >[]
 }) {
   const { parent, cards } = props
@@ -46,6 +53,7 @@ export function Subcards(props: {
           parentId={parent.id}
           cards={showArchived ? archivedCards : normalCards}
           allowEdit={parent.canEdit}
+          expandCards={parent.expandChildren}
         />
       </div>
     </div>

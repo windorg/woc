@@ -2,14 +2,15 @@ import * as Dnd from '@dnd-kit/core'
 import * as DndSort from '@dnd-kit/sortable'
 import * as DndModifiers from '@dnd-kit/modifiers'
 import type * as GQL from 'generated/graphql/graphql'
-import { CardsListItem } from './cardsListItem'
+import { CardsListItemCollapsed, CardsListItemExpanded } from './cardsListItem'
 import { CSS } from '@dnd-kit/utilities'
 import { deleteSync, insertPosition } from 'lib/array'
 import { graphql } from 'generated/graphql'
-import { useApolloClient, useMutation } from '@apollo/client'
+import { useApolloClient, useMutation, useQuery } from '@apollo/client'
 import { evictCardChildren } from '@lib/graphql/cache'
 import { reorderCardChildren } from '@lib/reorderCardChildren'
 import _ from 'lodash'
+import { Query } from '@components/query'
 
 const useReorderChild = () => {
   const cache = useApolloClient().cache
@@ -46,10 +47,58 @@ const useReorderChild = () => {
   }
 }
 
-// A list of cards, supporting drag-and-drop
+const useGetComments = (variables: { cardId: string }) => {
+  return useQuery(
+    graphql(`
+      query getComments($cardId: UUID!) {
+        card(id: $cardId) {
+          id
+          comments {
+            id
+            content
+            createdAt
+            visibility
+            pinned
+            canEdit
+            replies {
+              id
+              content
+              visibility
+              canEdit
+              createdAt
+              canDelete
+              author {
+                id
+                displayName
+                userpicUrl
+              }
+            }
+          }
+        }
+      }
+    `),
+    { variables }
+  )
+}
+
+/**
+ * A list of cards, supporting drag-and-drop
+ */
 export function CardsList(props: {
   parentId: GQL.Card['id']
-  cards: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'visibility' | 'commentCount' | 'firedAt'>[]
+  cards: Pick<
+    GQL.Card,
+    | 'id'
+    | 'title'
+    | 'tagline'
+    | 'visibility'
+    | 'commentCount'
+    | 'firedAt'
+    | 'canEdit'
+    | 'reverseOrder'
+  >[]
+  /** Whether to show the cards as expanded or collapsed */
+  expandCards: boolean
   allowEdit: boolean
 }) {
   const sensors = Dnd.useSensors(
@@ -95,7 +144,7 @@ export function CardsList(props: {
     }
   }
 
-  if (props.allowEdit) {
+  if (props.allowEdit && !props.expandCards) {
     return (
       <Dnd.DndContext
         sensors={sensors}
@@ -106,7 +155,7 @@ export function CardsList(props: {
       >
         <DndSort.SortableContext items={props.cards} strategy={DndSort.verticalListSortingStrategy}>
           {props.cards.map((card) => (
-            <Sortable key={card.id} card={card} />
+            <SortableCardsListItem key={card.id} card={card} />
           ))}
         </DndSort.SortableContext>
       </Dnd.DndContext>
@@ -114,12 +163,41 @@ export function CardsList(props: {
   } else {
     return (
       <>
-        {props.cards.map((card) => (
-          <CardsListItem key={card.id} card={card} />
-        ))}
+        {props.cards.map((card) =>
+          props.expandCards ? (
+            <SubcardWithFetchingComments key={card.id} card={card} />
+          ) : (
+            <CardsListItemCollapsed key={card.id} card={card} />
+          )
+        )}
       </>
     )
   }
+}
+
+function SubcardWithFetchingComments(props: {
+  card: Pick<
+    GQL.Card,
+    | 'id'
+    | 'title'
+    | 'tagline'
+    | 'visibility'
+    | 'commentCount'
+    | 'firedAt'
+    | 'canEdit'
+    | 'reverseOrder'
+  >
+}) {
+  const commentsQuery = useGetComments({ cardId: props.card.id })
+  return (
+    <Query queries={{ commentsQuery }}>
+      {({
+        commentsQuery: {
+          card: { comments },
+        },
+      }) => <CardsListItemExpanded card={props.card} comments={comments} />}
+    </Query>
+  )
 }
 
 // https://github.com/clauderic/dnd-kit/discussions/108
@@ -131,7 +209,7 @@ function animateLayoutChanges(args) {
   return true
 }
 
-function Sortable(props: {
+function SortableCardsListItem(props: {
   card: Pick<GQL.Card, 'id' | 'title' | 'tagline' | 'visibility' | 'commentCount' | 'firedAt'>
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -149,7 +227,7 @@ function Sortable(props: {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <CardsListItem card={props.card} dragged={isDragging} />
+      <CardsListItemCollapsed card={props.card} dragged={isDragging} />
     </div>
   )
 }

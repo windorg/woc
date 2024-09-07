@@ -29,6 +29,7 @@ const useGetCard = (variables: { id: string }) => {
           parentId
           canEdit
           archived
+          expandChildren
           reverseOrder
           beeminderGoal
           parentChain
@@ -41,6 +42,8 @@ const useGetCard = (variables: { id: string }) => {
             archived
             commentCount
             firedAt
+            reverseOrder
+            canEdit
           }
           owner {
             id

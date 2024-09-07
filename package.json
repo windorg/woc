@@ -6,6 +6,7 @@
     "dev": "node server.js",
     "build": "prisma generate && next build",
     "start": "NODE_ENV=production node server.js",
+    "gql": "graphql-codegen --require tsconfig-paths/register",
     "gql:watch": "graphql-codegen --require tsconfig-paths/register --watch",
     "check": "tsc --noEmit && echo '\u001b[32m✔ Typecheck OK\u001b[0m' && next lint",
     "test:e2e": "playwright test",

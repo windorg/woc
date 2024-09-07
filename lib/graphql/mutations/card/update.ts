@@ -16,6 +16,7 @@ export const UpdateCardInput = builder.inputType('UpdateCardInput', {
     private: t.boolean(),
     reverseOrder: t.boolean(),
     archived: t.boolean(),
+    expandChildren: t.boolean(),
     beeminderGoal: t.string(),
   }),
 })
@@ -62,6 +63,9 @@ builder.mutationField('updateCard', (t) =>
       }
       if (!_.isNil(input.archived)) {
         diff.settings.archived = input.archived
+      }
+      if (!_.isNil(input.expandChildren)) {
+        diff.settings.expandChildren = input.expandChildren
       }
       if (input.beeminderGoal !== undefined) {
         // We want to allow null because that's how you remove a goal

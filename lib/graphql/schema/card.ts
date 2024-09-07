@@ -98,6 +98,12 @@ export const Card = builder.prismaObject('Card', {
     archived: t.boolean({
       resolve: (card, args, context) => cardSettings(card).archived,
     }),
+    expandChildren: t.boolean({
+      description: endent`
+        Whether to expand all sub-cards' comments.
+      `,
+      resolve: (card, args, context) => cardSettings(card).expandChildren,
+    }),
     beeminderGoal: t.string({
       nullable: true,
       description: endent`

@@ -28,6 +28,9 @@ type Card {
   comments: [Comment!]!
   createdAt: DateTime!
 
+  """Whether to expand all sub-cards' comments."""
+  expandChildren: Boolean!
+
   """The last time this card was fire-d, if at all."""
   firedAt: DateTime
   id: UUID!
@@ -201,6 +204,7 @@ scalar UUID
 input UpdateCardInput {
   archived: Boolean
   beeminderGoal: String
+  expandChildren: Boolean
   id: UUID!
   private: Boolean
   reverseOrder: Boolean
